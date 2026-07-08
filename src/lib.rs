@@ -64,7 +64,7 @@ impl HDDLAnalyzer {
             AbstractSyntaxTree::Domain(d) => {
                 let tdg = TDG::new(&d);
                 let nullables = tdg.compute_nullables();
-                let recursion_type = tdg.get_recursion_type(&nullables);
+                let recursion_type = tdg.get_recursion_info(&nullables);
                 Ok(MetaData {
                     recursion: recursion_type,
                     nullables: nullables.iter().map(|x| x.to_string()).collect(),

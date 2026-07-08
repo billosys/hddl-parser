@@ -135,12 +135,12 @@ impl<'a> TDG<'a> {
         }
     }
 
-    pub fn get_recursion_type(&self, nullable_symbols: &HashSet<&'a str>) -> RecursionType {
+    pub fn get_recursion_info(&self, nullable_symbols: &HashSet<&'a str>) -> RecursionInfo {
         let nullables: HashSet<usize> = nullable_symbols
             .iter()
             .map(|x| self.get_task_index(&x))
             .collect();
-        let mut recursion_type = RecursionType::NonRecursive;
+        let mut recursion_type = RecursionInfo::NonRecursive;
         // DFS over TDG
         let mut stack = vec![];
         // initiating the stack
@@ -198,29 +198,29 @@ impl<'a> TDG<'a> {
                         if is_epsilon_prefix == true {
                             if suffix.len() == 0 {
                                 match recursion_type {
-                                    RecursionType::GrowAndShrinkRecursion(_) => {}
+                                    RecursionInfo::GrowAndShrinkRecursion(_) => {}
                                     _ => {
-                                        recursion_type = RecursionType::EmptyRecursion(cyclic_path);
+                                        recursion_type = RecursionInfo::EmptyRecursion(cyclic_path);
                                     }
                                 }
                             } else {
                                 let nullable_suffix =
                                     suffix.iter().all(|sym| nullables.contains(sym));
                                 match recursion_type {
-                                    RecursionType::GrowAndShrinkRecursion(_) => {}
-                                    RecursionType::EmptyRecursion(_) => {
+                                    RecursionInfo::GrowAndShrinkRecursion(_) => {}
+                                    RecursionInfo::EmptyRecursion(_) => {
                                         if nullable_suffix {
                                             recursion_type =
-                                                RecursionType::GrowAndShrinkRecursion(cyclic_path);
+                                                RecursionInfo::GrowAndShrinkRecursion(cyclic_path);
                                         }
                                     }
                                     _ => {
                                         if nullable_suffix {
                                             recursion_type =
-                                                RecursionType::GrowAndShrinkRecursion(cyclic_path);
+                                                RecursionInfo::GrowAndShrinkRecursion(cyclic_path);
                                         } else {
                                             recursion_type =
-                                                RecursionType::GrowingEmptyPrefixRecursion(
+                                                RecursionInfo::GrowingEmptyPrefixRecursion(
                                                     cyclic_path,
                                                 );
                                         }
@@ -229,8 +229,8 @@ impl<'a> TDG<'a> {
                             }
                         } else {
                             match recursion_type {
-                                RecursionType::NonRecursive => {
-                                    recursion_type = RecursionType::Recursive(cyclic_path);
+                                RecursionInfo::NonRecursive => {
+                                    recursion_type = RecursionInfo::Recursive(cyclic_path);
                                 }
                                 _ => {}
                             }

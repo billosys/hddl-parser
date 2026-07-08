@@ -137,7 +137,7 @@ pub fn tdg_non_recursive_test () {
                 AbstractSyntaxTree::Problem(p_ast) => {
                     let tdg = TDG::new(&d);
                     let nullables = tdg.compute_nullables();
-                    assert_eq!(tdg.get_recursion_type(&nullables), RecursionType::NonRecursive)
+                    assert_eq!(tdg.get_recursion_info(&nullables), RecursionInfo::NonRecursive)
                 }
                 _ => panic!()
             }
@@ -201,8 +201,8 @@ pub fn tdg_recursive_test () {
                 AbstractSyntaxTree::Problem(p_ast) => {
                     let tdg = TDG::new(&d);
                     let nullables = tdg.compute_nullables();
-                    match tdg.get_recursion_type(&nullables) {
-                        RecursionType::Recursive(_) => {}
+                    match tdg.get_recursion_info(&nullables) {
+                        RecursionInfo::Recursive(_) => {}
                         _ => panic!()
                     }
                 }
@@ -273,8 +273,8 @@ pub fn tdg_grow_and_shrink_cycle_test () {
                 AbstractSyntaxTree::Problem(p_ast) => {
                     let tdg = TDG::new(&d);
                     let nullables = tdg.compute_nullables();
-                    match tdg.get_recursion_type(&nullables) {
-                        RecursionType::GrowAndShrinkRecursion(_) => {}
+                    match tdg.get_recursion_info(&nullables) {
+                        RecursionInfo::GrowAndShrinkRecursion(_) => {}
                         _ => panic!()
                     }
                 }
@@ -351,8 +351,8 @@ pub fn tdg_grow_and_shrink_cycle_partial_order_1_test () {
                 AbstractSyntaxTree::Problem(p_ast) => {
                     let tdg = TDG::new(&d);
                     let nullables = tdg.compute_nullables();
-                    match tdg.get_recursion_type(&nullables) {
-                        RecursionType::GrowAndShrinkRecursion(_) => {}
+                    match tdg.get_recursion_info(&nullables) {
+                        RecursionInfo::GrowAndShrinkRecursion(_) => {}
                         _ => panic!()
                     }
                 }
@@ -427,8 +427,8 @@ pub fn tdg_growing_cycle_test () {
                 AbstractSyntaxTree::Problem(p_ast) => {
                     let tdg = TDG::new(&d);
                     let nullables = tdg.compute_nullables();
-                    match tdg.get_recursion_type(&nullables) {
-                        RecursionType::GrowingEmptyPrefixRecursion(_) => {}
+                    match tdg.get_recursion_info(&nullables) {
+                        RecursionInfo::GrowingEmptyPrefixRecursion(_) => {}
                         _ => panic!()
                     }
                 }
@@ -514,8 +514,8 @@ pub fn satelite_domain_cycle_test () {
                 AbstractSyntaxTree::Problem(p_ast) => {
                     let tdg = TDG::new(&d);
                     let nullables = tdg.compute_nullables();
-                    match tdg.get_recursion_type(&nullables) {
-                        RecursionType::Recursive(_) => {}
+                    match tdg.get_recursion_info(&nullables) {
+                        RecursionInfo::Recursive(_) => {}
                         _ => panic!()
                     }
                 }

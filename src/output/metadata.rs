@@ -1,34 +1,36 @@
 use std::fmt::{Display, Formatter, Error};
 
+pub type Cycle = Vec<(String, String)>;
+
 #[derive(PartialEq, Eq, Debug)]
-pub enum RecursionType {
+pub enum RecursionInfo {
     NonRecursive,
-    Recursive(Vec<(String, String)>), // (task_name, method_name) 
-    EmptyRecursion(Vec<(String, String)>), // (task_name, method_name) 
-    GrowingEmptyPrefixRecursion(Vec<(String, String)>), // (task_name, method_name) 
-    GrowAndShrinkRecursion(Vec<(String, String)>), // (task_name, method_name) 
+    Recursive(Cycle), // (task_name, method_name) 
+    EmptyRecursion(Cycle), // (task_name, method_name) 
+    GrowingEmptyPrefixRecursion(Cycle), // (task_name, method_name) 
+    GrowAndShrinkRecursion(Cycle), // (task_name, method_name) 
 }
 
-impl Display for RecursionType {
+impl Display for RecursionInfo {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            RecursionType::NonRecursive => write!(f, "Non-recursive"),
-            RecursionType::Recursive(pairs) => {
+            RecursionInfo::NonRecursive => write!(f, "Non-recursive"),
+            RecursionInfo::Recursive(pairs) => {
                 writeln!(f, "Recursive")?;
                 write!(f, "\tCycle: ")?;
                 format_task_pairs(pairs, f)
             }
-            RecursionType::EmptyRecursion(pairs) => {
+            RecursionInfo::EmptyRecursion(pairs) => {
                 writeln!(f, "Empty recursion")?;
                 write!(f, "\tCycle: ")?;
                 format_task_pairs(pairs, f)
             }
-            RecursionType::GrowingEmptyPrefixRecursion(pairs) => {
+            RecursionInfo::GrowingEmptyPrefixRecursion(pairs) => {
                 writeln!(f, "Growing empty prefix recursion")?;
                 write!(f, "\tCycle: ")?;
                 format_task_pairs(pairs, f)
             }
-            RecursionType::GrowAndShrinkRecursion(pairs) => {
+            RecursionInfo::GrowAndShrinkRecursion(pairs) => {
                 writeln!(f, "Grow and shrink recursion")?;
                 write!(f, "\tCycle: ")?;
                 format_task_pairs(pairs, f)
@@ -51,7 +53,7 @@ fn format_task_pairs(pairs: &[(String, String)], f: &mut Formatter<'_>) -> std::
 
 
 pub struct MetaData {
-    pub recursion: RecursionType,
+    pub recursion: RecursionInfo,
     pub nullables: Vec<String>,
     pub domain_name: String,
     pub n_actions: u32,
