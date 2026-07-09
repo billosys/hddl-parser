@@ -1,45 +1,84 @@
-use std::fmt::{Display, Formatter, Error};
+use std::{
+    collections::HashMap,
+    fmt::{Display, Error, Formatter},
+};
 
-pub type Cycle = Vec<(String, String)>;
+pub type Cycle = Vec<(String, String)>; // Vec of (task_name, method_name)
 
 #[derive(PartialEq, Eq, Debug)]
-pub enum RecursionInfo {
-    NonRecursive,
-    Recursive(Cycle), // (task_name, method_name) 
-    EmptyRecursion(Cycle), // (task_name, method_name) 
-    GrowingEmptyPrefixRecursion(Cycle), // (task_name, method_name) 
-    GrowAndShrinkRecursion(Cycle), // (task_name, method_name) 
+pub struct RecursionInfo {
+    pub acyclic_tasks: Vec<String>,
+    pub recursive_tasks: HashMap<String, Vec<Cycle>>,
+    pub eps_prefix_tasks: HashMap<String, Vec<Cycle>>,
+    pub empty_recursive_tasks: HashMap<String, Vec<Cycle>>,
+    pub growing_empty_recursive_tasks: HashMap<String, Vec<Cycle>>,
+    pub grow_and_shrink_tasks: HashMap<String, Vec<Cycle>>,
 }
 
 impl Display for RecursionInfo {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        match self {
-            RecursionInfo::NonRecursive => write!(f, "Non-recursive"),
-            RecursionInfo::Recursive(pairs) => {
-                writeln!(f, "Recursive")?;
-                write!(f, "\tCycle: ")?;
-                format_task_pairs(pairs, f)
-            }
-            RecursionInfo::EmptyRecursion(pairs) => {
-                writeln!(f, "Empty recursion")?;
-                write!(f, "\tCycle: ")?;
-                format_task_pairs(pairs, f)
-            }
-            RecursionInfo::GrowingEmptyPrefixRecursion(pairs) => {
-                writeln!(f, "Growing empty prefix recursion")?;
-                write!(f, "\tCycle: ")?;
-                format_task_pairs(pairs, f)
-            }
-            RecursionInfo::GrowAndShrinkRecursion(pairs) => {
-                writeln!(f, "Grow and shrink recursion")?;
-                write!(f, "\tCycle: ")?;
-                format_task_pairs(pairs, f)
-            }
+        let is_acyclic = self.recursive_tasks.is_empty();
+        if is_acyclic {
+            return write!(f, "Non-recursive");
         }
+        let headline = if !self.grow_and_shrink_tasks.is_empty() {
+            "Grow and shrink recursion"
+        } else if !self.growing_empty_recursive_tasks.is_empty() {
+            "Growing empty prefix recursion"
+        } else if !self.empty_recursive_tasks.is_empty() {
+            "Empty recursion"
+        } else if !self.eps_prefix_tasks.is_empty() {
+            "Epsilon-prefix recursion"
+        } else if !self.recursive_tasks.is_empty() {
+            "Recursive"
+        } else {
+            "Acyclic"
+        };
+        write!(f, "{}", headline)?;
+        format_task_cycles(f, "Recursive tasks", &self.recursive_tasks)?;
+        format_task_cycles(f, "Zero-Cost Recursive tasks", &self.eps_prefix_tasks)?;
+        format_task_cycles(f, "Zero-Cost Empty Recursive tasks", &self.empty_recursive_tasks)?;
+        format_task_cycles(
+            f,
+            "Growing Zero-Cost Recursive tasks",
+            &self.growing_empty_recursive_tasks,
+        )?;
+        format_task_cycles(f, "Grow and Shrink tasks", &self.grow_and_shrink_tasks)?;
+        if !self.acyclic_tasks.is_empty() {
+            writeln!(
+                f,
+                "\n\tAcyclic tasks: {}",
+                self.acyclic_tasks.len(),
+            )?;
+            write!(f, "\t\t{}", self.acyclic_tasks.join("\n\t\t"))?;
+                
+        }
+        Ok(())
     }
 }
 
-// Helper function to format the vector of task and method pairs
+// Prints one category: the number of initiator tasks, then each initiator
+// with all of its cycles.
+fn format_task_cycles(
+    f: &mut Formatter<'_>,
+    name: &str,
+    tasks: &HashMap<String, Vec<Cycle>>,
+) -> std::fmt::Result {
+    if tasks.is_empty() {
+        return Ok(());
+    }
+    write!(f, "\n\t{}: {}", name, tasks.keys().len())?;
+    for initiator in tasks.keys() {
+        let cycles = &tasks[initiator];
+        write!(f, "\n\t\t{} ({} cycle(s))", initiator, cycles.len())?;
+        // for cycle in cycles {
+        //     write!(f, "\n\t\t\tCycle: ")?;
+        //     format_task_pairs(cycle, f)?;
+        // }
+    }
+    Ok(())
+}
+
 fn format_task_pairs(pairs: &[(String, String)], f: &mut Formatter<'_>) -> std::fmt::Result {
     for (i, (task, method)) in pairs.iter().enumerate() {
         if i != pairs.len() - 1 {
@@ -51,24 +90,23 @@ fn format_task_pairs(pairs: &[(String, String)], f: &mut Formatter<'_>) -> std::
     Ok(())
 }
 
-
 pub struct MetaData {
     pub recursion: RecursionInfo,
     pub nullables: Vec<String>,
     pub domain_name: String,
     pub n_actions: u32,
     pub n_tasks: u32,
-    pub n_methods: u32
+    pub n_methods: u32,
 }
 
 impl Display for MetaData {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), Error> {
-        writeln!(f, "Description")?;
-        writeln!(f, "\tHierarchy type: {}", self.recursion)?;
+        writeln!(f, "Description of Domain `{}`", self.domain_name)?;
+        writeln!(f, "\tRecursion Structure: {}", self.recursion)?;
         if self.nullables.len() == 0 {
             writeln!(f, "\tNullable Tasks: None")?;
         } else {
-            writeln!(f, "\tNullable Tasks:")?;
+            writeln!(f, "\tNullable Tasks: {}", self.nullables.len())?;
             for nullable in self.nullables.iter() {
                 writeln!(f, "\t\t{}", nullable)?
             }

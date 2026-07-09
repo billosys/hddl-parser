@@ -64,11 +64,11 @@ impl HDDLAnalyzer {
             AbstractSyntaxTree::Domain(d) => {
                 let tdg = TDG::new(&d);
                 let nullables = tdg.compute_nullables();
-                let recursion_type = tdg.get_recursion_info(&nullables);
+                let recursion_type = tdg.classify_cycles(&nullables);
                 Ok(MetaData {
                     recursion: recursion_type,
                     nullables: nullables.iter().map(|x| x.to_string()).collect(),
-                    domain_name: String::new(),
+                    domain_name: d.name,
                     n_actions: d.actions.len() as u32,
                     n_tasks: d.compound_tasks.len() as u32,
                     n_methods: d.methods.len() as u32,
