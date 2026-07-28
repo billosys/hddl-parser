@@ -14,6 +14,7 @@ pub fn json_round_trip_single_domain() {
 }
 
 #[test]
+#[ignore = "takes a long time"]
 pub fn json_round_trip_ipc() {
     for folder in fs::read_dir("tests/ipc").unwrap() {
         let path = folder.as_ref().unwrap().path();

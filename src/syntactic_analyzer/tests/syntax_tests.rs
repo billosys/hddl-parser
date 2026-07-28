@@ -866,16 +866,13 @@ mod tests {
                 assert_eq!(ast.actions.len(), 1);
                 let action = &ast.actions[0];
                 assert_eq!(action.name, "a_1");
-                // a probabilistic block parses to the And of its Weighted branches
+                // a probabilistic block parses to the And of its Probabilistic branches
                 match &action.effects.as_ref().unwrap() {
                     Formula::And(branches) => {
                         assert_eq!(branches.len(), 2);
                         // branch 1: 0.8 (and (not (at p_2 p_3)) (at p_2))
-                        if let Formula::Weighted(weight, effect) = branches[0].as_ref() {
-                            match weight {
-                                NumberType::Real(x) => assert_eq!(*x, 0.8),
-                                _ => panic!("Parsing number failed."),
-                            }
+                        if let Formula::Probabilistic(probability, effect) = branches[0].as_ref() {
+                            assert_eq!(*probability, NumberType::Real(0.8));
                             if let Formula::And(conj) = effect.as_ref() {
                                 assert_eq!(conj.len(), 2);
                                 if let Formula::Not(inner) = conj[0].as_ref() {
@@ -901,23 +898,17 @@ mod tests {
                                 panic!("wrong formula")
                             }
                         } else {
-                            panic!("expected a weighted branch")
+                            panic!("expected a probability branch")
                         }
 
                         // branch 2: 0.2 (probabilistic 0.5 (hold p_2 p_3) 0.5 (not (at p_2)))
-                        if let Formula::Weighted(weight, effect) = branches[1].as_ref() {
-                            match weight {
-                                NumberType::Real(x) => assert_eq!(*x, 0.2),
-                                _ => panic!("Parsing number failed."),
-                            }
-                            // the nested probabilistic is itself an And of Weighted
+                        if let Formula::Probabilistic(probability, effect) = branches[1].as_ref() {
+                            assert_eq!(*probability, NumberType::Real(0.2));
+                            // the nested probabilistic is itself an And of Probabilistic
                             if let Formula::And(nested) = effect.as_ref() {
                                 assert_eq!(nested.len(), 2);
-                                if let Formula::Weighted(w, e) = nested[0].as_ref() {
-                                    match w {
-                                        NumberType::Real(x) => assert_eq!(*x, 0.5),
-                                        _ => panic!("Parsing number failed."),
-                                    }
+                                if let Formula::Probabilistic(p, e) = nested[0].as_ref() {
+                                    assert_eq!(*p, NumberType::Real(0.5));
                                     if let Formula::Atom(pred) = e.as_ref() {
                                         assert_eq!(pred.name, "hold");
                                         assert_eq!(pred.variables.len(), 2);
@@ -927,13 +918,10 @@ mod tests {
                                         panic!("wrong formula")
                                     }
                                 } else {
-                                    panic!("expected a weighted branch")
+                                    panic!("expected a probability branch")
                                 }
-                                if let Formula::Weighted(w, e) = nested[1].as_ref() {
-                                    match w {
-                                        NumberType::Real(x) => assert_eq!(*x, 0.5),
-                                        _ => panic!("Parsing number failed."),
-                                    }
+                                if let Formula::Probabilistic(p, e) = nested[1].as_ref() {
+                                    assert_eq!(*p, NumberType::Real(0.5));
                                     if let Formula::Not(inner) = e.as_ref() {
                                         if let Formula::Atom(pred) = inner.as_ref() {
                                             assert_eq!(pred.name, "at");
@@ -946,19 +934,44 @@ mod tests {
                                         panic!("wrong formula")
                                     }
                                 } else {
-                                    panic!("expected a weighted branch")
+                                    panic!("expected a probability branch")
                                 }
                             } else {
                                 panic!("expected nested probabilistic")
                             }
                         } else {
-                            panic!("expected a weighted branch")
+                            panic!("expected a probability branch")
                         }
                     }
                     _ => panic!("wrong formula"),
                 }
             }
             _ => panic!("parsing errors"),
+        }
+    }
+
+    #[test]
+    pub fn out_of_range_probability_test() {
+        let program = String::from(
+            "(define (domain bal)
+                (:action a_1
+                :parameters (p_1 p_2 - t1)
+                :precondition (at p_1)
+                :effect (probabilistic
+                    1.5 (at p_2)
+                    )
+                )
+            )",
+        )
+        .into_bytes();
+        let lexer = LexicalAnalyzer::new(&program);
+        match Parser::new(lexer).parse() {
+            Err(ParsingError::Syntactic(error)) => {
+                assert_eq!(error.expected, "a probability in [0, 1]");
+                assert_eq!(error.found, "1.5");
+            }
+            Err(error) => panic!("{:?}", error),
+            Ok(_) => panic!("out-of-range probability was accepted"),
         }
     }
 

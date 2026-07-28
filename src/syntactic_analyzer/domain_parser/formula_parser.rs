@@ -151,7 +151,7 @@ impl<'a> Parser<'a> {
                             return Err(ParsingError::Syntactic(error));
                         }
                     },
-                    // Stochastic Operations (represented as the And of Weighted branches)
+                    // Stochastic Operations (represented as the And of Probabilistic branches)
                     Token::Operator(OperationType::Probabilistic) => {
                         let mut branches = vec![];
                         loop {
@@ -160,8 +160,20 @@ impl<'a> Parser<'a> {
                                 Token::Punctuator(PunctuationType::RParentheses) => {
                                     return Ok(Formula::And(branches));
                                 }
-                                // a probability weight, immediately followed by its effect
-                                Token::Number(weight) => {
+                                // a probability, immediately followed by its effect
+                                Token::Number(probability) => {
+                                    let value = match &probability {
+                                        NumberType::Real(r) => *r,
+                                        NumberType::Integer(i) => *i as f64,
+                                    };
+                                    if !(0.0..=1.0).contains(&value) {
+                                        let error = SyntacticError {
+                                            expected: "a probability in [0, 1]".to_string(),
+                                            found: probability.to_string(),
+                                            position: self.tokenizer.get_last_token_position(),
+                                        };
+                                        return Err(ParsingError::Syntactic(error));
+                                    }
                                     let f = self.parse_formula()?;
                                     if let Formula::Empty = f {
                                         let error = SyntacticError {
@@ -171,7 +183,7 @@ impl<'a> Parser<'a> {
                                         };
                                         return Err(ParsingError::Syntactic(error));
                                     }
-                                    branches.push(Box::new(Formula::Weighted(weight, Box::new(f))));
+                                    branches.push(Box::new(Formula::Probabilistic(probability, Box::new(f))));
                                 }
                                 token => {
                                     let error = SyntacticError {

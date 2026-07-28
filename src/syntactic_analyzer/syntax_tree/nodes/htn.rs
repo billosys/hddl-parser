@@ -8,7 +8,7 @@ use super::*;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct InitialTaskNetwork<'a> {
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub parameters: Option<Vec<Symbol<'a>>>,
     #[serde(borrow)]
     pub tn: HTN<'a>

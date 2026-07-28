@@ -2,7 +2,7 @@ use std::fmt;
 
 use serde::{Deserialize, Serialize};
 
-use crate::lexical_analyzer::NumberType;
+use crate::NumberType;
 
 use super::*;
 
@@ -20,8 +20,8 @@ pub enum Formula<'a> {
     Exists(Vec<Symbol<'a>>, Box<Formula<'a>>),
     // ∀vars: formula
     ForAll(Vec<Symbol<'a>>, Box<Formula<'a>>),
-    // probability, weights, and other quantities.
-    Weighted(NumberType, Box<Formula<'a>>),
+    // a formula holding with the given probability in [0, 1]
+    Probabilistic(NumberType, Box<Formula<'a>>),
     // formula = formula'
     Equals(#[serde(borrow)] &'a str, &'a str),
 }
@@ -50,7 +50,7 @@ impl<'a> Formula<'a> {
                     predicates.extend(q.get_propositional_predicates().iter());
                 }
             },
-            Formula::Weighted(_, q) => {
+            Formula::Probabilistic(_, q) => {
                 predicates.extend(q.get_propositional_predicates().iter());
             }
             Formula::Equals(_, _) => {}
@@ -79,39 +79,51 @@ impl<'a> Formula<'a> {
 
 impl<'a> fmt::Display for Formula<'a> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        fn join(terms: &[Box<Formula>]) -> String {
+            terms.iter().map(|term| term.to_string()).collect::<Vec<_>>().join(" ")
+        }
+        // an implication side is a conjunction, but a single conjunct needs no "and" wrapper
+        fn implication_side(terms: &[Box<Formula>]) -> String {
+            match terms {
+                [term] => term.to_string(),
+                _ => format!("(and {})", join(terms)),
+            }
+        }
+        fn typed_vars(vars: &[Symbol]) -> String {
+            vars.iter()
+                .map(|var| match var.symbol_type {
+                    Some(t) => format!("{} - {}", var.name, t),
+                    None => var.name.to_string(),
+                })
+                .collect::<Vec<_>>()
+                .join(" ")
+        }
         match self {
-            Formula::Empty => write!(f, "∅"),
-            Formula::Atom(predicate) => write!(f, "{}", predicate.to_string()),
-            Formula::Not(inner) => write!(f, "¬({})", inner),
-            Formula::And(terms) => {
-                let terms_str = terms.iter().map(|term| format!("{}", term)).collect::<Vec<_>>().join(" ∧ ");
-                write!(f, "({})", terms_str)
+            Formula::Empty => write!(f, "()"),
+            Formula::Atom(predicate) => {
+                write!(f, "({}", predicate.name)?;
+                for var in predicate.variables.iter() {
+                    write!(f, " {}", var.name)?;
+                }
+                write!(f, ")")
             }
-            Formula::Or(terms) => {
-                let terms_str = terms.iter().map(|term| format!("{}", term)).collect::<Vec<_>>().join(" ∨ ");
-                write!(f, "({})", terms_str)
-            }
-            Formula::Xor(terms) => {
-                let terms_str = terms.iter().map(|term| format!("{}", term)).collect::<Vec<_>>().join(" ⊕ ");
-                write!(f, "({})", terms_str)
-            }
+            Formula::Not(inner) => write!(f, "(not {})", inner),
+            Formula::And(terms) => write!(f, "(and {})", join(terms)),
+            Formula::Or(terms) => write!(f, "(or {})", join(terms)),
+            Formula::Xor(terms) => write!(f, "(oneof {})", join(terms)),
             Formula::Imply(lhs, rhs) => {
-                let lhs_str = lhs.iter().map(|term| format!("{}", term)).collect::<Vec<_>>().join(" ∧ ");
-                let rhs_str = rhs.iter().map(|term| format!("{}", term)).collect::<Vec<_>>().join(" ∧ ");
-                write!(f, "({}) ⇒ ({})", lhs_str, rhs_str)
+                write!(f, "(when {} {})", implication_side(lhs), implication_side(rhs))
             }
             Formula::Exists(vars, inner) => {
-                let vars_str = vars.iter().map(|var| format!("{}", var.name)).collect::<Vec<_>>().join(", ");
-                write!(f, "∃{}: {}", vars_str, inner)
+                write!(f, "(exists ({}) {})", typed_vars(vars), inner)
             }
             Formula::ForAll(vars, inner) => {
-                let vars_str = vars.iter().map(|var| format!("{}", var.name)).collect::<Vec<_>>().join(", ");
-                write!(f, "∀{}: {}", vars_str, inner)
+                write!(f, "(forall ({}) {})", typed_vars(vars), inner)
             }
-            Formula::Weighted(weight, terms) => {
-                write!(f, "weight: {}, formula: {}", weight, terms)
+            Formula::Probabilistic(probability, terms) => {
+                write!(f, "(probabilistic {} {})", probability, terms)
             }
-            Formula::Equals(lhs, rhs) => write!(f, "{} = {}", lhs, rhs),
+            Formula::Equals(lhs, rhs) => write!(f, "(= {} {})", lhs, rhs),
         }
     }
 }
