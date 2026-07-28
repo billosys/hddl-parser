@@ -1,7 +1,7 @@
 use super::*;
 
 impl<'a> Parser<'a> {
-    pub fn parse_formula(&'a self) -> Result<Formula, ParsingError> {
+    pub fn parse_formula(&self) -> Result<Formula<'a>, ParsingError> {
         match self.tokenizer.get_token()? {
             Token::Punctuator(PunctuationType::RParentheses) => {
                 return Ok(Formula::Empty);

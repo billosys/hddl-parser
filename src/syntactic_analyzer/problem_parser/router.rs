@@ -1,7 +1,7 @@
 use super::*;
 
 impl <'a> Parser<'a> {
-    pub fn parse_problem(&'a self, meta_data: ProblemDefinition<'a>) -> Result<ProblemAST<'a>, ParsingError> {
+    pub fn parse_problem(&self, meta_data: ProblemDefinition<'a>) -> Result<ProblemAST<'a>, ParsingError> {
         let mut syntax_tree = ProblemAST::new();
         loop {
             match self.tokenizer.get_token()? {

@@ -1,7 +1,7 @@
 use super::*;
 
 impl <'a> Parser <'a> {
-    pub fn parse_action(&'a self) -> Result<Action, ParsingError> {
+    pub fn parse_action(&self) -> Result<Action<'a>, ParsingError> {
         let task = self.parse_task()?;
         let mut preconditions = None;
         let mut effects = None;

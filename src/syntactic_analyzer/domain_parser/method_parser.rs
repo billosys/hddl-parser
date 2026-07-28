@@ -1,7 +1,7 @@
 use super::*;
 
 impl<'a> Parser<'a> {
-    pub fn parse_method(&'a self) -> Result<Method<'a>, ParsingError> {
+    pub fn parse_method(&self) -> Result<Method<'a>, ParsingError> {
         match self.tokenizer.get_token()? {
             Token::Identifier(method_name) => {
                 let name = Symbol::new(

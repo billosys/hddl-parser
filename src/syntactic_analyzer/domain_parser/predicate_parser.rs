@@ -1,7 +1,7 @@
 use super::*;
 
 impl<'a> Parser<'a> {
-    pub fn parse_predicates(&'a self) -> Result<Vec<Predicate<'a>>, ParsingError> {
+    pub fn parse_predicates(&self) -> Result<Vec<Predicate<'a>>, ParsingError> {
         let mut finished = false;
         let mut predicates = vec![];
         while !finished {
@@ -27,7 +27,7 @@ impl<'a> Parser<'a> {
     }
 
     // parses a SINGLE predicate definition
-    fn parse_predicate_definition(&'a self) -> Result<Predicate<'a>, ParsingError> {
+    fn parse_predicate_definition(&self) -> Result<Predicate<'a>, ParsingError> {
         match self.tokenizer.get_token()? {
             Token::Identifier(predicate_name) => {
                 return Ok(Predicate {

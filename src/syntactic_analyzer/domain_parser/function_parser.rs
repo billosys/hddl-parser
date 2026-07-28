@@ -1,7 +1,7 @@
 use super::*;
 
 impl<'a> Parser<'a> {
-    pub fn parse_functions(&'a self) -> Result<Vec<Function<'a>>, ParsingError> {
+    pub fn parse_functions(&self) -> Result<Vec<Function<'a>>, ParsingError> {
         let mut finished = false;
         let mut functions = vec![];
         while !finished {
@@ -27,7 +27,7 @@ impl<'a> Parser<'a> {
     }
 
     // parses a SINGLE function definition
-    fn parse_function_definition(&'a self) -> Result<Function<'a>, ParsingError> {
+    fn parse_function_definition(&self) -> Result<Function<'a>, ParsingError> {
         match self.tokenizer.get_token()? {
             Token::Identifier(function_name) => Ok(Function {
                 name: function_name,

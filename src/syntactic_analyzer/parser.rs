@@ -10,7 +10,7 @@ impl<'a> Parser<'a> {
     pub fn new(tokenizer: LexicalAnalyzer<'a>) -> Parser<'a> {
         Parser { tokenizer }
     }
-    pub fn parse(&'a self) -> Result<AbstractSyntaxTree<'a>, ParsingError> {
+    pub fn parse(&self) -> Result<AbstractSyntaxTree<'a>, ParsingError> {
         // match opening '('
         match self.tokenizer.get_token()? {
             Token::Punctuator(PunctuationType::LParentheses) => {
@@ -55,7 +55,7 @@ impl<'a> Parser<'a> {
         return variant;
     }
 
-    fn parse_document_type(&self) -> Result<DefinitionType, ParsingError> {
+    fn parse_document_type(&self) -> Result<DefinitionType<'a>, ParsingError> {
         // match keyword 'define'
         match self.tokenizer.get_token()? {
             Token::Keyword(KeywordName::Define) => {
@@ -101,7 +101,7 @@ impl<'a> Parser<'a> {
         }
     }
 
-    fn parse_domain_header(&self) -> Result<DefinitionType, ParsingError> {
+    fn parse_domain_header(&self) -> Result<DefinitionType<'a>, ParsingError> {
         match self.tokenizer.get_token()? {
             Token::Identifier(domain_name) => {
                 // match closing paranthesis
@@ -130,7 +130,7 @@ impl<'a> Parser<'a> {
         }
     }
 
-    pub fn parse_problem_header(&self) -> Result<DefinitionType, ParsingError> {
+    pub fn parse_problem_header(&self) -> Result<DefinitionType<'a>, ParsingError> {
         // match problem name
         match self.tokenizer.get_token()? {
             Token::Identifier(problem_name) => {

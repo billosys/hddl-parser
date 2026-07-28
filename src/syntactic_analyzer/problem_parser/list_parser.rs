@@ -1,7 +1,7 @@
 use super::*;
 
 impl<'a> Parser<'a> {
-    pub fn parse_args(&'a self) -> Result<Vec<Symbol<'a>>, ParsingError> {
+    pub fn parse_args(&self) -> Result<Vec<Symbol<'a>>, ParsingError> {
         let mut objects = vec![];
         let mut result = vec![];
         let mut token = self.tokenizer.get_token()?;

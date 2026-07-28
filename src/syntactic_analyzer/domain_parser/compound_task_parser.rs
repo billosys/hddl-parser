@@ -1,7 +1,7 @@
 use super::*;
 
 impl<'a> Parser<'a> {
-    pub fn parse_task(&'a self) -> Result<Task, ParsingError> {
+    pub fn parse_task(&self) -> Result<Task<'a>, ParsingError> {
         match self.tokenizer.get_token()? {
             Token::Identifier(task_name) => {
                 let task_name_pos = self.tokenizer.get_last_token_position();

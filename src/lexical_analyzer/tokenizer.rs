@@ -23,7 +23,7 @@ impl<'a> LexicalAnalyzer<'a> {
     }
 
     // get the next token without advancing the cursor
-    pub fn lookahead(&self) -> Result<Token, LexicalError> {
+    pub fn lookahead(&self) -> Result<Token<'a>, LexicalError> {
         return self.parse(true);
     }
 
@@ -31,11 +31,11 @@ impl<'a> LexicalAnalyzer<'a> {
         self.last_token_pos.get()
     }
 
-    pub fn get_token(&self) -> Result<Token, LexicalError> {
+    pub fn get_token(&self) -> Result<Token<'a>, LexicalError> {
         return self.parse(false);
     }
 
-    fn parse(&self, peek: bool) -> Result<Token, LexicalError> {
+    fn parse(&self, peek: bool) -> Result<Token<'a>, LexicalError> {
         self.skip_whitespaces();
         if self.cursor.get() == self.program.len() {
             return Ok(Token::EOF);
@@ -181,7 +181,7 @@ impl<'a> LexicalAnalyzer<'a> {
     }
 
     // get next lexeme and new cursor position (to commit peek)
-    fn peek_lexeme(&self, init_cur_pos: usize) -> Result<(&str, usize), LexicalError> {
+    fn peek_lexeme(&self, init_cur_pos: usize) -> Result<(&'a str, usize), LexicalError> {
         let mut cursor_pos = init_cur_pos;
         let mut next_ch = self.program[cursor_pos] as char;
         let mut is_invalid = false;

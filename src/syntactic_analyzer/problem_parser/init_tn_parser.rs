@@ -1,7 +1,7 @@
 use super::*;
 
 impl<'a> Parser<'a> {
-    pub fn parse_initial_tn(&'a self) -> Result<InitialTaskNetwork<'a>, ParsingError> {
+    pub fn parse_initial_tn(&self) -> Result<InitialTaskNetwork<'a>, ParsingError> {
         loop {
             match self.tokenizer.lookahead()? {
                 Token::Keyword(KeywordName::Parameters) => {
@@ -53,7 +53,7 @@ impl<'a> Parser<'a> {
         }
     }
 
-    pub fn parse_htn(&'a self) -> Result<HTN<'a>, ParsingError> {
+    pub fn parse_htn(&self) -> Result<HTN<'a>, ParsingError> {
         let mut subtasks = vec![];
         let mut orderings = vec![];
         let mut constraints = None;
@@ -234,7 +234,7 @@ impl<'a> Parser<'a> {
     }
 
     // parse a single ordering constraint
-    fn parse_ordering(&'a self) -> Result<Vec<(&'a str, &'a str)>, ParsingError> {
+    fn parse_ordering(&self) -> Result<Vec<(&'a str, &'a str)>, ParsingError> {
         let mut orderings: Vec<(&str, &str)> = vec![];
         match self.tokenizer.get_token()? {
             Token::Operator(OperationType::LessThan) => match self.tokenizer.get_token()? {
@@ -277,7 +277,7 @@ impl<'a> Parser<'a> {
         }
     }
 
-    fn parse_subtasks(&self) -> Result<Vec<Subtask>, ParsingError> {
+    fn parse_subtasks(&self) -> Result<Vec<Subtask<'a>>, ParsingError> {
         match self.tokenizer.get_token()? {
             Token::Punctuator(PunctuationType::LParentheses) => {
                 match self.tokenizer.lookahead()? {
@@ -336,7 +336,7 @@ impl<'a> Parser<'a> {
     }
 
     // parses a single subtask
-    fn parse_subtask(&'a self) -> Result<Subtask, ParsingError> {
+    fn parse_subtask(&self) -> Result<Subtask<'a>, ParsingError> {
         match self.tokenizer.get_token()? {
             Token::Identifier(id) => {
                 let id_symbol = Symbol::new(
@@ -479,7 +479,7 @@ impl<'a> Parser<'a> {
         }
     }
 
-    pub fn parse_constraints(&'a self) -> Result<Vec<Constraint<'a>>, ParsingError> {
+    pub fn parse_constraints(&self) -> Result<Vec<Constraint<'a>>, ParsingError> {
         match self.tokenizer.get_token()? {
             Token::Punctuator(PunctuationType::LParentheses) => {
                 let mut constraints = vec![];
@@ -539,7 +539,7 @@ impl<'a> Parser<'a> {
         }
     }
 
-    pub fn parse_constraint(&'a self) -> Result<Constraint<'a>, ParsingError> {
+    pub fn parse_constraint(&self) -> Result<Constraint<'a>, ParsingError> {
         match self.tokenizer.get_token()? {
             Token::Operator(OperationType::Not) => match self.tokenizer.get_token()? {
                 Token::Punctuator(PunctuationType::LParentheses) => {
