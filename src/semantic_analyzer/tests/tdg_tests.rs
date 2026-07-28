@@ -137,7 +137,13 @@ pub fn tdg_non_recursive_test () {
                 AbstractSyntaxTree::Problem(p_ast) => {
                     let tdg = TDG::new(&d);
                     let nullables = tdg.compute_nullables();
-                    assert_eq!(tdg.get_recursion_info(&nullables), RecursionInfo::NonRecursive)
+                    let recursion_info = tdg.classify_cycles(&nullables);
+                    assert!(recursion_info.recursive_tasks.len() == 0);
+                    assert!(recursion_info.eps_prefix_tasks.len() == 0);
+                    assert!(recursion_info.empty_recursive_tasks.len() == 0);
+                    assert!(recursion_info.growing_empty_recursive_tasks.len() == 0);
+                    assert!(recursion_info.grow_and_shrink_tasks.len() == 0);
+                    assert!(recursion_info.acyclic_tasks.len() > 0);
                 }
                 _ => panic!()
             }
@@ -201,10 +207,8 @@ pub fn tdg_recursive_test () {
                 AbstractSyntaxTree::Problem(p_ast) => {
                     let tdg = TDG::new(&d);
                     let nullables = tdg.compute_nullables();
-                    match tdg.get_recursion_info(&nullables) {
-                        RecursionInfo::Recursive(_) => {}
-                        _ => panic!()
-                    }
+                    let recursion_info = tdg.classify_cycles(&nullables);
+                    assert!(recursion_info.recursive_tasks.len() > 0);
                 }
                 _ => panic!()
             }
@@ -273,10 +277,8 @@ pub fn tdg_grow_and_shrink_cycle_test () {
                 AbstractSyntaxTree::Problem(p_ast) => {
                     let tdg = TDG::new(&d);
                     let nullables = tdg.compute_nullables();
-                    match tdg.get_recursion_info(&nullables) {
-                        RecursionInfo::GrowAndShrinkRecursion(_) => {}
-                        _ => panic!()
-                    }
+                    let recursion_info =  tdg.classify_cycles(&nullables);
+                    assert!(recursion_info.grow_and_shrink_tasks.len() > 0);
                 }
                 _ => panic!()
             }
@@ -351,10 +353,8 @@ pub fn tdg_grow_and_shrink_cycle_partial_order_1_test () {
                 AbstractSyntaxTree::Problem(p_ast) => {
                     let tdg = TDG::new(&d);
                     let nullables = tdg.compute_nullables();
-                    match tdg.get_recursion_info(&nullables) {
-                        RecursionInfo::GrowAndShrinkRecursion(_) => {}
-                        _ => panic!()
-                    }
+                    let recursion_info = tdg.classify_cycles(&nullables);
+                    assert!(recursion_info.grow_and_shrink_tasks.len() > 0);
                 }
                 _ => panic!()
             }
@@ -427,10 +427,8 @@ pub fn tdg_growing_cycle_test () {
                 AbstractSyntaxTree::Problem(p_ast) => {
                     let tdg = TDG::new(&d);
                     let nullables = tdg.compute_nullables();
-                    match tdg.get_recursion_info(&nullables) {
-                        RecursionInfo::GrowingEmptyPrefixRecursion(_) => {}
-                        _ => panic!()
-                    }
+                    let recursion_info = tdg.classify_cycles(&nullables);
+                    assert!(recursion_info.growing_empty_recursive_tasks.len() > 0);
                 }
                 _ => panic!()
             }
@@ -514,10 +512,8 @@ pub fn satelite_domain_cycle_test () {
                 AbstractSyntaxTree::Problem(p_ast) => {
                     let tdg = TDG::new(&d);
                     let nullables = tdg.compute_nullables();
-                    match tdg.get_recursion_info(&nullables) {
-                        RecursionInfo::Recursive(_) => {}
-                        _ => panic!()
-                    }
+                    let recursion_info = tdg.classify_cycles(&nullables);
+                    assert!(recursion_info.recursive_tasks.len() > 0);
                 }
                 _ => panic!()
             }
