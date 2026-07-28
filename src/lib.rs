@@ -16,35 +16,62 @@ use semantic_analyzer::*;
 use syntactic_analyzer::AbstractSyntaxTree;
 use syntactic_analyzer::FileVariant;
 
-pub struct HDDLAnalyzer {}
+pub struct HDDLAnalyzer<'a> {
+    pub domain: AbstractSyntaxTree<'a>,
+    pub problem: Option<AbstractSyntaxTree<'a>>,
+}
 
-impl HDDLAnalyzer {
-    pub fn verify(
-        domain: &Vec<u8>,
-        problem: Option<&Vec<u8>>,
-    ) -> Result<Vec<output::WarningType>, output::ParsingError> {
+impl<'a> HDDLAnalyzer<'a> {
+    pub fn new(
+        domain: &'a Vec<u8>,
+        problem: Option<&'a Vec<u8>>,
+    ) -> Result<HDDLAnalyzer<'a>, ParsingError> {
         let lexer = LexicalAnalyzer::new(&domain);
         let domain_parser = syntactic_analyzer::Parser::new(lexer);
         let domain_ast = domain_parser.parse()?;
-        if let AbstractSyntaxTree::Domain(d) = domain_ast {
-            let domain_semantic_verifier = DomainSemanticAnalyzer::new(&d);
-            let symbol_table = domain_semantic_verifier.verify_domain()?;
+        if let AbstractSyntaxTree::Domain(_) = domain_ast {
             match problem {
                 Some(p) => {
                     let lexer = LexicalAnalyzer::new(p);
                     let problem_parser = syntactic_analyzer::Parser::new(lexer);
                     let problem_ast = problem_parser.parse()?;
                     match problem_ast {
-                        AbstractSyntaxTree::Problem(p_ast) => {
-                            let problem_semantic_verifier =
-                                ProblemSemanticAnalyzer::new(&p_ast, symbol_table);
-                            let warnings = problem_semantic_verifier.verify_problem()?;
-                            Ok(warnings)
-                        }
+                        AbstractSyntaxTree::Problem(_) => Ok(HDDLAnalyzer {
+                            domain: domain_ast,
+                            problem: Some(problem_ast),
+                        }),
                         _ => {
                             panic!("expected problem, found domain")
                         }
                     }
+                }
+                None => Ok(HDDLAnalyzer {
+                    domain: domain_ast,
+                    problem: None,
+                }),
+            }
+        } else {
+            panic!("expected domain, found problem")
+        }
+    }
+
+    pub fn verify(
+        domain: &Vec<u8>,
+        problem: Option<&Vec<u8>>,
+    ) -> Result<Vec<output::WarningType>, output::ParsingError> {
+        let analyzer = HDDLAnalyzer::new(domain, problem)?;
+        if let AbstractSyntaxTree::Domain(ref d) = analyzer.domain {
+            let domain_semantic_verifier = DomainSemanticAnalyzer::new(d);
+            let symbol_table = domain_semantic_verifier.verify_domain()?;
+            match &analyzer.problem {
+                Some(AbstractSyntaxTree::Problem(p_ast)) => {
+                    let problem_semantic_verifier =
+                        ProblemSemanticAnalyzer::new(p_ast, symbol_table);
+                    let warnings = problem_semantic_verifier.verify_problem()?;
+                    Ok(warnings)
+                }
+                Some(AbstractSyntaxTree::Domain(_)) => {
+                    panic!("expected problem, found domain")
                 }
                 None => Ok(symbol_table.warnings),
             }
@@ -90,14 +117,11 @@ impl HDDLAnalyzer {
                     let problem_ast = problem_parser.parse()?;
                     match problem_ast {
                         AbstractSyntaxTree::Problem(p) => {
-                            let root = HashMap::from(
-                                [
-                                    ("domain", AbstractSyntaxTree::Domain(d)),
-                                    ("problem", AbstractSyntaxTree::Problem(p))
-                                ]
-                            );
+                            let root = HashMap::from([
+                                ("domain", AbstractSyntaxTree::Domain(d)),
+                                ("problem", AbstractSyntaxTree::Problem(p)),
+                            ]);
                             return Ok(serde_json::to_string_pretty(&root).unwrap());
-
                         }
                         _ => {
                             panic!("expected problem, found domain")
@@ -105,11 +129,7 @@ impl HDDLAnalyzer {
                     }
                 }
                 None => {
-                    let root = HashMap::from(
-                        [
-                            ("domain", AbstractSyntaxTree::Domain(d)),
-                        ]
-                    );
+                    let root = HashMap::from([("domain", AbstractSyntaxTree::Domain(d))]);
                     return Ok(serde_json::to_string_pretty(&root).unwrap());
                 }
             },
