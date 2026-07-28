@@ -1,16 +1,18 @@
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
 use crate::TokenPosition;
 
 use super::*;
 
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Method<'a> {
+    #[serde(borrow)]
     pub name: Symbol<'a>,
-    pub task: Symbol<'a>, 
+    pub task: Symbol<'a>,
     pub task_terms: Vec<Symbol<'a>>,
     pub params: Vec<Symbol<'a>>,
+    #[serde(default)]
     pub precondition: Option<Formula<'a>>,
     pub tn: HTN<'a>
 }

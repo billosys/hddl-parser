@@ -1,14 +1,15 @@
 use std::{borrow::Borrow, hash::Hash};
 
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
 use crate::TokenPosition;
 
 use super::*;
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Task<'a> {
     pub name: &'a str,
+    #[serde(skip)]
     pub name_pos: TokenPosition,
     pub parameters: Vec<Symbol<'a>>
 }

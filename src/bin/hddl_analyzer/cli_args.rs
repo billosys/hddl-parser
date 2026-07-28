@@ -10,8 +10,10 @@ pub struct CLIArgs {
 pub enum Commands {
     Verify(InputArgs),
     Metadata(InputArgs),
-    #[command(name = "to_json")] 
-    Serialize(InputArgs)
+    #[command(name = "to_json")]
+    Serialize(InputArgs),
+    #[command(name = "from_json")]
+    Deserialize(InputArgs)
 }
 
 #[derive(Parser)]

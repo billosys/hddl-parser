@@ -152,7 +152,7 @@ impl From<ParsingError> for Diagnostic {
                 let line_start = lexical_error.position.line;
                 Diagnostic::new(
                     Range {
-                        start: Position::new(line_start - 1, 0),
+                        start: Position::new(line_start.saturating_sub(1), 0),
                         end: Position::new(line_start, 0),
                     },
                     Some(DiagnosticSeverity::ERROR),
@@ -167,13 +167,28 @@ impl From<ParsingError> for Diagnostic {
                 let line_start = syntactic_error.position.line;
                 Diagnostic::new(
                     Range {
-                        start: Position::new(line_start - 1, 0),
+                        start: Position::new(line_start.saturating_sub(1), 0),
                         end: Position::new(line_start, 0),
                     },
                     Some(DiagnosticSeverity::ERROR),
                     None,
                     source,
                     syntactic_error.to_string(),
+                    None,
+                    None,
+                )
+            }
+            ParsingError::JSON(json_error) => {
+                let line_start = json_error.line.saturating_sub(1);
+                Diagnostic::new(
+                    Range {
+                        start: Position::new(line_start, 0),
+                        end: Position::new(line_start + 1, 0),
+                    },
+                    Some(DiagnosticSeverity::ERROR),
+                    None,
+                    source,
+                    json_error.to_string(),
                     None,
                     None,
                 )
@@ -189,7 +204,7 @@ impl From<ParsingError> for Diagnostic {
                     | SemanticErrorType::DuplicateParameterDeclaration(ref duplicate) => {
                         Diagnostic::new(
                             Range {
-                                start: Position { line: duplicate.second_pos.line - 1, character: 0 },
+                                start: Position { line: duplicate.second_pos.line.saturating_sub(1), character: 0 },
                                 end: Position { line: duplicate.second_pos.line, character: 0 }
                             },
                             Some(DiagnosticSeverity::ERROR), 
@@ -202,7 +217,7 @@ impl From<ParsingError> for Diagnostic {
                                         // TODO: fix the dummy URI
                                         uri: Url::parse("//").unwrap(),
                                         range: Range {
-                                            start: Position { line: duplicate.first_pos.line - 1, character: 0 },
+                                            start: Position { line: duplicate.first_pos.line.saturating_sub(1), character: 0 },
                                             end: Position { line: duplicate.first_pos.line, character: 0 }
                                         }
                                     },
@@ -236,7 +251,7 @@ impl From<ParsingError> for Diagnostic {
                     | SemanticErrorType::UndefinedObject(ref undefined) => {
                         Diagnostic::new(
                             Range {
-                                start: Position { line: undefined.position.line - 1, character: 0 },
+                                start: Position { line: undefined.position.line.saturating_sub(1), character: 0 },
                                 end: Position { line: undefined.position.line, character: 0 }
                             },
                             Some(DiagnosticSeverity::ERROR), 
@@ -252,7 +267,7 @@ impl From<ParsingError> for Diagnostic {
                     | SemanticErrorType::InconsistentTaskArity(ref arity_error) => {
                         Diagnostic::new(
                             Range {
-                                start: Position { line: arity_error.position.line - 1, character: 0 },
+                                start: Position { line: arity_error.position.line.saturating_sub(1), character: 0 },
                                 end: Position { line: arity_error.position.line, character: 0 }
                             },
                             Some(DiagnosticSeverity::ERROR), 
@@ -267,7 +282,7 @@ impl From<ParsingError> for Diagnostic {
                     | SemanticErrorType::InconsistentTaskArgType(ref type_error) => {
                         Diagnostic::new(
                             Range {
-                                start: Position { line: type_error.position.line - 1, character: 0 },
+                                start: Position { line: type_error.position.line.saturating_sub(1), character: 0 },
                                 end: Position { line: type_error.position.line, character: 0 }
                             },
                             Some(DiagnosticSeverity::ERROR), 
@@ -297,7 +312,7 @@ impl From<ParsingError> for Diagnostic {
                     SemanticErrorType::CyclicOrderingDeclaration(pos) => {
                         Diagnostic::new(
                             Range {
-                                start: Position { line: pos.line - 1, character: 0 },
+                                start: Position { line: pos.line.saturating_sub(1), character: 0 },
                                 end: Position { line: pos.line, character: 0 }
                             },
                             Some(DiagnosticSeverity::ERROR), 

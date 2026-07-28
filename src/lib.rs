@@ -8,23 +8,23 @@ mod language_server;
 pub use language_server::RequestHandler;
 pub use transpiler::Transpiler;
 
-use crate::lexical_analyzer::TokenPosition;
+pub use crate::lexical_analyzer::*;
 use lexical_analyzer::LexicalAnalyzer;
-use output::MetaData;
-pub use output::{LexicalErrorType, ParsingError, SemanticErrorType, SyntacticError, WarningType};
-use syntactic_analyzer::*;
+pub use output::*;
+pub use syntactic_analyzer::*;
 use semantic_analyzer::*;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize)]
 pub struct HDDLProgram<'a> {
+    #[serde(borrow)]
     pub domain: DomainAST<'a>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub problem: Option<ProblemAST<'a>>,
 }
 
 impl<'a> HDDLProgram<'a> {
-    pub fn new(
+    pub fn from_hddl(
         domain: &'a Vec<u8>,
         problem: Option<&'a Vec<u8>>,
     ) -> Result<HDDLProgram<'a>, ParsingError> {
@@ -49,6 +49,11 @@ impl<'a> HDDLProgram<'a> {
             domain: domain_ast,
             problem: problem_ast,
         })
+    }
+
+    pub fn from_json(json: &'a str) -> Result<HDDLProgram<'a>, ParsingError> {
+        let json = json.strip_prefix('\u{feff}').unwrap_or(json);
+        Ok(serde_json::from_str(json)?)
     }
 
     pub fn verify(&self) -> Result<Vec<WarningType>, ParsingError> {

@@ -1,6 +1,6 @@
 use std::fmt;
 
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, PartialEq)]
 pub enum Token<'a> {
@@ -85,7 +85,7 @@ impl fmt::Display for OperationType {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy, Serialize)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy, Serialize, Deserialize)]
 pub enum RequirementType {
     MethodPreconditions,
     Hierarchy,
@@ -170,7 +170,7 @@ impl fmt::Display for KeywordName {
 }
 
 // TODO: Add support for lexing negative numbers
-#[derive(Debug, PartialEq, Clone, Serialize)]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub enum NumberType {
     Real(f64),
     Integer(i64)

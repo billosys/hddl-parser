@@ -53,7 +53,7 @@ impl<'a> TypeChecker<'a> {
                 if !self.type_hierarchy.contains_node(t) {
                     return Some(SemanticErrorType::UndefinedType(UndefinedSymbolError {
                         symbol: parameter.symbol_type.unwrap().to_string(),
-                        position: parameter.type_pos.unwrap(),
+                        position: parameter.type_pos.unwrap_or_default(),
                     }));
                 }
             }

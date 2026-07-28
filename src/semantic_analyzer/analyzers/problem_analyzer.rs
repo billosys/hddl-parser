@@ -53,7 +53,7 @@ impl<'a> ProblemSemanticAnalyzer<'a> {
             if !htn.tn.orderings.is_acyclic() {
                 return Err(
                     SemanticErrorType::CyclicOrderingDeclaration(
-                        htn.tn.ordering_pos.unwrap()
+                        htn.tn.ordering_pos.unwrap_or_default()
                     )
                 );
             }

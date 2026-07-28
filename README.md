@@ -25,6 +25,8 @@ With ```hddl_analyzer.exe```, you can execute the following commands.
 * To verify a domain, use ```/path/to/hddl_analyzer.exe verify /path/to/domain.hddl```
 * To verify a problem, use ```/path/to/hddl_analyzer.exe verify /path/to/domain.hddl -p /path/to/problem.hddl```
 * To get general information about the domain (e.g., hierarchy class), use ```/path/to/hddl_analyzer.exe metadata /path/to/domain.hddl```
+* To export the parsed model as JSON, use ```/path/to/hddl_analyzer.exe to_json /path/to/domain.hddl [-p /path/to/problem.hddl] [-o output.json]```
+* To load a (possibly modified) JSON export back and validate it, use ```/path/to/hddl_analyzer.exe from_json /path/to/program.json [-o normalized.json]```
 * For a complete list of commands, use ```/path/to/hddl_analyzer.exe --help```
 ## Language Server
 Executing ```language_server.exe```, activates the language server on the current terminal. At the moment, we only support communication via the standard IO, specified by the Language Server Protocol (LSP).

@@ -1,12 +1,12 @@
 use std::fmt;
 
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
 use crate::lexical_analyzer::NumberType;
 
 use super::*;
 
-#[derive(Clone, Debug, Serialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub enum Formula<'a> {
     Empty,
     Atom(Predicate<'a>),
@@ -23,7 +23,7 @@ pub enum Formula<'a> {
     // probability, weights, and other quantities.
     Weighted(NumberType, Box<Formula<'a>>),
     // formula = formula'
-    Equals(&'a str, &'a str),
+    Equals(#[serde(borrow)] &'a str, &'a str),
 }
 
 impl<'a> Formula<'a> {

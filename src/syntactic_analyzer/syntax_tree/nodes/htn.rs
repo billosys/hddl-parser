@@ -1,43 +1,50 @@
 use petgraph::prelude::GraphMap;
 use petgraph::algo::toposort;
 use petgraph::Directed;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
 use crate::TokenPosition;
 use super::*;
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct InitialTaskNetwork<'a> {
+    #[serde(default)]
     pub parameters: Option<Vec<Symbol<'a>>>,
+    #[serde(borrow)]
     pub tn: HTN<'a>
 }
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HTN<'a> {
+    #[serde(borrow)]
     pub subtasks: Vec<Subtask<'a>>,
+    #[serde(skip)]
     pub ordering_pos: Option<TokenPosition>,
     pub orderings: TaskOrdering<'a>,
-    pub constraints: Option<Vec<Constraint<'a>>>, 
+    #[serde(default)]
+    pub constraints: Option<Vec<Constraint<'a>>>,
 }
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Subtask<'a> {
+    #[serde(default)]
     pub id: Option<Symbol<'a>>,
+    #[serde(borrow)]
     pub task: Symbol<'a>,
     pub terms: Vec<Symbol<'a>>
 }
 
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum Constraint<'a> {
-    Equal(&'a str, &'a str),
-    NotEqual(&'a str, &'a str)
+    Equal(#[serde(borrow)] &'a str, &'a str),
+    NotEqual(#[serde(borrow)] &'a str, &'a str)
 }
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum TaskOrdering<'a> {
     Total,
-    Partial(Vec<(&'a str, &'a str)>)
+    Partial(#[serde(borrow)] Vec<(&'a str, &'a str)>)
 }
 
 impl <'a> TaskOrdering<'a> {

@@ -18,7 +18,7 @@ pub fn ipc_validation_test() {
             } else {
                 let problem_path = file.as_ref().unwrap().path();
                 let problem = fs::read(&problem_path).unwrap();
-                match HDDLProgram::new(&domain, Some(&problem))
+                match HDDLProgram::from_hddl(&domain, Some(&problem))
                     .and_then(|program| program.verify())
                 {
                     Err(token) => {

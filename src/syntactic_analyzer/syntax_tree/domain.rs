@@ -1,11 +1,14 @@
 use super::*;
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct DomainAST<'a> {
     pub name: String,
+    #[serde(default)]
     pub types: Option<Vec<Symbol<'a>>>,
+    #[serde(default)]
     pub constants: Option<Vec<Symbol<'a>>>,
     pub requirements: Vec<RequirementType>,
+    #[serde(borrow)]
     pub predicates: Vec<Predicate<'a>>,
     pub compound_tasks: Vec<Task<'a>>,
     pub methods: Vec<Method<'a>>,

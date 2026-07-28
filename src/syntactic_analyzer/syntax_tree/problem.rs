@@ -1,12 +1,15 @@
 use super::*;
 use crate::TokenPosition;
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct ProblemAST<'a> {
     pub requirements: Vec<RequirementType>,
+    #[serde(default)]
     pub init_tn: Option<InitialTaskNetwork<'a>>,
     pub init_state: Vec<Predicate<'a>>,
+    #[serde(default)]
     pub goal: Option<Formula<'a>>,
+    #[serde(borrow)]
     pub objects: Vec<Symbol<'a>>,
 }
 

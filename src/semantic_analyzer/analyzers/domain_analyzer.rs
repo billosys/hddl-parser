@@ -193,7 +193,7 @@ impl<'a> DomainSemanticAnalyzer<'a> {
             // Assert orderings are acyclic
             if !method.tn.orderings.is_acyclic() {
                 return Err(SemanticErrorType::CyclicOrderingDeclaration(
-                    method.tn.ordering_pos.unwrap(),
+                    method.tn.ordering_pos.unwrap_or_default(),
                 ));
             }
         }

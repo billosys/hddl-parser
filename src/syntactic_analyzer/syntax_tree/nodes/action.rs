@@ -1,18 +1,21 @@
 use std::hash::Hash;
 use std::borrow::Borrow;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
 use crate::lexical_analyzer::TokenPosition;
 
 use super::*;
 
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Action<'a> {
     pub name: &'a str,
+    #[serde(skip)]
     pub name_pos: TokenPosition,
     pub parameters: Vec<Symbol<'a>>,
+    #[serde(default)]
     pub preconditions: Option<Formula<'a>>,
+    #[serde(default)]
     pub effects: Option<Formula<'a>>
 }
 

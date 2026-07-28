@@ -3,7 +3,7 @@ mod nodes;
 mod problem;
 mod generic;
 
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
 pub use domain::DomainAST;
 pub use problem::ProblemAST;

@@ -1,14 +1,15 @@
 use std::{fmt::format, hash::Hash};
 
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
 use crate::TokenPosition;
 
 use super::*;
 
-#[derive(Clone, Debug, Serialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Predicate<'a> {
     pub name: &'a str,
+    #[serde(skip)]
     pub name_pos: TokenPosition,
     pub variables: Vec<Symbol<'a>>
 }

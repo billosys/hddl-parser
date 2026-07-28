@@ -19,7 +19,7 @@ pub fn main() {
         Commands::Metadata(info) => {
             let domain = fs::read(info.domain_path);
             match domain {
-                Ok(domain_content) => match HDDLProgram::new(&domain_content, None)
+                Ok(domain_content) => match HDDLProgram::from_hddl(&domain_content, None)
                     .and_then(|program| program.metadata())
                 {
                     Ok(result) => {
@@ -43,7 +43,7 @@ pub fn main() {
                         match problem {
                             Ok(problem_content) => {
                                 let output =
-                                    HDDLProgram::new(&domain_content, Some(&problem_content))
+                                    HDDLProgram::from_hddl(&domain_content, Some(&problem_content))
                                         .and_then(|program| program.verify());
                                 match output {
                                     Ok(warnings) => {
@@ -63,7 +63,7 @@ pub fn main() {
                         }
                     }
                     None => {
-                        let output = HDDLProgram::new(&domain_content, None)
+                        let output = HDDLProgram::from_hddl(&domain_content, None)
                             .and_then(|program| program.verify());
                         match output {
                             Ok(warnings) => {
@@ -92,7 +92,7 @@ pub fn main() {
                         match problem_bytes {
                             Ok(problem_content) => {
                                 let json_string =
-                                    HDDLProgram::new(&domain_content, Some(&problem_content))
+                                    HDDLProgram::from_hddl(&domain_content, Some(&problem_content))
                                         .map(|program| Transpiler::new(program).to_json());
                                 match json_string {
                                     Ok(output_string) => {
@@ -127,7 +127,7 @@ pub fn main() {
                         }
                     }
                     None => {
-                        let json_string = HDDLProgram::new(&domain_content, None)
+                        let json_string = HDDLProgram::from_hddl(&domain_content, None)
                             .map(|program| Transpiler::new(program).to_json());
                         match json_string {
                             Ok(output_string) => {
@@ -156,6 +156,49 @@ pub fn main() {
                         }
                     }
                 },
+                Err(read_error) => {
+                    eprintln!("{}[Error]{} {}", red, reset, read_error)
+                }
+            }
+        }
+        Commands::Deserialize(args) => {
+            let json = fs::read_to_string(args.domain_path);
+            match json {
+                Ok(json_content) => {
+                    let output = HDDLProgram::from_json(&json_content);
+                    match output {
+                        Ok(program) => {
+                            match program.verify() {
+                                Ok(warnings) => {
+                                    for warning in warnings {
+                                        println!("{}[Warning]{} {}", yellow, reset, warning);
+                                    }
+                                    println!("{}[Ok]{}", green, reset);
+                                }
+                                Err(parsing_error) => {
+                                    eprintln!("{}[Error]{} {}", red, reset, parsing_error);
+                                    return;
+                                }
+                            }
+                            if let Some(output_file) = args.output_file {
+                                let output_string = Transpiler::new(program).to_json();
+                                let mut output_path = env::current_dir().unwrap();
+                                output_path.push(&output_file);
+                                match fs::write(&output_path, output_string) {
+                                    Ok(_) => {
+                                        println!("Result successfully written to {}", output_file);
+                                    }
+                                    Err(err) => {
+                                        eprintln!("{}[Error]{} {}", red, reset, err)
+                                    }
+                                }
+                            }
+                        }
+                        Err(parsing_error) => {
+                            eprintln!("{}[Error]{} {}", red, reset, parsing_error)
+                        }
+                    }
+                }
                 Err(read_error) => {
                     eprintln!("{}[Error]{} {}", red, reset, read_error)
                 }
