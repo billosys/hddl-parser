@@ -2,19 +2,19 @@ mod lexical_analyzer;
 mod output;
 mod semantic_analyzer;
 mod syntactic_analyzer;
+mod transpiler;
 
 mod language_server;
 pub use language_server::RequestHandler;
+pub use transpiler::Transpiler;
 
 use crate::lexical_analyzer::TokenPosition;
 use lexical_analyzer::LexicalAnalyzer;
 use output::MetaData;
 pub use output::{LexicalErrorType, ParsingError, SemanticErrorType, SyntacticError, WarningType};
+use syntactic_analyzer::*;
 use semantic_analyzer::*;
 use serde::Serialize;
-use syntactic_analyzer::AbstractSyntaxTree;
-use syntactic_analyzer::FileVariant;
-use syntactic_analyzer::{DomainAST, ProblemAST};
 
 #[derive(Serialize)]
 pub struct HDDLProgram<'a> {
@@ -76,9 +76,5 @@ impl<'a> HDDLProgram<'a> {
             n_tasks: self.domain.compound_tasks.len() as u32,
             n_methods: self.domain.methods.len() as u32,
         })
-    }
-
-    pub fn to_json(&self) -> String {
-        serde_json::to_string_pretty(self).unwrap()
     }
 }

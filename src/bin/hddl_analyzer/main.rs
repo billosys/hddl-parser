@@ -1,5 +1,5 @@
 use clap::Parser;
-use hddl_analyzer::HDDLProgram;
+use hddl_analyzer::{HDDLProgram, Transpiler};
 use std::{env, fs};
 
 mod cli_args;
@@ -93,7 +93,7 @@ pub fn main() {
                             Ok(problem_content) => {
                                 let json_string =
                                     HDDLProgram::new(&domain_content, Some(&problem_content))
-                                        .map(|program| program.to_json());
+                                        .map(|program| Transpiler::new(program).to_json());
                                 match json_string {
                                     Ok(output_string) => {
                                         match args.output_file {
@@ -127,8 +127,8 @@ pub fn main() {
                         }
                     }
                     None => {
-                        let json_string =
-                            HDDLProgram::new(&domain_content, None).map(|program| program.to_json());
+                        let json_string = HDDLProgram::new(&domain_content, None)
+                            .map(|program| Transpiler::new(program).to_json());
                         match json_string {
                             Ok(output_string) => {
                                 match args.output_file {
