@@ -1,5 +1,5 @@
 use clap::Parser;
-use hddl_analyzer::HDDLAnalyzer;
+use hddl_analyzer::HDDLProgram;
 use std::{env, fs};
 
 mod cli_args;
@@ -19,7 +19,9 @@ pub fn main() {
         Commands::Metadata(info) => {
             let domain = fs::read(info.domain_path);
             match domain {
-                Ok(domain_content) => match HDDLAnalyzer::get_metadata(&domain_content, None) {
+                Ok(domain_content) => match HDDLProgram::new(&domain_content, None)
+                    .and_then(|program| program.metadata())
+                {
                     Ok(result) => {
                         print!("{}", result)
                     }
@@ -41,7 +43,8 @@ pub fn main() {
                         match problem {
                             Ok(problem_content) => {
                                 let output =
-                                    HDDLAnalyzer::verify(&domain_content, Some(&problem_content));
+                                    HDDLProgram::new(&domain_content, Some(&problem_content))
+                                        .and_then(|program| program.verify());
                                 match output {
                                     Ok(warnings) => {
                                         for warning in warnings {
@@ -60,7 +63,8 @@ pub fn main() {
                         }
                     }
                     None => {
-                        let output = HDDLAnalyzer::verify(&domain_content, None);
+                        let output = HDDLProgram::new(&domain_content, None)
+                            .and_then(|program| program.verify());
                         match output {
                             Ok(warnings) => {
                                 for warning in warnings {
@@ -88,7 +92,8 @@ pub fn main() {
                         match problem_bytes {
                             Ok(problem_content) => {
                                 let json_string =
-                                    HDDLAnalyzer::to_json(&domain_content, Some(&problem_content));
+                                    HDDLProgram::new(&domain_content, Some(&problem_content))
+                                        .map(|program| program.to_json());
                                 match json_string {
                                     Ok(output_string) => {
                                         match args.output_file {
@@ -122,7 +127,8 @@ pub fn main() {
                         }
                     }
                     None => {
-                        let json_string = HDDLAnalyzer::to_json(&domain_content, None);
+                        let json_string =
+                            HDDLProgram::new(&domain_content, None).map(|program| program.to_json());
                         match json_string {
                             Ok(output_string) => {
                                 match args.output_file {

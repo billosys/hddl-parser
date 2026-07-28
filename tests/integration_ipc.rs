@@ -1,6 +1,6 @@
 extern crate hddl_analyzer;
 
-use hddl_analyzer::{HDDLAnalyzer, SemanticErrorType};
+use hddl_analyzer::{HDDLProgram, SemanticErrorType};
 use std::fs;
 
 #[test]
@@ -18,7 +18,9 @@ pub fn ipc_validation_test() {
             } else {
                 let problem_path = file.as_ref().unwrap().path();
                 let problem = fs::read(&problem_path).unwrap();
-                match HDDLAnalyzer::verify(&domain, Some(&problem)) {
+                match HDDLProgram::new(&domain, Some(&problem))
+                    .and_then(|program| program.verify())
+                {
                     Err(token) => {
                         let error = format!("Domain: {:?} \nProblem:{:?}\nError: {:?}", domain_path, problem_path, token);
                         panic!("{}",  error)
