@@ -59,6 +59,22 @@ impl<'a> Formula<'a> {
         }
         return predicates;
     }
+
+    pub fn is_simple_conjunction(&self) -> bool {
+        match self {
+            Formula::Empty => true,
+            Formula::And(conjuncts) => conjuncts.iter().all(|c| c.is_literal()),
+            other => other.is_literal(),
+        }
+    }
+
+    fn is_literal(&self) -> bool {
+        match self {
+            Formula::Atom(_) | Formula::Equals(_, _) => true,
+            Formula::Not(inner) => matches!(&**inner, Formula::Atom(_)),
+            _ => false,
+        }
+    }
 }
 
 impl<'a> fmt::Display for Formula<'a> {

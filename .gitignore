@@ -2,3 +2,4 @@
 /Robinson
 .vscode/*
 *.lock
+.claude/*
