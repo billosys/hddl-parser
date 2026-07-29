@@ -219,7 +219,7 @@ pub fn parameter_duplicate_test() {
                 }
                 Err(error) => match error {
                     SemanticErrorType::DuplicateParameterDeclaration(x) => {
-                        assert_eq!(x.symbol, "p_1");
+                        assert_eq!(x.symbol, "?p_1");
                         assert_eq!(x.first_pos.line, 8);
                         assert_eq!(x.second_pos.line, 8);
                     }

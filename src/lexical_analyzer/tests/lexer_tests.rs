@@ -95,13 +95,13 @@ mod lexer_test {
         let lexer = LexicalAnalyzer::new(&program);
         match lexer.get_token() {
             Ok(Token::Identifier(x)) => {
-                assert_eq!(x, &String::from("test_id"))
+                assert_eq!(x, &String::from("?test_id"))
             },
             _ => panic!("wrong token")
         }
         match lexer.get_token() {
             Ok(Token::Identifier(x)) => {
-                assert_eq!(x, &String::from("pred-aa"))
+                assert_eq!(x, &String::from("?pred-aa"))
             },
             _ => panic!("wrong token")
         }

@@ -32,7 +32,7 @@ pub fn basic_type_checking_test () {
                 Err(error) => {
                     match error {
                         SemanticErrorType::InconsistentPredicateArgType(t_err) => {
-                            assert_eq!(t_err.var_name, "l1");
+                            assert_eq!(t_err.var_name, "?l1");
                             assert_eq!(t_err.found.unwrap(), "t2");
                             assert_eq!(t_err.expected.unwrap(), "t1");
                             assert_eq!(t_err.position.line, 12);
@@ -272,7 +272,7 @@ pub fn method_subtask_checking_test () {
                         SemanticErrorType::InconsistentTaskArgType(t_error) => {
                             assert_eq!(t_error.expected.unwrap(), "t2");
                             assert_eq!(t_error.found.unwrap(), "t6");
-                            assert_eq!(t_error.var_name, "l3");
+                            assert_eq!(t_error.var_name, "?l3");
                             assert_eq!(t_error.position.line, 27);
                         }
                         any => {

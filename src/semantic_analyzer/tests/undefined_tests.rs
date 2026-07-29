@@ -179,7 +179,7 @@ pub fn undefined_method_parameters_test() {
                 Err(error) => {
                     match error {
                         SemanticErrorType::UndefinedParameter(x) => {
-                            assert_eq!(x.symbol, "p5");
+                            assert_eq!(x.symbol, "?p5");
                             assert_eq!(x.position.line, 15);
                         }
                         x => {

@@ -157,7 +157,7 @@ pub fn duplicate_parameter_validation_test() {
         Err(err) => {
             if let hddl_analyzer::ParsingError::Semantic(x) = err {
                 if let SemanticErrorType::DuplicateParameterDeclaration(t) = x {
-                    assert_eq!(t.symbol, "a");
+                    assert_eq!(t.symbol, "?a");
                 } else {
                     panic!("wrong error {:?}", x)
                 }
@@ -311,7 +311,7 @@ pub fn inconsistent_type_task_validation_test() {
         Err(err) => {
             if let hddl_analyzer::ParsingError::Semantic(x) = err {
                 if let SemanticErrorType::InconsistentTaskArgType(t) = x {
-                    assert_eq!(t.var_name, "a_0");
+                    assert_eq!(t.var_name, "?a_0");
                 } else {
                     panic!()
                 }
@@ -332,7 +332,7 @@ pub fn undeclared_method_param_validation_test() {
         Err(err) => {
             if let hddl_analyzer::ParsingError::Semantic(x) = err {
                 if let SemanticErrorType::UndefinedParameter(t) = x {
-                    assert_eq!(t.symbol, "d");
+                    assert_eq!(t.symbol, "?d");
                 } else {
                     panic!()
                 }
@@ -353,7 +353,7 @@ pub fn undeclared_task_param_validation_test() {
         Err(err) => {
             if let hddl_analyzer::ParsingError::Semantic(x) = err {
                 if let SemanticErrorType::UndefinedParameter(t) = x {
-                    assert_eq!(t.symbol, "s");
+                    assert_eq!(t.symbol, "?s");
                 } else {
                     panic!()
                 }

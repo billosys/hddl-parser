@@ -1,3 +1,4 @@
+mod action_tests;
 mod formula_tests;
 mod syntax_tests;
 

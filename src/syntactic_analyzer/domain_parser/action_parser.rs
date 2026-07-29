@@ -30,7 +30,6 @@ impl <'a> Parser <'a> {
                 // skip effects keyword
                 let _ = self.tokenizer.get_token();
                 let formula = self.parse_formula()?;
-                let s = formula.clone().to_string();
                 effects = Some(formula);
             },
             // action has no effects

@@ -3,6 +3,7 @@ use std::fmt;
 use serde::{Deserialize, Serialize};
 
 use crate::NumberType;
+use crate::transpiler::format_typed_list;
 
 use super::*;
 
@@ -89,15 +90,6 @@ impl<'a> fmt::Display for Formula<'a> {
                 _ => format!("(and {})", join(terms)),
             }
         }
-        fn typed_vars(vars: &[Symbol]) -> String {
-            vars.iter()
-                .map(|var| match var.symbol_type {
-                    Some(t) => format!("{} - {}", var.name, t),
-                    None => var.name.to_string(),
-                })
-                .collect::<Vec<_>>()
-                .join(" ")
-        }
         match self {
             Formula::Empty => write!(f, "()"),
             Formula::Atom(predicate) => {
@@ -115,10 +107,10 @@ impl<'a> fmt::Display for Formula<'a> {
                 write!(f, "(when {} {})", implication_side(lhs), implication_side(rhs))
             }
             Formula::Exists(vars, inner) => {
-                write!(f, "(exists ({}) {})", typed_vars(vars), inner)
+                write!(f, "(exists ({}) {})", format_typed_list(vars), inner)
             }
             Formula::ForAll(vars, inner) => {
-                write!(f, "(forall ({}) {})", typed_vars(vars), inner)
+                write!(f, "(forall ({}) {})", format_typed_list(vars), inner)
             }
             Formula::Probabilistic(probability, terms) => {
                 write!(f, "(probabilistic {} {})", probability, terms)

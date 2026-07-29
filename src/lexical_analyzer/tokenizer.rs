@@ -51,11 +51,12 @@ impl<'a> LexicalAnalyzer<'a> {
                 ')' => Ok(Token::Punctuator(PunctuationType::RParentheses)),
                 // Ordering Relations
                 p @ ('<' | '>' | '=') => Ok(Token::Operator(self.ordering_type(&p, peek))),
-                // Variables
+                // Variables (the '?' prefix is kept as part of the name)
                 '?' => {
                     let mut init_cur_pos = self.cursor.get();
-                    if peek {
-                        init_cur_pos += 1;
+                    if !peek {
+                        // start at the already-consumed '?'
+                        init_cur_pos -= 1;
                     }
                     let (var_name, new_cur_pos) = self.peek_lexeme(init_cur_pos)?;
                     if !peek {
@@ -185,8 +186,15 @@ impl<'a> LexicalAnalyzer<'a> {
         let mut cursor_pos = init_cur_pos;
         let mut next_ch = self.program[cursor_pos] as char;
         let mut is_invalid = false;
-        let mut is_valid_character = |c| match c {
+        let mut is_valid_character = |c: char, is_first: bool| match c {
             '_' | '-' => true,
+            // a variable's '?' prefix is only valid as the lexeme's first character
+            '?' => {
+                if !is_first {
+                    is_invalid = true;
+                }
+                true
+            }
             ')' | '(' => false,
             _ => {
                 if LexicalAnalyzer::is_whitespace(&c) {
@@ -199,7 +207,7 @@ impl<'a> LexicalAnalyzer<'a> {
                 }
             }
         };
-        while is_valid_character(next_ch) {
+        while is_valid_character(next_ch, cursor_pos == init_cur_pos) {
             if cursor_pos < self.program.len() - 1 {
                 cursor_pos += 1;
                 next_ch = self.program[cursor_pos] as char;

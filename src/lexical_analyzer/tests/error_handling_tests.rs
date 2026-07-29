@@ -12,7 +12,7 @@ mod tests{
                 match x.error_type {
                     LexicalErrorType::InvalidIdentifier => {
                         assert_eq!(x.position.line, 3);
-                        assert_eq!(x.lexeme, "ca<sd");
+                        assert_eq!(x.lexeme, "?ca<sd");
                     },
                     _ => panic!("wrong error detected")
                 }
@@ -26,7 +26,7 @@ mod tests{
                 match x.error_type {
                     LexicalErrorType::InvalidIdentifier => {
                         assert_eq!(x.position.line, 3);
-                        assert_eq!(x.lexeme, "rt/asd");
+                        assert_eq!(x.lexeme, "?rt/asd");
                     },
                     _ => panic!("wrong error detected")
                 }
@@ -40,7 +40,7 @@ mod tests{
                 match x.error_type {
                     LexicalErrorType::InvalidIdentifier => {
                         assert_eq!(x.position.line, 7);
-                        assert_eq!(x.lexeme, "f*ta");
+                        assert_eq!(x.lexeme, "?f*ta");
                     },
                     _ => panic!("wrong error detected")
                 }

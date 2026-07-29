@@ -152,9 +152,9 @@ mod tests {
                         assert_eq!(
                             items,
                             vec![
-                                ("a_1", Some("t_1")),
-                                ("a_2", Some("t_1")),
-                                ("a_3", Some("t_2"))
+                                ("?a_1", Some("t_1")),
+                                ("?a_2", Some("t_1")),
+                                ("?a_3", Some("t_2"))
                             ]
                         );
                         assert_eq!(predicate.name_pos.line, 3);
@@ -203,9 +203,9 @@ mod tests {
                 assert_eq!(method.task.name, "deliver_abs");
                 assert_eq!(method.task.name_pos.line, 4);
                 assert_eq!(method.task_terms.len(), 3);
-                assert_eq!(method.task_terms[0].name, "p1");
-                assert_eq!(method.task_terms[1].name, "l1");
-                assert_eq!(method.task_terms[2].name, "l2");
+                assert_eq!(method.task_terms[0].name, "?p1");
+                assert_eq!(method.task_terms[1].name, "?l1");
+                assert_eq!(method.task_terms[2].name, "?l2");
                 assert_eq!(method.tn.subtasks[0].task.name, "pickup");
                 assert_eq!(method.tn.subtasks[0].task.name_pos.line, 6);
                 let term_pos_lines1: Vec<u32> = method.tn.subtasks[0]
@@ -214,8 +214,8 @@ mod tests {
                     .map(|x| x.name_pos.line)
                     .collect();
                 assert_eq!(term_pos_lines1, vec![6, 6]);
-                assert_eq!(method.tn.subtasks[0].terms[0].name, "p1");
-                assert_eq!(method.tn.subtasks[0].terms[1].name, "l1");
+                assert_eq!(method.tn.subtasks[0].terms[0].name, "?p1");
+                assert_eq!(method.tn.subtasks[0].terms[1].name, "?l1");
                 assert_eq!(method.tn.subtasks[1].task.name, "deliver_abs");
                 let term_pos_lines2: Vec<u32> = method.tn.subtasks[1]
                     .terms
@@ -224,9 +224,9 @@ mod tests {
                     .collect();
                 assert_eq!(term_pos_lines2, vec![7, 7, 7]);
                 assert_eq!(method.tn.subtasks[1].task.name_pos.line, 7);
-                assert_eq!(method.tn.subtasks[1].terms[0].name, "p1");
-                assert_eq!(method.tn.subtasks[1].terms[1].name, "l2");
-                assert_eq!(method.tn.subtasks[1].terms[2].name, "l3");
+                assert_eq!(method.tn.subtasks[1].terms[0].name, "?p1");
+                assert_eq!(method.tn.subtasks[1].terms[1].name, "?l2");
+                assert_eq!(method.tn.subtasks[1].terms[2].name, "?l3");
                 assert_eq!(method.precondition.is_none(), true);
             }
             _ => panic!("AST not created"),
@@ -258,16 +258,16 @@ mod tests {
                 assert_eq!(method.name.name, "m_1");
                 assert_eq!(method.task.name, "deliver_abs");
                 assert_eq!(method.task_terms.len(), 3);
-                assert_eq!(method.task_terms[0].name, "p1");
-                assert_eq!(method.task_terms[1].name, "l1");
-                assert_eq!(method.task_terms[2].name, "l2");
+                assert_eq!(method.task_terms[0].name, "?p1");
+                assert_eq!(method.task_terms[1].name, "?l1");
+                assert_eq!(method.task_terms[2].name, "?l2");
                 assert_eq!(method.tn.subtasks[0].task.name, "pickup");
-                assert_eq!(method.tn.subtasks[0].terms[0].name, "p1");
-                assert_eq!(method.tn.subtasks[0].terms[1].name, "l1");
+                assert_eq!(method.tn.subtasks[0].terms[0].name, "?p1");
+                assert_eq!(method.tn.subtasks[0].terms[1].name, "?l1");
                 assert_eq!(method.tn.subtasks[1].task.name, "deliver_abs");
-                assert_eq!(method.tn.subtasks[1].terms[0].name, "p1");
-                assert_eq!(method.tn.subtasks[1].terms[1].name, "l2");
-                assert_eq!(method.tn.subtasks[1].terms[2].name, "l3");
+                assert_eq!(method.tn.subtasks[1].terms[0].name, "?p1");
+                assert_eq!(method.tn.subtasks[1].terms[1].name, "?l2");
+                assert_eq!(method.tn.subtasks[1].terms[2].name, "?l3");
                 match &method.precondition {
                     Some(formula) => match formula {
                         Formula::And(predicates) => {
@@ -299,8 +299,8 @@ mod tests {
                             match neq {
                                 Formula::Not(equality) => match **equality {
                                     Formula::Equals(a, b) => {
-                                        assert_eq!(a, "l1");
-                                        assert_eq!(b, "l2");
+                                        assert_eq!(a, "?l1");
+                                        assert_eq!(b, "?l2");
                                     }
                                     _ => {
                                         panic!("equality constraint not parsed successfully")
@@ -348,14 +348,14 @@ mod tests {
                 assert_eq!(method.name.name, "m_1");
                 assert_eq!(method.task.name, "deliver_abs");
                 assert_eq!(method.task_terms.len(), 3);
-                assert_eq!(method.task_terms[0].name, "p1");
-                assert_eq!(method.task_terms[1].name, "l1");
-                assert_eq!(method.task_terms[2].name, "l2");
+                assert_eq!(method.task_terms[0].name, "?p1");
+                assert_eq!(method.task_terms[1].name, "?l1");
+                assert_eq!(method.task_terms[2].name, "?l2");
                 match &method.precondition {
                     Some(formula) => match formula {
                         Formula::ForAll(params, exp) => {
                             assert_eq!(params.len(), 2);
-                            assert_eq!(params[0].name, "l1");
+                            assert_eq!(params[0].name, "?l1");
                             match params[0].symbol_type {
                                 Some(x) => {
                                     assert_eq!(x, "loc");
@@ -364,7 +364,7 @@ mod tests {
                                     panic!("wrong parameter type")
                                 }
                             }
-                            assert_eq!(params[1].name, "l2");
+                            assert_eq!(params[1].name, "?l2");
                             match params[1].symbol_type {
                                 Some(x) => {
                                     assert_eq!(x, "loc");
@@ -375,8 +375,8 @@ mod tests {
                             }
                             match **exp {
                                 Formula::Equals(a, b) => {
-                                    assert_eq!(a, "l1");
-                                    assert_eq!(b, "l2");
+                                    assert_eq!(a, "?l1");
+                                    assert_eq!(b, "?l2");
                                 }
                                 _ => {
                                     panic!("wrong expression parsing")
@@ -454,7 +454,7 @@ mod tests {
                     match tn.parameters {
                         Some(p) => {
                             assert_eq!(p.len(), 1);
-                            assert_eq!(p[0].name, "d");
+                            assert_eq!(p[0].name, "?d");
                             assert_eq!(p[0].symbol_type.is_none(), true);
                         }
                         _ => panic!("wrong set of params"),
@@ -735,8 +735,8 @@ mod tests {
                         match &*exps[1] {
                             Formula::Exists(q, qs) => {
                                 assert_eq!(q.len(), 2);
-                                assert_eq!(q[0].name, "num1");
-                                assert_eq!(q[1].name, "num2");
+                                assert_eq!(q[0].name, "?num1");
+                                assert_eq!(q[1].name, "?num2");
                                 let predicates = qs.get_propositional_predicates();
                                 assert_eq!(predicates.len(), 1);
                             }
@@ -773,7 +773,7 @@ mod tests {
                         match formula[2].as_ref() {
                             Formula::ForAll(q, e) => {
                                 assert_eq!(q.len(), 1);
-                                assert_eq!(q[0].name, "loc");
+                                assert_eq!(q[0].name, "?loc");
                                 assert_eq!(e.get_propositional_predicates().len(), 2);
                             }
                             _ => panic!(),
@@ -1034,7 +1034,7 @@ mod tests {
                 let battery_amount = &ast.functions[0];
                 assert_eq!(battery_amount.name, "battery-amount");
                 assert_eq!(battery_amount.variables.len(), 1);
-                assert_eq!(battery_amount.variables[0].name, "r");
+                assert_eq!(battery_amount.variables[0].name, "?r");
                 if let Some(val) = battery_amount.variables[0].symbol_type {
                     assert_eq!(val, "rover")
                 }
@@ -1043,7 +1043,7 @@ mod tests {
                 let recharge_rate = &ast.functions[1];
                 assert_eq!(recharge_rate.name, "recharge-rate");
                 assert_eq!(recharge_rate.variables.len(), 1);
-                assert_eq!(recharge_rate.variables[0].name, "r");
+                assert_eq!(recharge_rate.variables[0].name, "?r");
                 if let Some(val) = recharge_rate.variables[0].symbol_type {
                     assert_eq!(val, "rover")
                 }
@@ -1057,11 +1057,11 @@ mod tests {
                 let distance = &ast.functions[3];
                 assert_eq!(distance.name, "distance");
                 assert_eq!(distance.variables.len(), 2);
-                assert_eq!(distance.variables[0].name, "wp1");
+                assert_eq!(distance.variables[0].name, "?wp1");
                 if let Some(val) = distance.variables[0].symbol_type {
                     assert_eq!(val, "waypoint")
                 }
-                assert_eq!(distance.variables[1].name, "wp2");
+                assert_eq!(distance.variables[1].name, "?wp2");
                 if let Some(val) = distance.variables[1].symbol_type {
                     assert_eq!(val, "waypoint")
                 }

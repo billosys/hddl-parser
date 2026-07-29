@@ -1,8 +1,10 @@
+use std::fmt;
 use std::hash::Hash;
 use std::borrow::Borrow;
 use serde::{Deserialize, Serialize};
 
 use crate::lexical_analyzer::TokenPosition;
+use crate::transpiler::format_typed_list;
 
 use super::*;
 
@@ -17,6 +19,24 @@ pub struct Action<'a> {
     pub preconditions: Option<Formula<'a>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub effects: Option<Formula<'a>>
+}
+
+impl<'a> fmt::Display for Action<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "(:action {}\n :parameters ({})",
+            self.name,
+            format_typed_list(&self.parameters)
+        )?;
+        if let Some(precondition) = &self.preconditions {
+            write!(f, "\n :precondition {}", precondition)?;
+        }
+        if let Some(effect) = &self.effects {
+            write!(f, "\n :effect {}", effect)?;
+        }
+        write!(f, "\n)")
+    }
 }
 
 impl <'a> Hash for Action<'a> {
