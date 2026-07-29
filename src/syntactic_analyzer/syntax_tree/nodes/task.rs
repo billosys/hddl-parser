@@ -52,6 +52,6 @@ impl <'a> Borrow<&'a str> for &Task<'a> {
 
 impl <'a> fmt::Display for Task<'a> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "(:task {}\n :parameters ({}))", self.name, format_typed_list(&self.parameters))
+        write!(f, "(:task {}\n :parameters ({})\n)", self.name, format_typed_list(&self.parameters))
     }
 }

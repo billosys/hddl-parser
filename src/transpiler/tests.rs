@@ -146,11 +146,12 @@ pub fn predicate_display_test() {
 pub fn action_display_round_trip_test() {
     assert_domain_round_trip(
         "(define (domain d)
+
  (:action pickup
- :parameters (?x - block)
- :precondition (and (clear ?x) (handempty))
- :effect (and (holding ?x) (not (clear ?x)))
-)
+  :parameters (?x - block)
+  :precondition (and (clear ?x) (handempty))
+  :effect (and (holding ?x) (not (clear ?x)))
+ )
 
 )",
     );
@@ -160,14 +161,15 @@ pub fn action_display_round_trip_test() {
 pub fn method_display_round_trip_test() {
     assert_domain_round_trip(
         "(define (domain d)
+
  (:method m_1
- :parameters (?p1 - p ?l1 - loc ?l2 - loc)
- :task (deliver ?p1 ?l1)
- :precondition (at ?p1 ?l1)
- :subtasks (and (task0 (pickup ?p1 ?l1)) (task1 (drop ?p1 ?l2)))
- :ordering (and (< task0 task1))
- :constraints (and (not (= ?l1 ?l2)))
-)
+  :parameters (?p1 - p ?l1 - loc ?l2 - loc)
+  :task (deliver ?p1 ?l1)
+  :precondition (at ?p1 ?l1)
+  :subtasks (and (task0 (pickup ?p1 ?l1)) (task1 (drop ?p1 ?l2)))
+  :ordering (and (< task0 task1))
+  :constraints (and (not (= ?l1 ?l2)))
+ )
 
 )",
     );
@@ -177,11 +179,12 @@ pub fn method_display_round_trip_test() {
 pub fn ordered_subtasks_round_trip_test() {
     assert_domain_round_trip(
         "(define (domain d)
+
  (:method m_2
- :parameters (?p - p)
- :task (deliver ?p)
- :ordered-subtasks (and (pickup ?p) (drop ?p))
-)
+  :parameters (?p - p)
+  :task (deliver ?p)
+  :ordered-subtasks (and (pickup ?p) (drop ?p))
+ )
 
 )",
     );
@@ -191,11 +194,13 @@ pub fn ordered_subtasks_round_trip_test() {
 pub fn init_tn_display_round_trip_test() {
     assert_problem_round_trip(
         "(define (problem p1) (:domain d)
+
  (:htn
- :parameters (?v)
- :subtasks (and (task0 (deliver pkg_0 loc_0)) (task1 (deliver pkg_1 loc_1)))
- :ordering (and (< task0 task1))
-)
+  :parameters (?v)
+  :subtasks (and (task0 (deliver pkg_0 loc_0)) (task1 (deliver pkg_1 loc_1)))
+  :ordering (and (< task0 task1))
+ )
+
 )",
     );
 }
@@ -204,25 +209,32 @@ pub fn init_tn_display_round_trip_test() {
 pub fn domain_to_hddl_round_trip_test() {
     assert_domain_round_trip(
         "(define (domain transport)
+
  (:requirements :typing :hierarchy)
+
  (:types loc - object pkg - object)
+
  (:constants depot - loc)
+
  (:predicates (at ?p - pkg ?l - loc) (road ?l1 - loc ?l2 - loc))
+
  (:functions (fuel ?l - loc))
+
  (:task deliver
- :parameters (?p - pkg ?l - loc))
+  :parameters (?p - pkg ?l - loc)
+ )
 
  (:method m_deliver
- :parameters (?p - pkg ?l1 - loc ?l2 - loc)
- :task (deliver ?p ?l2)
- :ordered-subtasks (and (pickup ?p ?l1) (drop ?p ?l2))
-)
+  :parameters (?p - pkg ?l1 - loc ?l2 - loc)
+  :task (deliver ?p ?l2)
+  :ordered-subtasks (and (pickup ?p ?l1) (drop ?p ?l2))
+ )
 
  (:action pickup
- :parameters (?p - pkg ?l - loc)
- :precondition (at ?p ?l)
- :effect (not (at ?p ?l))
-)
+  :parameters (?p - pkg ?l - loc)
+  :precondition (at ?p ?l)
+  :effect (not (at ?p ?l))
+ )
 
 )",
     );
@@ -232,13 +244,19 @@ pub fn domain_to_hddl_round_trip_test() {
 pub fn problem_to_hddl_round_trip_test() {
     assert_problem_round_trip(
         "(define (problem p_transport) (:domain transport)
+
  (:requirements :typing)
+
  (:objects pkg_0 - pkg loc_0 - loc loc_1 - loc)
+
  (:htn
- :subtasks (and (task0 (deliver pkg_0 loc_1)))
-)
+  :subtasks (and (task0 (deliver pkg_0 loc_1)))
+ )
+
  (:init (at pkg_0 loc_0) (road loc_0 loc_1))
+
  (:goal (at pkg_0 loc_1))
+
 )",
     );
 }
@@ -246,29 +264,36 @@ pub fn problem_to_hddl_round_trip_test() {
 #[test]
 pub fn transpiler_pipeline_test() {
     let domain = "(define (domain transport)
+
  (:predicates (at ?p ?l) (road ?l1 ?l2))
+
  (:task deliver
- :parameters (?p ?l))
+  :parameters (?p ?l)
+ )
 
  (:method m_deliver
- :parameters (?p ?l)
- :task (deliver ?p ?l)
- :ordered-subtasks (and (pickup ?p ?l))
-)
+  :parameters (?p ?l)
+  :task (deliver ?p ?l)
+  :ordered-subtasks (and (pickup ?p ?l))
+ )
 
  (:action pickup
- :parameters (?p ?l)
- :precondition (at ?p ?l)
- :effect (not (at ?p ?l))
-)
+  :parameters (?p ?l)
+  :precondition (at ?p ?l)
+  :effect (not (at ?p ?l))
+ )
 
 )";
     let problem = "(define (problem p_transport) (:domain transport)
+
  (:objects pkg_0 loc_0)
+
  (:htn
- :subtasks (and (deliver pkg_0 loc_0))
-)
+  :subtasks (and (deliver pkg_0 loc_0))
+ )
+
  (:init (at pkg_0 loc_0))
+
 )";
     let domain_bytes = domain.as_bytes().to_vec();
     let problem_bytes = problem.as_bytes().to_vec();
@@ -301,11 +326,16 @@ pub fn transpiler_pipeline_test() {
 #[test]
 pub fn transpiler_to_hddl_test() {
     let domain = "(define (domain transport)
+
  (:predicates (at ?p ?l))
+
 )";
     let problem = "(define (problem p_transport) (:domain transport)
+
  (:objects pkg_0 loc_0)
+
  (:init (at pkg_0 loc_0))
+
 )";
     let domain_bytes = domain.as_bytes().to_vec();
     let problem_bytes = problem.as_bytes().to_vec();

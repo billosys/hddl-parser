@@ -56,22 +56,22 @@ impl <'a> ProblemAST<'a> {
 
 impl <'a> fmt::Display for ProblemAST<'a> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "(define (problem {}) (:domain {})", self.name, self.domain_name)?;
+        write!(f, "(define (problem {}) (:domain {})\n", self.name, self.domain_name)?;
         if !self.requirements.is_empty() {
-            write!(f, "\n (:requirements {})", format_list(&self.requirements))?;
+            write!(f, "\n (:requirements {})\n", format_list(&self.requirements))?;
         }
         if !self.objects.is_empty() {
-            write!(f, "\n (:objects {})", format_typed_list(&self.objects))?;
+            write!(f, "\n (:objects {})\n", format_typed_list(&self.objects))?;
         }
         if let Some(init_tn) = &self.init_tn {
-            write!(f, "\n {}", init_tn)?;
+            write!(f, "\n {}\n", init_tn.to_string().replace('\n', "\n "))?;
         }
         if !self.init_state.is_empty() {
-            write!(f, "\n (:init {})", format_list(&self.init_state))?;
+            write!(f, "\n (:init {})\n", format_list(&self.init_state))?;
         }
         // the parser only accepts :goal as the last block of a problem
         if let Some(goal) = &self.goal {
-            write!(f, "\n (:goal {})", goal)?;
+            write!(f, "\n (:goal {})\n", goal)?;
         }
         write!(f, "\n)")
     }

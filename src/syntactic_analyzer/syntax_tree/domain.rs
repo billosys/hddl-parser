@@ -83,30 +83,32 @@ impl<'a> DomainAST<'a> {
 
 impl <'a> fmt::Display for DomainAST<'a> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "(define (domain {})", self.name)?;
+        write!(f, "(define (domain {})\n", self.name)?;
         if !self.requirements.is_empty() {
-            write!(f, "\n (:requirements {})", format_list(&self.requirements))?;
+            write!(f, "\n (:requirements {})\n", format_list(&self.requirements))?;
         }
         if let Some(types) = &self.types {
-            write!(f, "\n (:types {})", format_typed_list(types))?;
+            write!(f, "\n (:types {})\n", format_typed_list(types))?;
         }
         if let Some(constants) = &self.constants {
-            write!(f, "\n (:constants {})", format_typed_list(constants))?;
+            write!(f, "\n (:constants {})\n", format_typed_list(constants))?;
         }
         if !self.predicates.is_empty() {
-            write!(f, "\n (:predicates {})", format_list(&self.predicates))?;
+            write!(f, "\n (:predicates {})\n", format_list(&self.predicates))?;
         }
         if !self.functions.is_empty() {
-            write!(f, "\n (:functions {})", format_list(&self.functions))?;
+            write!(f, "\n (:functions {})\n", format_list(&self.functions))?;
         }
+        // members are multi-line: shift every line one level to keep their
+        // parentheses and keyword colons vertically aligned
         for task in &self.compound_tasks {
-            write!(f, "\n {}\n", task)?;
+            write!(f, "\n {}\n", task.to_string().replace('\n', "\n "))?;
         }
         for method in &self.methods {
-            write!(f, "\n {}\n", method)?;
+            write!(f, "\n {}\n", method.to_string().replace('\n', "\n "))?;
         }
         for action in &self.actions {
-            write!(f, "\n {}\n", action)?;
+            write!(f, "\n {}\n", action.to_string().replace('\n', "\n "))?;
         }
         write!(f, "\n)")
     }
