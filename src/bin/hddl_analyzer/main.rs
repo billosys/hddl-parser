@@ -1,208 +1,174 @@
 use clap::Parser;
-use hddl_analyzer::{HDDLProgram, Transpiler};
-use std::{env, fs};
+use hddl_analyzer::{Input, ParsingError, Transpiler};
+use std::{
+    env, fs,
+    path::{Path, PathBuf},
+};
 
 mod cli_args;
 
-use cli_args::{CLIArgs, Commands};
+use cli_args::{CLIArgs, Commands, ConvertArgs, InputArgs, OutputFormat};
+
+// ANSI escape color codes
+const YELLOW: &str = "\x1b[33m";
+const GREEN: &str = "\x1b[32m";
+const RED: &str = "\x1b[31m";
+const RESET: &str = "\x1b[0m";
+
+// the raw input bytes; the parsed program borrows from them, so each command
+// keeps this alive in its own frame for as long as the Transpiler is used
+enum InputData {
+    Json(String),
+    Hddl {
+        domain: Vec<u8>,
+        problem: Option<Vec<u8>>,
+    },
+}
+
+impl InputData {
+    fn read(input: &InputArgs) -> Result<InputData, String> {
+        let extension = Path::new(&input.input_path)
+            .extension()
+            .and_then(|extension| extension.to_str())
+            .map(|extension| extension.to_lowercase());
+        match extension.as_deref() {
+            Some("json") => {
+                if input.problem_path.is_some() {
+                    return Err(
+                        "a JSON input already contains everything; --problem-path only applies to HDDL input"
+                            .to_string(),
+                    );
+                }
+                let json = fs::read_to_string(&input.input_path).map_err(|err| err.to_string())?;
+                Ok(InputData::Json(json))
+            }
+            Some("hddl") => {
+                let domain = fs::read(&input.input_path).map_err(|err| err.to_string())?;
+                let problem = match &input.problem_path {
+                    Some(path) => Some(fs::read(path).map_err(|err| err.to_string())?),
+                    None => None,
+                };
+                Ok(InputData::Hddl { domain, problem })
+            }
+            Some(other) => Err(format!(
+                "unrecognized input extension '.{other}' (expected .hddl or .json)"
+            )),
+            None => Err("the input file has no extension; cannot infer its format".to_string()),
+        }
+    }
+
+    fn transpiler(&self) -> Result<Transpiler, ParsingError> {
+        Transpiler::from_input(match self {
+            InputData::Json(json) => Input::Json(json),
+            InputData::Hddl { domain, problem } => Input::Hddl {
+                domain,
+                problem: problem.as_ref(),
+            },
+        })
+    }
+}
 
 pub fn main() {
-    // ANSI escape color codes
-    let yellow = "\x1b[33m";
-    let green = "\x1b[32m";
-    let red = "\x1b[31m";
-    // ANSI escape code to reset text color
-    let reset = "\x1b[0m";
-
     let args = CLIArgs::parse();
     match args.command {
-        Commands::Metadata(info) => {
-            let domain = fs::read(info.domain_path);
-            match domain {
-                Ok(domain_content) => match HDDLProgram::from_hddl(&domain_content, None)
-                    .and_then(|program| program.metadata())
-                {
-                    Ok(result) => {
-                        print!("{}", result)
+        Commands::Convert(args) => convert(args),
+        Commands::Verify(input) => verify(input),
+        Commands::Metadata(input) => metadata(input),
+    }
+}
+
+fn convert(args: ConvertArgs) {
+    if args.untyped {
+        eprintln!("{RED}[Error]{RESET} transformation 'untyped' is not implemented yet");
+        return;
+    }
+    let data = match InputData::read(&args.input) {
+        Ok(data) => data,
+        Err(error) => return eprintln!("{RED}[Error]{RESET} {error}"),
+    };
+    let transpiler = match data.transpiler() {
+        Ok(transpiler) => transpiler,
+        Err(parsing_error) => return eprintln!("{RED}[Error]{RESET} {parsing_error}"),
+    };
+    match args.to {
+        OutputFormat::Json => write_or_print(args.output_file.as_deref(), &transpiler.to_json()),
+        OutputFormat::Hddl => {
+            let (domain, problem) = transpiler.to_hddl();
+            match (args.output_file.as_deref(), problem) {
+                (Some(path), Some(problem)) => {
+                    write_file(path, &domain);
+                    write_file(&problem_sibling(path), &problem);
+                }
+                (Some(path), None) => write_file(path, &domain),
+                (None, problem) => {
+                    println!("{GREEN}[Ok]{RESET}");
+                    println!("{domain}");
+                    if let Some(problem) = problem {
+                        println!();
+                        println!("{problem}");
                     }
-                    Err(error) => {
-                        eprintln!("{}[Error]{} {}", red, reset, error)
-                    }
-                },
-                Err(read_error) => {
-                    eprintln!("{}[Error]{} {}", red, reset, read_error)
                 }
             }
         }
-        Commands::Verify(input) => {
-            let domain = fs::read(input.domain_path);
-            match domain {
-                Ok(domain_content) => match input.problem_path {
-                    Some(problem_path) => {
-                        let problem = fs::read(problem_path);
-                        match problem {
-                            Ok(problem_content) => {
-                                let output =
-                                    HDDLProgram::from_hddl(&domain_content, Some(&problem_content))
-                                        .and_then(|program| program.verify());
-                                match output {
-                                    Ok(warnings) => {
-                                        for warning in warnings {
-                                            println!("{}[Warning]{} {}", yellow, reset, warning);
-                                        }
-                                        println!("{}[Ok]{}", green, reset);
-                                    }
-                                    Err(parsing_error) => {
-                                        eprintln!("{}[Error]{} {}", red, reset, parsing_error)
-                                    }
-                                }
-                            }
-                            Err(read_error) => {
-                                eprintln!("{}[Error]{} {}", red, reset, read_error)
-                            }
-                        }
-                    }
-                    None => {
-                        let output = HDDLProgram::from_hddl(&domain_content, None)
-                            .and_then(|program| program.verify());
-                        match output {
-                            Ok(warnings) => {
-                                for warning in warnings {
-                                    println!("{}[Warning]{} {}", yellow, reset, warning);
-                                }
-                                println!("{}[Ok]{}", green, reset);
-                            }
-                            Err(parsing_error) => {
-                                eprintln!("{}[Error]{} {}", red, reset, parsing_error)
-                            }
-                        }
-                    }
-                },
-                Err(read_error) => {
-                    eprintln!("{}[Error]{} {}", red, reset, read_error)
-                }
+    }
+}
+
+fn verify(input: InputArgs) {
+    let data = match InputData::read(&input) {
+        Ok(data) => data,
+        Err(error) => return eprintln!("{RED}[Error]{RESET} {error}"),
+    };
+    match data.transpiler().and_then(|transpiler| transpiler.verify()) {
+        Ok(warnings) => {
+            for warning in warnings {
+                println!("{YELLOW}[Warning]{RESET} {warning}");
             }
+            println!("{GREEN}[Ok]{RESET}");
         }
-        Commands::Serialize(args) => {
-            let domain_bytes = fs::read(args.domain_path);
-            match domain_bytes {
-                Ok(domain_content) => match args.problem_path {
-                    Some(problem_path) => {
-                        let problem_bytes = fs::read(problem_path);
-                        match problem_bytes {
-                            Ok(problem_content) => {
-                                let json_string =
-                                    HDDLProgram::from_hddl(&domain_content, Some(&problem_content))
-                                        .map(|program| Transpiler::new(program).to_json());
-                                match json_string {
-                                    Ok(output_string) => {
-                                        match args.output_file {
-                                            None => {
-                                                println!("{}[Ok]{}", green, reset);
-                                                println!("{}", output_string);
-                                            }
-                                            Some(output_file) => {
-                                                let mut output_path = env::current_dir().unwrap();
-                                                output_path.push(&output_file);
-                                                match fs::write(&output_path, output_string) {
-                                                    Ok(_) => {
-                                                        //println!("Result successfully written to {}.", output_file);
-                                                        println!("{:?}", output_path);
-                                                    }
-                                                    Err(err) => {
-                                                        eprintln!("{}[Error]{} {}", red, reset, err)
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                    Err(parsing_error) => {
-                                        eprintln!("{}[Error]{} {}", red, reset, parsing_error)
-                                    }
-                                }
-                            }
-                            Err(read_error) => {
-                                eprintln!("{}[Error]{} {}", red, reset, read_error)
-                            }
-                        }
-                    }
-                    None => {
-                        let json_string = HDDLProgram::from_hddl(&domain_content, None)
-                            .map(|program| Transpiler::new(program).to_json());
-                        match json_string {
-                            Ok(output_string) => {
-                                match args.output_file {
-                                    None => {
-                                        println!("{}[Ok]{}", green, reset);
-                                        println!("{}", output_string);
-                                    }
-                                    Some(output_file) => {
-                                        let mut output_path = env::current_dir().unwrap();
-                                        output_path.push(&output_file);
-                                        match fs::write(&output_path, output_string) {
-                                            Ok(_) => {
-                                                println!("Result successfully written to {}", output_file);
-                                            }
-                                            Err(err) => {
-                                                eprintln!("{}[Error]{} {}", red, reset, err)
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                            Err(parsing_error) => {
-                                eprintln!("{}[Error]{} {}", red, reset, parsing_error)
-                            }
-                        }
-                    }
-                },
-                Err(read_error) => {
-                    eprintln!("{}[Error]{} {}", red, reset, read_error)
-                }
-            }
+        Err(parsing_error) => eprintln!("{RED}[Error]{RESET} {parsing_error}"),
+    }
+}
+
+fn metadata(input: InputArgs) {
+    let data = match InputData::read(&input) {
+        Ok(data) => data,
+        Err(error) => return eprintln!("{RED}[Error]{RESET} {error}"),
+    };
+    match data.transpiler().and_then(|transpiler| transpiler.metadata()) {
+        Ok(result) => print!("{result}"),
+        Err(parsing_error) => eprintln!("{RED}[Error]{RESET} {parsing_error}"),
+    }
+}
+
+fn write_or_print(output_file: Option<&str>, content: &str) {
+    match output_file {
+        None => {
+            println!("{GREEN}[Ok]{RESET}");
+            println!("{content}");
         }
-        Commands::Deserialize(args) => {
-            let json = fs::read_to_string(args.domain_path);
-            match json {
-                Ok(json_content) => {
-                    let output = HDDLProgram::from_json(&json_content);
-                    match output {
-                        Ok(program) => {
-                            match program.verify() {
-                                Ok(warnings) => {
-                                    for warning in warnings {
-                                        println!("{}[Warning]{} {}", yellow, reset, warning);
-                                    }
-                                    println!("{}[Ok]{}", green, reset);
-                                }
-                                Err(parsing_error) => {
-                                    eprintln!("{}[Error]{} {}", red, reset, parsing_error);
-                                    return;
-                                }
-                            }
-                            if let Some(output_file) = args.output_file {
-                                let output_string = Transpiler::new(program).to_json();
-                                let mut output_path = env::current_dir().unwrap();
-                                output_path.push(&output_file);
-                                match fs::write(&output_path, output_string) {
-                                    Ok(_) => {
-                                        println!("Result successfully written to {}", output_file);
-                                    }
-                                    Err(err) => {
-                                        eprintln!("{}[Error]{} {}", red, reset, err)
-                                    }
-                                }
-                            }
-                        }
-                        Err(parsing_error) => {
-                            eprintln!("{}[Error]{} {}", red, reset, parsing_error)
-                        }
-                    }
-                }
-                Err(read_error) => {
-                    eprintln!("{}[Error]{} {}", red, reset, read_error)
-                }
-            }
+        Some(path) => write_file(path, content),
+    }
+}
+
+fn write_file(path: &str, content: &str) {
+    let mut output_path = env::current_dir().unwrap();
+    output_path.push(path);
+    match fs::write(&output_path, content) {
+        Ok(_) => println!("Result successfully written to {}", output_path.display()),
+        Err(err) => eprintln!("{RED}[Error]{RESET} {err}"),
+    }
+}
+
+// "out.hddl" -> "out.problem.hddl"; "out" -> "out.problem"
+fn problem_sibling(path: &str) -> String {
+    let extension = PathBuf::from(path)
+        .extension()
+        .and_then(|ext| ext.to_str().map(|ext| ext.to_string()));
+    match extension {
+        Some(extension) => {
+            let stem = &path[..path.len() - extension.len() - 1];
+            format!("{stem}.problem.{extension}")
         }
+        None => format!("{path}.problem"),
     }
 }

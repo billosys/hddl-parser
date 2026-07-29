@@ -1,4 +1,4 @@
-An open-source tool for validating planning models specified in the Hierarchical Domain Definition Language (HDDL)[^1] format based on the official HDDL syntax specification and concrete tests (including those pointing to *potential* issues) as proposed by Sleath and Bercher (2023)[^2]. HDDL Parser aims to help domain modelers catch bugs by providing strong type checking, error localization, and ensuring syntactic correctness.
+An open-source tool for validating planning models specified in the Hierarchical Domain Definition Language (HDDL)[^1] format based on the official HDDL syntax specification and concrete tests (including those pointing to *potential* issues) as proposed by Sleath and Bercher (2023)[^2]. HDDL Parser aims to help domain modelers catch bugs by providing strong type checking, error localization, and ensuring syntactic correctness. It can also convert models between HDDL and a machine-friendly JSON representation (in both directions), enabling programmatic inspection and modification of planning models.
 
 # Detected Errors
 In what follows, we provide the currently supported list of errors (for further details, see the paper by Sleath and Bercher (2023)[^2]). Once detected, actionable error messages in conjunction with the exact error location are returned to help modelers fix problems quickly.
@@ -21,13 +21,13 @@ If you do not have it installed, follow the official installation guide ([link](
 # Usage
 The build process creates two binary files: The command line tool, ```hddl_analyzer.exe```, and the language server, ```language_server.exe```.
 ## Command Line
-With ```hddl_analyzer.exe```, you can execute the following commands. 
+With ```hddl_analyzer.exe```, you can execute the following commands. Every command accepts its input either as HDDL files or as a whole-program JSON export; the format is inferred from the file extension (```.hddl``` or ```.json```, anything else is rejected). Since a JSON export contains the whole program, the ```-p``` option only applies to HDDL input.
 * To verify a domain, use ```/path/to/hddl_analyzer.exe verify /path/to/domain.hddl```
 * To verify a problem, use ```/path/to/hddl_analyzer.exe verify /path/to/domain.hddl -p /path/to/problem.hddl```
+* To verify a JSON export, use ```/path/to/hddl_analyzer.exe verify /path/to/program.json```
 * To get general information about the domain (e.g., hierarchy class), use ```/path/to/hddl_analyzer.exe metadata /path/to/domain.hddl```
-* To export the parsed model as JSON, use ```/path/to/hddl_analyzer.exe to_json /path/to/domain.hddl [-p /path/to/problem.hddl] [-o output.json]```
-* To load a (possibly modified) JSON export back and validate it, use ```/path/to/hddl_analyzer.exe from_json /path/to/program.json [-o normalized.json]```
-* For a complete list of commands, use ```/path/to/hddl_analyzer.exe --help```
+* To convert between HDDL and JSON, use ```/path/to/hddl_analyzer.exe convert /path/to/input [-p /path/to/problem.hddl] [--to hddl|json] [-o output]```. The output format defaults to JSON. When emitting HDDL for a program that contains a problem, the domain is written to the ```-o``` path and the problem to a derived sibling file (e.g., ```-o out.hddl``` also produces ```out.problem.hddl```); without ```-o```, both are printed to stdout.
+* For a complete list of commands and options, use ```/path/to/hddl_analyzer.exe --help```
 ## Language Server
 Executing ```language_server.exe```, activates the language server on the current terminal. At the moment, we only support communication via the standard IO, specified by the Language Server Protocol (LSP).
 

@@ -6,7 +6,7 @@ mod transpiler;
 
 mod language_server;
 pub use language_server::RequestHandler;
-pub use transpiler::Transpiler;
+pub use transpiler::{Input, Transformation, Transpiler};
 
 pub use crate::lexical_analyzer::*;
 use lexical_analyzer::LexicalAnalyzer;

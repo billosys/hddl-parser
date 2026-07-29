@@ -100,13 +100,13 @@ impl <'a> fmt::Display for DomainAST<'a> {
             write!(f, "\n (:functions {})", format_list(&self.functions))?;
         }
         for task in &self.compound_tasks {
-            write!(f, "\n {}", task)?;
+            write!(f, "\n {}\n", task)?;
         }
         for method in &self.methods {
-            write!(f, "\n {}", method)?;
+            write!(f, "\n {}\n", method)?;
         }
         for action in &self.actions {
-            write!(f, "\n {}", action)?;
+            write!(f, "\n {}\n", action)?;
         }
         write!(f, "\n)")
     }

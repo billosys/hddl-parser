@@ -1,4 +1,4 @@
-use super::Transpiler;
+use super::{Input, Transpiler};
 use crate::{
     AbstractSyntaxTree, Action, Formula, HDDLProgram, LexicalAnalyzer, NumberType, Parser,
     Predicate, Subtask, Symbol, TokenPosition,
@@ -151,6 +151,7 @@ pub fn action_display_round_trip_test() {
  :precondition (and (clear ?x) (handempty))
  :effect (and (holding ?x) (not (clear ?x)))
 )
+
 )",
     );
 }
@@ -167,6 +168,7 @@ pub fn method_display_round_trip_test() {
  :ordering (and (< task0 task1))
  :constraints (and (not (= ?l1 ?l2)))
 )
+
 )",
     );
 }
@@ -180,6 +182,7 @@ pub fn ordered_subtasks_round_trip_test() {
  :task (deliver ?p)
  :ordered-subtasks (and (pickup ?p) (drop ?p))
 )
+
 )",
     );
 }
@@ -208,16 +211,19 @@ pub fn domain_to_hddl_round_trip_test() {
  (:functions (fuel ?l - loc))
  (:task deliver
  :parameters (?p - pkg ?l - loc))
+
  (:method m_deliver
  :parameters (?p - pkg ?l1 - loc ?l2 - loc)
  :task (deliver ?p ?l2)
  :ordered-subtasks (and (pickup ?p ?l1) (drop ?p ?l2))
 )
+
  (:action pickup
  :parameters (?p - pkg ?l - loc)
  :precondition (at ?p ?l)
  :effect (not (at ?p ?l))
 )
+
 )",
     );
 }
@@ -235,6 +241,61 @@ pub fn problem_to_hddl_round_trip_test() {
  (:goal (at pkg_0 loc_1))
 )",
     );
+}
+
+#[test]
+pub fn transpiler_pipeline_test() {
+    let domain = "(define (domain transport)
+ (:predicates (at ?p ?l) (road ?l1 ?l2))
+ (:task deliver
+ :parameters (?p ?l))
+
+ (:method m_deliver
+ :parameters (?p ?l)
+ :task (deliver ?p ?l)
+ :ordered-subtasks (and (pickup ?p ?l))
+)
+
+ (:action pickup
+ :parameters (?p ?l)
+ :precondition (at ?p ?l)
+ :effect (not (at ?p ?l))
+)
+
+)";
+    let problem = "(define (problem p_transport) (:domain transport)
+ (:objects pkg_0 loc_0)
+ (:htn
+ :subtasks (and (deliver pkg_0 loc_0))
+)
+ (:init (at pkg_0 loc_0))
+)";
+    let domain_bytes = domain.as_bytes().to_vec();
+    let problem_bytes = problem.as_bytes().to_vec();
+
+    // HDDL in, both outputs
+    let from_hddl = Transpiler::from_hddl(&domain_bytes, Some(&problem_bytes)).unwrap();
+    assert_eq!(from_hddl.to_hddl(), (domain.to_string(), Some(problem.to_string())));
+    let json = from_hddl.to_json();
+
+    // JSON in, both outputs; agrees with the HDDL path
+    let from_json = Transpiler::from_json(&json).unwrap();
+    assert_eq!(from_json.to_hddl(), (domain.to_string(), Some(problem.to_string())));
+    assert_eq!(from_json.to_json(), json);
+
+    // verify and metadata work through the facade
+    assert!(from_json.verify().is_ok());
+    assert_eq!(from_json.metadata().unwrap().domain_name, "transport");
+
+    // from_input dispatches to the same constructors
+    let from_hddl_input = Transpiler::from_input(Input::Hddl {
+        domain: &domain_bytes,
+        problem: Some(&problem_bytes),
+    })
+    .unwrap();
+    assert_eq!(from_hddl_input.to_json(), json);
+    let from_json_input = Transpiler::from_input(Input::Json(&json)).unwrap();
+    assert_eq!(from_json_input.to_json(), json);
 }
 
 #[test]

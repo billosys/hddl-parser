@@ -24,13 +24,13 @@ pub struct HTN<'a> {
     #[serde(skip)]
     pub ordering_pos: Option<TokenPosition>,
     pub orderings: TaskOrdering<'a>,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub constraints: Option<Vec<Constraint<'a>>>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Subtask<'a> {
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub id: Option<Symbol<'a>>,
     #[serde(borrow)]
     pub task: Symbol<'a>,
