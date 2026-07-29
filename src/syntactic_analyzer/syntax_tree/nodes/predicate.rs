@@ -1,8 +1,9 @@
-use std::{fmt::format, hash::Hash};
+use std::{fmt, hash::Hash};
 
 use serde::{Deserialize, Serialize};
 
 use crate::TokenPosition;
+use crate::transpiler::format_call;
 
 use super::*;
 
@@ -45,15 +46,8 @@ impl <'a> Hash for Predicate<'a> {
     }
 }
 
-impl <'a> ToString for Predicate<'a> {
-    fn to_string(&self) -> String {
-        let mut s = String::from(self.name);
-        s.push('(');
-        for var in self.variables.iter() {
-            s.push_str(var.name);
-            s.push(',');
-        }
-        s.push(')');
-        s
+impl <'a> fmt::Display for Predicate<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", format_call(self.name, &self.variables))
     }
 }

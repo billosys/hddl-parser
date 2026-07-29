@@ -2,7 +2,7 @@ use super::*;
 
 impl <'a> Parser<'a> {
     pub fn parse_problem(&self, meta_data: ProblemDefinition<'a>) -> Result<ProblemAST<'a>, ParsingError> {
-        let mut syntax_tree = ProblemAST::new();
+        let mut syntax_tree = ProblemAST::new(meta_data.problem_name, meta_data.domain_name);
         loop {
             match self.tokenizer.get_token()? {
                 Token::Punctuator(PunctuationType::LParentheses) => {

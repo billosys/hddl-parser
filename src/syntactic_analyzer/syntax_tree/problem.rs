@@ -1,8 +1,15 @@
+use std::fmt;
+
 use super::*;
 use crate::TokenPosition;
+use crate::transpiler::{format_list, format_typed_list};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ProblemAST<'a> {
+    #[serde(borrow, default)]
+    pub name: &'a str,
+    #[serde(borrow, default)]
+    pub domain_name: &'a str,
     pub requirements: Vec<RequirementType>,
     #[serde(default)]
     pub init_tn: Option<InitialTaskNetwork<'a>>,
@@ -14,8 +21,10 @@ pub struct ProblemAST<'a> {
 }
 
 impl <'a> ProblemAST<'a> {
-    pub fn new() -> ProblemAST<'a> {
+    pub fn new(name: &'a str, domain_name: &'a str) -> ProblemAST<'a> {
         ProblemAST {
+            name,
+            domain_name,
             requirements: vec![],
             init_tn: None,
             init_state: vec![],
@@ -42,5 +51,28 @@ impl <'a> ProblemAST<'a> {
     }
     pub fn add_requirement(&mut self, req: RequirementType) {
         self.requirements.push(req);
+    }
+}
+
+impl <'a> fmt::Display for ProblemAST<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "(define (problem {}) (:domain {})", self.name, self.domain_name)?;
+        if !self.requirements.is_empty() {
+            write!(f, "\n (:requirements {})", format_list(&self.requirements))?;
+        }
+        if !self.objects.is_empty() {
+            write!(f, "\n (:objects {})", format_typed_list(&self.objects))?;
+        }
+        if let Some(init_tn) = &self.init_tn {
+            write!(f, "\n {}", init_tn)?;
+        }
+        if !self.init_state.is_empty() {
+            write!(f, "\n (:init {})", format_list(&self.init_state))?;
+        }
+        // the parser only accepts :goal as the last block of a problem
+        if let Some(goal) = &self.goal {
+            write!(f, "\n (:goal {})", goal)?;
+        }
+        write!(f, "\n)")
     }
 }

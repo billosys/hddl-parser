@@ -1,8 +1,8 @@
-use std::{borrow::Borrow, hash::Hash};
+use std::{borrow::Borrow, fmt, hash::Hash, write};
 
 use serde::{Deserialize, Serialize};
 
-use crate::TokenPosition;
+use crate::{TokenPosition, transpiler::format_typed_list};
 
 use super::*;
 
@@ -47,5 +47,11 @@ impl <'a> Borrow<str> for &Task<'a> {
 impl <'a> Borrow<&'a str> for &Task<'a> {
     fn borrow(&self) -> &&'a str {
         &self.name
+    }
+}
+
+impl <'a> fmt::Display for Task<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "(:task {}\n :parameters ({}))", self.name, format_typed_list(&self.parameters))
     }
 }

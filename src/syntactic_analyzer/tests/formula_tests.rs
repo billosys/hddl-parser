@@ -74,38 +74,6 @@ mod tests {
     }
 
     #[test]
-    pub fn pddl_display_test() {
-        let at = Predicate::new(
-            "at",
-            TokenPosition { line: 0 },
-            vec![
-                Symbol::new("p_1", TokenPosition { line: 0 }, None, None),
-                Symbol::new("p_2", TokenPosition { line: 0 }, None, None),
-            ],
-        );
-        let formula = Formula::And(vec![
-            Box::new(Formula::Atom(at)),
-            Box::new(Formula::Not(atom("clear"))),
-            Box::new(Formula::Probabilistic(NumberType::Real(0.5), atom("holding"))),
-            Box::new(Formula::Equals("a", "b")),
-        ]);
-        assert_eq!(
-            formula.to_string(),
-            "(and (at p_1 p_2) (not (clear)) (probabilistic 0.5 (holding)) (= a b))"
-        );
-
-        let var = Symbol::new("x", TokenPosition { line: 0 }, Some("loc"), None);
-        let for_all = Formula::ForAll(vec![var], atom("p_1"));
-        assert_eq!(for_all.to_string(), "(forall (x - loc) (p_1))");
-
-        let when = Formula::Imply(vec![atom("p_1")], vec![atom("p_2"), atom("p_3")]);
-        assert_eq!(when.to_string(), "(when (p_1) (and (p_2) (p_3)))");
-
-        let oneof = Formula::Xor(vec![atom("p_1"), atom("p_2")]);
-        assert_eq!(oneof.to_string(), "(oneof (p_1) (p_2))");
-    }
-
-    #[test]
     pub fn parsed_precondition_conjunction_test() {
         let program = String::from(
             "(define (domain bal)

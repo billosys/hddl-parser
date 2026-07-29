@@ -1,4 +1,4 @@
-use std::{borrow::Borrow, hash::Hash};
+use std::{borrow::Borrow, fmt, hash::Hash, write};
 
 use serde::{Deserialize, Serialize};
 
@@ -43,5 +43,14 @@ impl <'a> Hash for Symbol<'a> {
 impl <'a> Borrow<&'a str> for &Symbol<'a> {
     fn borrow(&self) -> &&'a str {
         &self.name
+    }
+}
+
+impl <'a> fmt::Display for Symbol<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self.symbol_type {
+            Some(t) => write!(f, "{} - {}", self.name, t),
+            None => write!(f, "{}", self.name.to_string()),
+        }
     }
 }

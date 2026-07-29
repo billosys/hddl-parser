@@ -1,9 +1,12 @@
+use std::fmt;
+
 use petgraph::prelude::GraphMap;
 use petgraph::algo::toposort;
 use petgraph::Directed;
 use serde::{Deserialize, Serialize};
 
 use crate::TokenPosition;
+use crate::transpiler::{format_call, format_typed_list};
 use super::*;
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -45,6 +48,65 @@ pub enum Constraint<'a> {
 pub enum TaskOrdering<'a> {
     Total,
     Partial(#[serde(borrow)] Vec<(&'a str, &'a str)>)
+}
+
+impl <'a> fmt::Display for InitialTaskNetwork<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "(:htn")?;
+        if let Some(parameters) = &self.parameters {
+            write!(f, "\n :parameters ({})", format_typed_list(parameters))?;
+        }
+        write!(f, "\n {}\n)", self.tn)
+    }
+}
+
+impl <'a> fmt::Display for HTN<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let keyword = match self.orderings {
+            TaskOrdering::Total => ":ordered-subtasks",
+            TaskOrdering::Partial(_) => ":subtasks",
+        };
+        if self.subtasks.is_empty() {
+            write!(f, "{} ()", keyword)?;
+        } else {
+            let subtasks = self.subtasks.iter().map(|st| st.to_string()).collect::<Vec<_>>().join(" ");
+            write!(f, "{} (and {})", keyword, subtasks)?;
+        }
+        if let TaskOrdering::Partial(orderings) = &self.orderings {
+            if !orderings.is_empty() {
+                let orderings = orderings.iter().map(|(t1, t2)| format!("(< {} {})", t1, t2)).collect::<Vec<_>>().join(" ");
+                write!(f, "\n :ordering (and {})", orderings)?;
+            }
+        }
+        if let Some(constraints) = &self.constraints {
+            if constraints.is_empty() {
+                write!(f, "\n :constraints ()")?;
+            } else {
+                let constraints = constraints.iter().map(|c| c.to_string()).collect::<Vec<_>>().join(" ");
+                write!(f, "\n :constraints (and {})", constraints)?;
+            }
+        }
+        Ok(())
+    }
+}
+
+impl <'a> fmt::Display for Subtask<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let call = format_call(self.task.name, &self.terms);
+        match &self.id {
+            Some(id) => write!(f, "({} {})", id, call),
+            None => write!(f, "{}", call),
+        }
+    }
+}
+
+impl <'a> fmt::Display for Constraint<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Constraint::Equal(a, b) => write!(f, "(= {} {})", a, b),
+            Constraint::NotEqual(a, b) => write!(f, "(not (= {} {}))", a, b),
+        }
+    }
 }
 
 impl <'a> TaskOrdering<'a> {
