@@ -15,6 +15,18 @@ pub(crate) fn format_typed_list(vars: &[Symbol]) -> String {
     format_list(vars)
 }
 
+// renders a domain/problem list block; a single item stays inline, more get
+// one line each, e.g. "(:predicates\n  (at ?p ?l)\n  (road ?l1 ?l2)\n )"
+pub(crate) fn format_block<T: fmt::Display>(keyword: &str, items: &[T]) -> String {
+    match items {
+        [single] => format!("({} {})", keyword, single),
+        _ => {
+            let lines: String = items.iter().map(|item| format!("\n  {}", item)).collect();
+            format!("({}{}\n )", keyword, lines)
+        }
+    }
+}
+
 // renders a task/predicate invocation, e.g. "(deliver ?p ?l)" or "(noop)"
 pub(crate) fn format_call(name: &str, args: &[Symbol]) -> String {
     if args.is_empty() {

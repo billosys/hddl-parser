@@ -2,7 +2,7 @@ use std::fmt;
 
 use super::*;
 use crate::TokenPosition;
-use crate::transpiler::{format_list, format_typed_list};
+use crate::transpiler::{format_block, format_list};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ProblemAST<'a> {
@@ -61,13 +61,13 @@ impl <'a> fmt::Display for ProblemAST<'a> {
             write!(f, "\n (:requirements {})\n", format_list(&self.requirements))?;
         }
         if !self.objects.is_empty() {
-            write!(f, "\n (:objects {})\n", format_typed_list(&self.objects))?;
+            write!(f, "\n {}\n", format_block(":objects", &self.objects))?;
         }
         if let Some(init_tn) = &self.init_tn {
             write!(f, "\n {}\n", init_tn.to_string().replace('\n', "\n "))?;
         }
         if !self.init_state.is_empty() {
-            write!(f, "\n (:init {})\n", format_list(&self.init_state))?;
+            write!(f, "\n {}\n", format_block(":init", &self.init_state))?;
         }
         // the parser only accepts :goal as the last block of a problem
         if let Some(goal) = &self.goal {

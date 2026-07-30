@@ -9,4 +9,4 @@ mod tests;
 pub use self::core::Transpiler;
 pub use self::input::Input;
 pub use self::transform::Transformation;
-pub(crate) use self::hddl::{format_call, format_list, format_typed_list};
+pub(crate) use self::hddl::{format_block, format_call, format_list, format_typed_list};

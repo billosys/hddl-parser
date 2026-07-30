@@ -1,6 +1,6 @@
 use std::fmt;
 
-use crate::transpiler::{format_list, format_typed_list};
+use crate::transpiler::{format_block, format_list};
 use super::*;
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -88,16 +88,16 @@ impl <'a> fmt::Display for DomainAST<'a> {
             write!(f, "\n (:requirements {})\n", format_list(&self.requirements))?;
         }
         if let Some(types) = &self.types {
-            write!(f, "\n (:types {})\n", format_typed_list(types))?;
+            write!(f, "\n {}\n", format_block(":types", types))?;
         }
         if let Some(constants) = &self.constants {
-            write!(f, "\n (:constants {})\n", format_typed_list(constants))?;
+            write!(f, "\n {}\n", format_block(":constants", constants))?;
         }
         if !self.predicates.is_empty() {
-            write!(f, "\n (:predicates {})\n", format_list(&self.predicates))?;
+            write!(f, "\n {}\n", format_block(":predicates", &self.predicates))?;
         }
         if !self.functions.is_empty() {
-            write!(f, "\n (:functions {})\n", format_list(&self.functions))?;
+            write!(f, "\n {}\n", format_block(":functions", &self.functions))?;
         }
         // members are multi-line: shift every line one level to keep their
         // parentheses and keyword colons vertically aligned

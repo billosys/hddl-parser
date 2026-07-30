@@ -217,11 +217,17 @@ pub fn domain_to_hddl_round_trip_test() {
 
  (:requirements :typing :hierarchy)
 
- (:types loc - object pkg - object)
+ (:types
+  loc - object
+  pkg - object
+ )
 
  (:constants depot - loc)
 
- (:predicates (at ?p - pkg ?l - loc) (road ?l1 - loc ?l2 - loc))
+ (:predicates
+  (at ?p - pkg ?l - loc)
+  (road ?l1 - loc ?l2 - loc)
+ )
 
  (:functions (fuel ?l - loc))
 
@@ -252,13 +258,20 @@ pub fn problem_to_hddl_round_trip_test() {
 
  (:requirements :typing)
 
- (:objects pkg_0 - pkg loc_0 - loc loc_1 - loc)
+ (:objects
+  pkg_0 - pkg
+  loc_0 - loc
+  loc_1 - loc
+ )
 
  (:htn
   :subtasks (and (task0 (deliver pkg_0 loc_1)))
  )
 
- (:init (at pkg_0 loc_0) (road loc_0 loc_1))
+ (:init
+  (at pkg_0 loc_0)
+  (road loc_0 loc_1)
+ )
 
  (:goal (at pkg_0 loc_1))
 
@@ -270,7 +283,10 @@ pub fn problem_to_hddl_round_trip_test() {
 pub fn transpiler_pipeline_test() {
     let domain = "(define (domain transport)
 
- (:predicates (at ?p ?l) (road ?l1 ?l2))
+ (:predicates
+  (at ?p ?l)
+  (road ?l1 ?l2)
+ )
 
  (:task deliver
   :parameters (?p ?l)
@@ -291,7 +307,10 @@ pub fn transpiler_pipeline_test() {
 )";
     let problem = "(define (problem p_transport) (:domain transport)
 
- (:objects pkg_0 loc_0)
+ (:objects
+  pkg_0
+  loc_0
+ )
 
  (:htn
   :subtasks (and (deliver pkg_0 loc_0))
@@ -343,7 +362,10 @@ pub fn transpiler_to_hddl_test() {
 )";
     let problem = "(define (problem p_transport) (:domain transport)
 
- (:objects pkg_0 loc_0)
+ (:objects
+  pkg_0
+  loc_0
+ )
 
  (:init (at pkg_0 loc_0))
 
