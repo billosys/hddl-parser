@@ -24,6 +24,9 @@ impl <'a> Symbol<'a> {
             type_pos
         }
     }
+    pub fn new_untyped(name: &'a str, name_pos: TokenPosition) -> Symbol<'a> {
+        Symbol { name, name_pos, symbol_type: None, type_pos: None }
+    }
 }
 
 impl <'a> Eq for Symbol<'a> {}

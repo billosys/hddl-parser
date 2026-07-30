@@ -1,3 +1,6 @@
+use core::panic;
+use std::collections::HashSet;
+
 use super::*;
 
 #[derive(Clone)]
@@ -7,32 +10,59 @@ pub struct TypeChecker<'a> {
 
 impl<'a> TypeChecker<'a> {
     pub fn new(types: &Option<Vec<Symbol<'a>>>) -> TypeChecker<'a> {
-        match &types {
-            None => TypeChecker {
-                type_hierarchy: GraphMap::new(),
-            },
-            Some(type_deps) => {
-                let mut type_graph: GraphMap<&str, (), Directed> =
-                    GraphMap::<_, (), Directed>::new();
-                for delcared_type in type_deps {
-                    if !type_graph.contains_node(delcared_type.name) {
-                        type_graph.add_node(delcared_type.name);
+        let mut type_graph = GraphMap::new();
+        type_graph.add_node("object");
+
+        if let Some(type_deps) = types {
+            for declared_type in type_deps {
+                type_graph.add_node(declared_type.name);
+                match declared_type.symbol_type {
+                    Some(parent) => {
+                        type_graph.add_edge(declared_type.name, parent, ());
                     }
-                    match &delcared_type.symbol_type {
-                        None => {}
-                        Some(parent) => {
-                            if !type_graph.contains_node(parent) {
-                                type_graph.add_node(parent);
-                            }
-                            type_graph.add_edge(delcared_type.name, parent, ());
-                        }
+                    None => {
+                        type_graph.add_edge(declared_type.name, "object", ());
                     }
                 }
-                return TypeChecker {
-                    type_hierarchy: type_graph,
-                };
             }
         }
+
+        let roots: Vec<_> = type_graph
+            .nodes()
+            .filter(|n| *n != "object")
+            .filter(|n| {
+                type_graph
+                    .neighbors_directed(*n, petgraph::Direction::Outgoing)
+                    .next()
+                    .is_none()
+            })
+            .collect();
+
+        for root in roots {
+            type_graph.add_edge(root, "object", ());
+        }
+
+        return TypeChecker {
+            type_hierarchy: type_graph,
+        };
+    }
+
+    pub fn get_types(&self) -> HashSet<&'a str> {
+        HashSet::from_iter(self.type_hierarchy.nodes())
+    }
+
+    pub fn get_supertypes(&self, of_type: &'a str) -> HashSet<&'a str> {
+        let mut supertypes = HashSet::new();
+        if !self.type_hierarchy.contains_node(of_type) {
+            panic!("Type {} is not defined.", of_type)
+        }
+        let mut dfs = Dfs::new(&self.type_hierarchy, of_type);
+        while let Some(node) = dfs.next(&self.type_hierarchy) {
+            if node != of_type {
+                supertypes.insert(node);
+            }
+        }
+        supertypes
     }
 
     pub fn verify_type_hierarchy(&self) -> Result<(), SemanticErrorType> {

@@ -1,3 +1,5 @@
+use std::collections::HashSet;
+
 use super::*;
 
 #[test]
@@ -284,4 +286,21 @@ pub fn method_subtask_checking_test () {
         }
         _ => panic!()
     }
+}
+#[test]
+pub fn get_supertypes_test() {
+    let types = Some(vec![
+        Symbol::new("truck", TokenPosition::default(), Some("vehicle"), None),
+        Symbol::new("loc", TokenPosition::default(), None, None),
+    ]);
+    let checker = TypeChecker::new(&types);
+    assert_eq!(
+        checker.get_types(),
+        HashSet::from_iter(vec!["truck", "vehicle", "object", "loc"])
+    );
+    
+    assert_eq!(checker.get_supertypes("truck"), HashSet::from_iter(vec!["vehicle", "object"]));
+    assert_eq!(checker.get_supertypes("vehicle"), HashSet::from_iter(vec!["object"]));
+    assert_eq!(checker.get_supertypes("loc"), HashSet::from_iter(vec!["object"]));
+    assert_eq!(checker.get_supertypes("object"), HashSet::from_iter(Vec::<&str>::new()));
 }

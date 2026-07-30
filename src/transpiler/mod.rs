@@ -1,6 +1,7 @@
 mod core;
 mod hddl;
 mod input;
+mod remove_types;
 mod transform;
 #[cfg(test)]
 mod tests;

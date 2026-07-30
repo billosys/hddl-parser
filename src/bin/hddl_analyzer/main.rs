@@ -1,5 +1,5 @@
 use clap::Parser;
-use hddl_analyzer::{Input, ParsingError, Transpiler};
+use hddl_analyzer::{Input, ParsingError, Transformation, Transpiler};
 use std::{
     env, fs,
     path::{Path, PathBuf},
@@ -78,10 +78,6 @@ pub fn main() {
 }
 
 fn convert(args: ConvertArgs) {
-    if args.untyped {
-        eprintln!("{RED}[Error]{RESET} transformation 'untyped' is not implemented yet");
-        return;
-    }
     let data = match InputData::read(&args.input) {
         Ok(data) => data,
         Err(error) => return eprintln!("{RED}[Error]{RESET} {error}"),
@@ -89,6 +85,12 @@ fn convert(args: ConvertArgs) {
     let transpiler = match data.transpiler() {
         Ok(transpiler) => transpiler,
         Err(parsing_error) => return eprintln!("{RED}[Error]{RESET} {parsing_error}"),
+    };
+    let transpiler = if args.untyped {
+        eprintln!("{YELLOW}[Warning]{RESET} 'untyped' is partially implemented: type predicates and init atoms are added, but type annotations are not stripped yet");
+        transpiler.transform(Transformation::RemoveTypes)
+    } else {
+        transpiler
     };
     match args.to {
         OutputFormat::Json => write_or_print(args.output_file.as_deref(), &transpiler.to_json()),

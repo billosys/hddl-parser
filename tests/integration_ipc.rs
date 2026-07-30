@@ -1,6 +1,6 @@
 extern crate hddl_analyzer;
 
-use hddl_analyzer::{HDDLProgram, SemanticErrorType};
+use hddl_analyzer::{HDDLProgram, SemanticErrorType, Transformation, Transpiler};
 use std::fs;
 
 #[test]

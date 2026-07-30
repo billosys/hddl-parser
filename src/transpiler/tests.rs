@@ -1,7 +1,9 @@
+use std::println;
+
 use super::{Input, Transpiler};
 use crate::{
-    AbstractSyntaxTree, Action, Formula, HDDLProgram, LexicalAnalyzer, NumberType, Parser,
-    Predicate, Subtask, Symbol, TokenPosition,
+    transpiler::transform, AbstractSyntaxTree, Action, Formula, HDDLProgram, LexicalAnalyzer,
+    NumberType, Parser, Predicate, Subtask, Symbol, TokenPosition,
 };
 
 fn symbol(name: &'static str) -> Symbol<'static> {
@@ -300,12 +302,18 @@ pub fn transpiler_pipeline_test() {
 
     // HDDL in, both outputs
     let from_hddl = Transpiler::from_hddl(&domain_bytes, Some(&problem_bytes)).unwrap();
-    assert_eq!(from_hddl.to_hddl(), (domain.to_string(), Some(problem.to_string())));
+    assert_eq!(
+        from_hddl.to_hddl(),
+        (domain.to_string(), Some(problem.to_string()))
+    );
     let json = from_hddl.to_json();
 
     // JSON in, both outputs; agrees with the HDDL path
     let from_json = Transpiler::from_json(&json).unwrap();
-    assert_eq!(from_json.to_hddl(), (domain.to_string(), Some(problem.to_string())));
+    assert_eq!(
+        from_json.to_hddl(),
+        (domain.to_string(), Some(problem.to_string()))
+    );
     assert_eq!(from_json.to_json(), json);
 
     // verify and metadata work through the facade
@@ -343,4 +351,104 @@ pub fn transpiler_to_hddl_test() {
     let (domain_hddl, problem_hddl) = Transpiler::new(program).to_hddl();
     assert_eq!(domain_hddl, domain);
     assert_eq!(problem_hddl.as_deref(), Some(problem));
+}
+
+#[test]
+pub fn untyping_test() {
+    let domain = "(define (domain transport)
+        (:types car truck - vehicle vehicle - something location) 
+        (:constants up - location)
+        (:predicates (at ?c - car ?l - location ?a))
+    )";
+    let problem = "(define (problem p_transport) (:domain transport)
+        (:objects c1 - car loc_0 - location pkg_0)
+        (:init (at pkg_0 loc_0))
+    )";
+    let domain_bytes = domain.as_bytes().to_vec();
+    let problem_bytes = problem.as_bytes().to_vec();
+    let program = HDDLProgram::from_hddl(&domain_bytes, Some(&problem_bytes)).unwrap();
+    let result = Transpiler::new(program)
+        .transform(crate::Transformation::RemoveTypes)
+        .into_program();
+    assert!(result.domain.constants.unwrap().iter().all(|x| {
+        x.symbol_type.is_none() && x.type_pos.is_none()
+    }));
+    let predicates = &result.domain.predicates;
+    assert!(predicates.contains(&Predicate {
+        name: "object",
+        name_pos: TokenPosition::default(),
+        variables: vec![Symbol::new_untyped("?var", TokenPosition::default())]
+    }));
+    assert!(predicates.contains(&Predicate {
+        name: "something",
+        name_pos: TokenPosition::default(),
+        variables: vec![Symbol::new_untyped("?var", TokenPosition::default())]
+    }));
+    assert!(predicates.contains(&Predicate {
+        name: "location",
+        name_pos: TokenPosition::default(),
+        variables: vec![Symbol::new_untyped("?var", TokenPosition::default())]
+    }));
+    assert!(predicates.contains(&Predicate {
+        name: "vehicle",
+        name_pos: TokenPosition::default(),
+        variables: vec![Symbol::new_untyped("?var", TokenPosition::default())]
+    }));
+    assert!(predicates.contains(&Predicate {
+        name: "car",
+        name_pos: TokenPosition::default(),
+        variables: vec![Symbol::new_untyped("?var", TokenPosition::default())]
+    }));
+    assert!(predicates.contains(&Predicate {
+        name: "truck",
+        name_pos: TokenPosition::default(),
+        variables: vec![Symbol::new_untyped("?var", TokenPosition::default())]
+    }));
+    let problem = &result.problem.unwrap();
+    let objects = &problem.objects;
+    for object in objects {
+        assert!(object.symbol_type.is_none());
+        assert!(object.type_pos.is_none());
+    }
+    let init = &problem.init_state;
+    assert!(init.contains(&Predicate {
+        name: "object",
+        name_pos: TokenPosition::default(),
+        variables: vec![Symbol::new_untyped("up", TokenPosition::default())]
+    }));
+    assert!(init.contains(&Predicate {
+        name: "location",
+        name_pos: TokenPosition::default(),
+        variables: vec![Symbol::new_untyped("up", TokenPosition::default())]
+    }));
+    assert!(init.contains(&Predicate {
+        name: "object",
+        name_pos: TokenPosition::default(),
+        variables: vec![Symbol::new_untyped("c1", TokenPosition::default())]
+    }));
+    assert!(init.contains(&Predicate {
+        name: "car",
+        name_pos: TokenPosition::default(),
+        variables: vec![Symbol::new_untyped("c1", TokenPosition::default())]
+    }));
+    assert!(init.contains(&Predicate {
+        name: "vehicle",
+        name_pos: TokenPosition::default(),
+        variables: vec![Symbol::new_untyped("c1", TokenPosition::default())]
+    }));
+    assert!(init.contains(&Predicate {
+        name: "object",
+        name_pos: TokenPosition::default(),
+        variables: vec![Symbol::new_untyped("loc0", TokenPosition::default())]
+    }));
+    assert!(init.contains(&Predicate {
+        name: "location",
+        name_pos: TokenPosition::default(),
+        variables: vec![Symbol::new_untyped("loc0", TokenPosition::default())]
+    }));
+    assert!(init.contains(&Predicate {
+        name: "object",
+        name_pos: TokenPosition::default(),
+        variables: vec![Symbol::new_untyped("pkg0", TokenPosition::default())]
+    }));
 }

@@ -30,10 +30,11 @@ impl<'a> Transpiler<'a> {
     }
 
     // applies a transformation to the program; chainable before emission
-    pub fn transform(self, transformation: Transformation) -> Transpiler<'a> {
+    pub fn transform(mut self, transformation: Transformation) -> Transpiler<'a> {
         match transformation {
-            Transformation::RemoveTypes => todo!("transformations are not implemented yet"),
+            Transformation::RemoveTypes => super::remove_types::remove_types(&mut self.program),
         }
+        self
     }
 
     pub fn verify(&self) -> Result<Vec<WarningType>, ParsingError> {
