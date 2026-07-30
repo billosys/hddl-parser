@@ -70,12 +70,15 @@ impl<'a> Formula<'a> {
     }
 
     pub fn and(self, rhs: Formula<'a>) -> Formula<'a> {
-        Formula::And(
-            vec![
-                Box::new(self),
-                Box::new(rhs)
-            ]
-        )
+        let mut conjuncts = match self {
+            Formula::And(conjuncts) => conjuncts,
+            other => vec![Box::new(other)],
+        };
+        match rhs {
+            Formula::And(rhs) => conjuncts.extend(rhs),
+            other => conjuncts.push(Box::new(other)),
+        }
+        Formula::And(conjuncts)
     }
 
     fn is_literal(&self) -> bool {

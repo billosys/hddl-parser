@@ -395,79 +395,69 @@ pub fn untyping_test() {
         .iter()
         .all(|x| { x.symbol_type.is_none() && x.type_pos.is_none() }));
     if let Some(Formula::And(prec)) = &action.preconditions {
-        assert_eq!(prec.len(), 2);
-        let prec0 = &*prec[0];
-        match prec0 {
-            Formula::And(inner) => {
-                assert_eq!(inner.len(), 1);
-                if let Formula::Not(inner2) = &*inner[0] {
-                    match &**inner2 {
-                        Formula::Atom(p) => {
-                            assert_eq!(p.name, "at");
-                        }
-                        _ => panic!(),
-                    }
-                } else {
-                    panic!()
+        assert_eq!(prec.len(), 3);
+        if let Formula::Not(inner) = &*prec[0] {
+            match &**inner {
+                Formula::Atom(p) => {
+                    assert_eq!(p.name, "at");
                 }
+                _ => panic!(),
             }
-            _ => panic!(),
+        } else {
+            panic!()
         }
-        let prec1 = &*prec[1];
-        match prec1 {
-            Formula::And(typings) => {
-                println!("{:?}", typings);
-                assert_eq!(typings.len(), 2);
-                if let Formula::Atom(x) = &*typings[0] {
-                    assert_eq!(x.name, "car");
-                    assert_eq!(
-                        x.variables,
-                        vec![Symbol::new_untyped("?c", TokenPosition::default())]
-                    )
-                } else {
-                    panic!();
-                }
-                if let Formula::Atom(x) = &*typings[1] {
-                    assert_eq!(x.name, "location");
-                    assert_eq!(
-                        x.variables,
-                        vec![Symbol::new_untyped("?loc1", TokenPosition::default())]
-                    )
-                } else {
-                    panic!();
-                }
-            }
-            _ => panic!(),
+        if let Formula::Atom(x) = &*prec[1] {
+            assert_eq!(x.name, "car");
+            assert_eq!(
+                x.variables,
+                vec![Symbol::new_untyped("?c", TokenPosition::default())]
+            )
+        } else {
+            panic!();
+        }
+        if let Formula::Atom(x) = &*prec[2] {
+            assert_eq!(x.name, "location");
+            assert_eq!(
+                x.variables,
+                vec![Symbol::new_untyped("?loc1", TokenPosition::default())]
+            )
+        } else {
+            panic!();
         }
     } else {
         panic!("precondition does not match the pattern")
     }
+    let task = &result.domain.compound_tasks[0];
+    assert!(task
+        .parameters
+        .iter()
+        .all(|x| { x.symbol_type.is_none() && x.type_pos.is_none() }));
     let method = &result.domain.methods[0];
     assert!(method
         .params
         .iter()
         .all(|x| { x.symbol_type.is_none() && x.type_pos.is_none() }));
-    match &method.precondition {
-        None => panic!(),
-        Some(prec) => match prec {
-            Formula::And(inner) => {
-                assert_eq!(inner.len(), 3);
-                let mut types = vec!["location", "location", "car"];
-                assert!(inner.iter().all(|x| {
-                    if let Atom(pred) = &**x {
-                        if let Some(pos) = types.iter().position(|x| *x == pred.name) {
-                            types.remove(pos);
-                            true
-                        } else {
-                            false
-                        }
+    let assert_typings = |formula: &Formula, mut types: Vec<&str>| match formula {
+        Formula::And(inner) => {
+            assert_eq!(inner.len(), types.len());
+            assert!(inner.iter().all(|x| {
+                if let Atom(pred) = &**x {
+                    if let Some(pos) = types.iter().position(|x| *x == pred.name) {
+                        types.remove(pos);
+                        true
                     } else {
                         false
                     }
-                }));
-            }
-            _ => panic!(),
-        },
+                } else {
+                    false
+                }
+            }));
+        }
+        _ => panic!(),
+    };
+    match &method.precondition {
+        None => panic!(),
+        Some(prec) => assert_typings(prec, vec!["location", "location", "car"]),
     }
     assert!(result
         .domain
@@ -554,4 +544,97 @@ pub fn untyping_test() {
         name_pos: TokenPosition::default(),
         variables: vec![Symbol::new_untyped("pkg0", TokenPosition::default())]
     }));
+}
+
+#[test]
+pub fn untyping_task_test() {
+    let domain = "(define (domain d)
+        (:types loc)
+        (:predicates (road ?a - loc ?b - loc))
+        (:task Goto
+            :parameters (?from ?to - loc)
+        )
+        (:method m_goto
+            :parameters (?a ?b - loc)
+            :task (Goto ?a ?b)
+            :precondition (road ?a ?b)
+            :subtasks (and (noop))
+        )
+        (:method m_goto_untyped_term
+            :parameters (?a - loc ?b)
+            :task (Goto ?a ?b)
+            :subtasks (and (noop))
+        )
+        (:method m_goto_repeated_term
+            :parameters (?a)
+            :task (Goto ?a ?a)
+            :subtasks (and (noop))
+        )
+    )";
+    let domain_bytes = domain.as_bytes().to_vec();
+    let program = HDDLProgram::from_hddl(&domain_bytes, None).unwrap();
+    let result = Transpiler::new(program)
+        .transform(crate::Transformation::RemoveTypes)
+        .into_program();
+
+    let task = &result.domain.compound_tasks[0];
+    assert!(task
+        .parameters
+        .iter()
+        .all(|x| { x.symbol_type.is_none() && x.type_pos.is_none() }));
+
+    let typing = |t: &'static str, var: &'static str| {
+        Atom(Predicate::new(
+            t,
+            TokenPosition::default(),
+            vec![Symbol::new_untyped(var, TokenPosition::default())],
+        ))
+    };
+    let assert_typings = |formula: &Formula, expected: Vec<Formula>| match formula {
+        Formula::And(inner) => {
+            assert_eq!(inner.len(), expected.len());
+            for (found, expected) in inner.iter().zip(expected) {
+                match (&**found, expected) {
+                    (Atom(found), Atom(expected)) => {
+                        assert_eq!(found.name, expected.name);
+                        assert_eq!(found.variables, expected.variables);
+                    }
+                    _ => panic!(),
+                }
+            }
+        }
+        _ => panic!(),
+    };
+
+    let method = &result.domain.methods[0];
+    match &method.precondition {
+        Some(prec) => assert_typings(
+            prec,
+            vec![
+                Atom(Predicate::new(
+                    "road",
+                    TokenPosition::default(),
+                    vec![
+                        Symbol::new_untyped("?a", TokenPosition::default()),
+                        Symbol::new_untyped("?b", TokenPosition::default()),
+                    ],
+                )),
+                typing("loc", "?a"),
+                typing("loc", "?b"),
+            ],
+        ),
+        None => panic!(),
+    }
+
+    let method = &result.domain.methods[1];
+    match &method.precondition {
+        Some(prec) => assert_typings(prec, vec![typing("loc", "?a"), typing("loc", "?b")]),
+        None => panic!(),
+    }
+
+    let method = &result.domain.methods[2];
+    match &method.precondition {
+        Some(prec) => assert_typings(prec, vec![typing("loc", "?a")]),
+        None => panic!(),
+    }
 }

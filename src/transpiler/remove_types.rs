@@ -1,5 +1,5 @@
 use core::panic;
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::vec;
 
 use crate::semantic_analyzer::TypeChecker;
@@ -70,11 +70,37 @@ pub fn remove_types<'a>(program: &mut HDDLProgram<'a>) {
     }
     // convert typed action params to untyped
     for action in program.domain.actions.iter_mut() {
-        compile_param_types_to_precondition(&mut action.parameters, &mut action.preconditions);
+        let constraints = collect_param_constraints(&mut action.parameters);
+        apply_constraints(
+            &mut action.preconditions,
+            minimize_constraints(constraints, &checker),
+        );
     }
-    // convert typed methods to untyped
+    // convert typed tasks to untyped
+    let mut task_param_types: HashMap<&'a str, Vec<Option<&'a str>>> = HashMap::new();
+    for task in program.domain.compound_tasks.iter_mut() {
+        let mut types = vec![];
+        for param in task.parameters.iter_mut() {
+            param.type_pos = None;
+            types.push(param.symbol_type.take());
+        }
+        task_param_types.insert(task.name, types);
+    }
+    // convert typed methods to untyped;
+    // each method also receives the typings of its task's terms
     for method in program.domain.methods.iter_mut() {
-        compile_param_types_to_precondition(&mut method.params, &mut method.precondition);
+        let mut constraints = collect_param_constraints(&mut method.params);
+        if let Some(types) = task_param_types.get(method.task.name) {
+            for (term, t) in method.task_terms.iter().zip(types) {
+                if let Some(t) = *t {
+                    constraints.push((term.name, t));
+                }
+            }
+        }
+        apply_constraints(
+            &mut method.precondition,
+            minimize_constraints(constraints, &checker),
+        );
     }
     // Convert typed objects to untyped
     if let Some(problem) = &mut program.problem {
@@ -95,23 +121,53 @@ pub fn remove_types<'a>(program: &mut HDDLProgram<'a>) {
     }
 }
 
-fn compile_param_types_to_precondition<'a>(
-    parameters: &mut Vec<Symbol<'a>>,
-    precondition: &mut Option<Formula<'a>>,
-) {
-    let mut conjuncts = vec![];
+// strips the parameter typings, returning them as (variable, type) constraints
+fn collect_param_constraints<'a>(parameters: &mut Vec<Symbol<'a>>) -> Vec<(&'a str, &'a str)> {
+    let mut constraints = vec![];
     for param in parameters.iter_mut() {
         param.type_pos = None;
         let Some(t) = param.symbol_type.take() else {
             continue;
         };
-        conjuncts.push(Box::new(crate::Formula::Atom(Predicate::new(
-            t,
-            TokenPosition::default(),
-            vec![Symbol::new_untyped(param.name, TokenPosition::default())],
-        ))));
+        constraints.push((param.name, t));
     }
-    let conjuncts = crate::Formula::And(conjuncts);
+    constraints
+}
+
+// drops constraints implied by a more specific constraint on the same variable
+fn minimize_constraints<'a>(
+    constraints: Vec<(&'a str, &'a str)>,
+    checker: &TypeChecker<'a>,
+) -> Vec<(&'a str, &'a str)> {
+    let mut kept: Vec<(&'a str, &'a str)> = vec![];
+    for (var, t) in constraints {
+        let implied = kept
+            .iter()
+            .any(|(kv, kt)| *kv == var && (*kt == t || checker.get_supertypes(kt).contains(t)));
+        if implied {
+            continue;
+        }
+        kept.retain(|(kv, kt)| !(*kv == var && checker.get_supertypes(t).contains(kt)));
+        kept.push((var, t));
+    }
+    kept
+}
+
+fn apply_constraints<'a>(
+    precondition: &mut Option<Formula<'a>>,
+    constraints: Vec<(&'a str, &'a str)>,
+) {
+    let conjuncts = constraints
+        .into_iter()
+        .map(|(var, t)| {
+            Box::new(Formula::Atom(Predicate::new(
+                t,
+                TokenPosition::default(),
+                vec![Symbol::new_untyped(var, TokenPosition::default())],
+            )))
+        })
+        .collect();
+    let conjuncts = Formula::And(conjuncts);
     *precondition = Some(match precondition.take() {
         Some(prec) => prec.and(conjuncts),
         None => conjuncts,
