@@ -85,30 +85,30 @@ impl <'a> fmt::Display for DomainAST<'a> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "(define (domain {})\n", self.name)?;
         if !self.requirements.is_empty() {
-            write!(f, "\n (:requirements {})\n", format_list(&self.requirements))?;
+            write!(f, "\n\t(:requirements {})\n", format_list(&self.requirements))?;
         }
         if let Some(types) = &self.types {
-            write!(f, "\n {}\n", format_block(":types", types))?;
+            write!(f, "\n\t{}\n", format_block(":types", types).replace('\n', "\n\t"))?;
         }
         if let Some(constants) = &self.constants {
-            write!(f, "\n {}\n", format_block(":constants", constants))?;
+            write!(f, "\n\t{}\n", format_block(":constants", constants).replace('\n', "\n\t"))?;
         }
         if !self.predicates.is_empty() {
-            write!(f, "\n {}\n", format_block(":predicates", &self.predicates))?;
+            write!(f, "\n\t{}\n", format_block(":predicates", &self.predicates).replace('\n', "\n\t"))?;
         }
         if !self.functions.is_empty() {
-            write!(f, "\n {}\n", format_block(":functions", &self.functions))?;
+            write!(f, "\n\t{}\n", format_block(":functions", &self.functions).replace('\n', "\n\t"))?;
         }
         // members are multi-line: shift every line one level to keep their
         // parentheses and keyword colons vertically aligned
         for task in &self.compound_tasks {
-            write!(f, "\n {}\n", task.to_string().replace('\n', "\n "))?;
+            write!(f, "\n\t{}\n", task.to_string().replace('\n', "\n\t"))?;
         }
         for method in &self.methods {
-            write!(f, "\n {}\n", method.to_string().replace('\n', "\n "))?;
+            write!(f, "\n\t{}\n", method.to_string().replace('\n', "\n\t"))?;
         }
         for action in &self.actions {
-            write!(f, "\n {}\n", action.to_string().replace('\n', "\n "))?;
+            write!(f, "\n\t{}\n", action.to_string().replace('\n', "\n\t"))?;
         }
         write!(f, "\n)")
     }

@@ -27,7 +27,7 @@ impl <'a> fmt::Display for Method<'a> {
             format_call(self.task.name, &self.task_terms),
         )?;
         if let Some(precondition) = &self.precondition {
-            write!(f, "\n :precondition {}", precondition)?;
+            write!(f, "\n :precondition {}", precondition.to_string().replace('\n', "\n "))?;
         }
         write!(f, "\n {}\n)", self.tn)
     }

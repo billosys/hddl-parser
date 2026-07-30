@@ -92,14 +92,27 @@ impl<'a> Formula<'a> {
 
 impl<'a> fmt::Display for Formula<'a> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        fn join(terms: &[Box<Formula>]) -> String {
-            terms.iter().map(|term| term.to_string()).collect::<Vec<_>>().join(" ")
+        // nested renderings are shifted one level so multi-line children align
+        fn shift<T: fmt::Display>(term: &T) -> String {
+            term.to_string().replace('\n', "\n\t")
+        }
+        // a connective with a single term stays inline, more get one line each
+        fn connective(name: &str, terms: &[Box<Formula>]) -> String {
+            match terms {
+                [] => format!("({} )", name),
+                [single] => format!("({} {})", name, shift(single)),
+                _ => {
+                    let lines: String =
+                        terms.iter().map(|term| format!("\n\t{}", shift(term))).collect();
+                    format!("({}{}\n)", name, lines)
+                }
+            }
         }
         // an implication side is a conjunction, but a single conjunct needs no "and" wrapper
         fn implication_side(terms: &[Box<Formula>]) -> String {
             match terms {
                 [term] => term.to_string(),
-                _ => format!("(and {})", join(terms)),
+                _ => connective("and", terms),
             }
         }
         match self {
@@ -111,21 +124,26 @@ impl<'a> fmt::Display for Formula<'a> {
                 }
                 write!(f, ")")
             }
-            Formula::Not(inner) => write!(f, "(not {})", inner),
-            Formula::And(terms) => write!(f, "(and {})", join(terms)),
-            Formula::Or(terms) => write!(f, "(or {})", join(terms)),
-            Formula::Xor(terms) => write!(f, "(oneof {})", join(terms)),
+            Formula::Not(inner) => write!(f, "(not {})", shift(inner)),
+            Formula::And(terms) => write!(f, "{}", connective("and", terms)),
+            Formula::Or(terms) => write!(f, "{}", connective("or", terms)),
+            Formula::Xor(terms) => write!(f, "{}", connective("oneof", terms)),
             Formula::Imply(lhs, rhs) => {
-                write!(f, "(when {} {})", implication_side(lhs), implication_side(rhs))
+                write!(
+                    f,
+                    "(when {} {})",
+                    shift(&implication_side(lhs)),
+                    shift(&implication_side(rhs))
+                )
             }
             Formula::Exists(vars, inner) => {
-                write!(f, "(exists ({}) {})", format_typed_list(vars), inner)
+                write!(f, "(exists ({}) {})", format_typed_list(vars), shift(inner))
             }
             Formula::ForAll(vars, inner) => {
-                write!(f, "(forall ({}) {})", format_typed_list(vars), inner)
+                write!(f, "(forall ({}) {})", format_typed_list(vars), shift(inner))
             }
             Formula::Probabilistic(probability, terms) => {
-                write!(f, "(probabilistic {} {})", probability, terms)
+                write!(f, "(probabilistic {} {})", probability, shift(terms))
             }
             Formula::Equals(lhs, rhs) => write!(f, "(= {} {})", lhs, rhs),
         }

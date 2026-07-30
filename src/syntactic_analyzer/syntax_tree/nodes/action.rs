@@ -30,10 +30,10 @@ impl<'a> fmt::Display for Action<'a> {
             format_typed_list(&self.parameters)
         )?;
         if let Some(precondition) = &self.preconditions {
-            write!(f, "\n :precondition {}", precondition)?;
+            write!(f, "\n :precondition {}", precondition.to_string().replace('\n', "\n "))?;
         }
         if let Some(effect) = &self.effects {
-            write!(f, "\n :effect {}", effect)?;
+            write!(f, "\n :effect {}", effect.to_string().replace('\n', "\n "))?;
         }
         write!(f, "\n)")
     }
