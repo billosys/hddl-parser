@@ -3,7 +3,7 @@ use std::collections::HashSet;
 use std::vec;
 
 use crate::semantic_analyzer::TypeChecker;
-use crate::{HDDLProgram, Predicate, RequirementType, Symbol, TokenPosition};
+use crate::{Formula, HDDLProgram, Predicate, RequirementType, Symbol, TokenPosition};
 
 pub fn remove_types<'a>(program: &mut HDDLProgram<'a>) {
     if program.domain.types.is_none() {
@@ -69,24 +69,12 @@ pub fn remove_types<'a>(program: &mut HDDLProgram<'a>) {
         }
     }
     // convert typed action params to untyped
-    for action in &mut program.domain.actions {
-        let mut conjuncts = vec![];
-        for param in action.parameters.iter_mut() {
-            param.type_pos = None;
-            let Some(t) = param.symbol_type.take() else {
-                continue;
-            };
-            conjuncts.push(Box::new(crate::Formula::Atom(Predicate::new(
-                t,
-                TokenPosition::default(),
-                vec![Symbol::new_untyped(param.name, TokenPosition::default())],
-            ))));
-        }
-        let conjuncts = crate::Formula::And(conjuncts);
-        action.preconditions = Some(match action.preconditions.take() {
-            Some(prec) => prec.and(conjuncts),
-            None => conjuncts,
-        });
+    for action in program.domain.actions.iter_mut() {
+        compile_param_types_to_precondition(&mut action.parameters, &mut action.preconditions);
+    }
+    // convert typed methods to untyped
+    for method in program.domain.methods.iter_mut() {
+        compile_param_types_to_precondition(&mut method.params, &mut method.precondition);
     }
     // Convert typed objects to untyped
     if let Some(problem) = &mut program.problem {
@@ -105,4 +93,27 @@ pub fn remove_types<'a>(program: &mut HDDLProgram<'a>) {
         }
         problem.add_init_state(init);
     }
+}
+
+fn compile_param_types_to_precondition<'a>(
+    parameters: &mut Vec<Symbol<'a>>,
+    precondition: &mut Option<Formula<'a>>,
+) {
+    let mut conjuncts = vec![];
+    for param in parameters.iter_mut() {
+        param.type_pos = None;
+        let Some(t) = param.symbol_type.take() else {
+            continue;
+        };
+        conjuncts.push(Box::new(crate::Formula::Atom(Predicate::new(
+            t,
+            TokenPosition::default(),
+            vec![Symbol::new_untyped(param.name, TokenPosition::default())],
+        ))));
+    }
+    let conjuncts = crate::Formula::And(conjuncts);
+    *precondition = Some(match precondition.take() {
+        Some(prec) => prec.and(conjuncts),
+        None => conjuncts,
+    });
 }

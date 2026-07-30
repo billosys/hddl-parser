@@ -1,11 +1,12 @@
-
 use core::panic;
 use std::{assert_eq, println, vec};
 
 use super::{Input, Transpiler};
 use crate::{
-    transpiler::transform, AbstractSyntaxTree, Action, Formula, HDDLProgram, LexicalAnalyzer,
-    NumberType, Parser, Predicate, Subtask, Symbol, TokenPosition,
+    transpiler::transform,
+    AbstractSyntaxTree, Action,
+    Formula::{self, Atom},
+    HDDLProgram, LexicalAnalyzer, NumberType, Parser, Predicate, Subtask, Symbol, TokenPosition,
 };
 
 fn symbol(name: &'static str) -> Symbol<'static> {
@@ -361,6 +362,17 @@ pub fn untyping_test() {
         (:types car truck - vehicle vehicle - something location) 
         (:constants up - location)
         (:predicates (at ?c - car ?l - location ?a))
+        (:task Drive
+            :parameters (?l1 ?l2 - location ?veh - vehicle)
+        )
+        (:method abs_drive
+            :parameters (?l1 ?l2 - location ?c - car)
+            :task (Drive ?l1 ?l2 ?c)
+            :subtasks (and
+                (act ?c ?l1)
+                (act ?c ?l2)
+            )
+        )
         (:action act
          :parameters (?c - car ?loc1 - location)
          :precondition (and (not (at ?c ?loc1))) 
@@ -393,13 +405,13 @@ pub fn untyping_test() {
                         Formula::Atom(p) => {
                             assert_eq!(p.name, "at");
                         }
-                        _ => panic!()
+                        _ => panic!(),
                     }
                 } else {
                     panic!()
                 }
             }
-            _ => panic!()
+            _ => panic!(),
         }
         let prec1 = &*prec[1];
         match prec1 {
@@ -429,6 +441,33 @@ pub fn untyping_test() {
         }
     } else {
         panic!("precondition does not match the pattern")
+    }
+    let method = &result.domain.methods[0];
+    assert!(method
+        .params
+        .iter()
+        .all(|x| { x.symbol_type.is_none() && x.type_pos.is_none() }));
+    match &method.precondition {
+        None => panic!(),
+        Some(prec) => match prec {
+            Formula::And(inner) => {
+                assert_eq!(inner.len(), 3);
+                let mut types = vec!["location", "location", "car"];
+                assert!(inner.iter().all(|x| {
+                    if let Atom(pred) = &**x {
+                        if let Some(pos) = types.iter().position(|x| *x == pred.name) {
+                            types.remove(pos);
+                            true
+                        } else {
+                            false
+                        }
+                    } else {
+                        false
+                    }
+                }));
+            }
+            _ => panic!(),
+        },
     }
     assert!(result
         .domain
