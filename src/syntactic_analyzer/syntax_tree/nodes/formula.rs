@@ -1,4 +1,4 @@
-use std::fmt;
+use std::{fmt, vec};
 
 use serde::{Deserialize, Serialize};
 
@@ -67,6 +67,15 @@ impl<'a> Formula<'a> {
             Formula::And(conjuncts) => conjuncts.iter().all(|c| c.is_literal()),
             other => other.is_literal(),
         }
+    }
+
+    pub fn and(self, rhs: Formula<'a>) -> Formula<'a> {
+        Formula::And(
+            vec![
+                Box::new(self),
+                Box::new(rhs)
+            ]
+        )
     }
 
     fn is_literal(&self) -> bool {

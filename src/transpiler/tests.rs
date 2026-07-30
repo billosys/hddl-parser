@@ -1,4 +1,6 @@
-use std::println;
+
+use core::panic;
+use std::{assert_eq, println, vec};
 
 use super::{Input, Transpiler};
 use crate::{
@@ -359,6 +361,10 @@ pub fn untyping_test() {
         (:types car truck - vehicle vehicle - something location) 
         (:constants up - location)
         (:predicates (at ?c - car ?l - location ?a))
+        (:action act
+         :parameters (?c - car ?loc1 - location)
+         :precondition (and (not (at ?c ?loc1))) 
+        )
     )";
     let problem = "(define (problem p_transport) (:domain transport)
         (:objects c1 - car loc_0 - location pkg_0)
@@ -367,12 +373,69 @@ pub fn untyping_test() {
     let domain_bytes = domain.as_bytes().to_vec();
     let problem_bytes = problem.as_bytes().to_vec();
     let program = HDDLProgram::from_hddl(&domain_bytes, Some(&problem_bytes)).unwrap();
+    // assert domain changes
     let result = Transpiler::new(program)
         .transform(crate::Transformation::RemoveTypes)
         .into_program();
-    assert!(result.domain.constants.unwrap().iter().all(|x| {
-        x.symbol_type.is_none() && x.type_pos.is_none()
-    }));
+    let action = &result.domain.actions[0];
+    assert!(action
+        .parameters
+        .iter()
+        .all(|x| { x.symbol_type.is_none() && x.type_pos.is_none() }));
+    if let Some(Formula::And(prec)) = &action.preconditions {
+        assert_eq!(prec.len(), 2);
+        let prec0 = &*prec[0];
+        match prec0 {
+            Formula::And(inner) => {
+                assert_eq!(inner.len(), 1);
+                if let Formula::Not(inner2) = &*inner[0] {
+                    match &**inner2 {
+                        Formula::Atom(p) => {
+                            assert_eq!(p.name, "at");
+                        }
+                        _ => panic!()
+                    }
+                } else {
+                    panic!()
+                }
+            }
+            _ => panic!()
+        }
+        let prec1 = &*prec[1];
+        match prec1 {
+            Formula::And(typings) => {
+                println!("{:?}", typings);
+                assert_eq!(typings.len(), 2);
+                if let Formula::Atom(x) = &*typings[0] {
+                    assert_eq!(x.name, "car");
+                    assert_eq!(
+                        x.variables,
+                        vec![Symbol::new_untyped("?c", TokenPosition::default())]
+                    )
+                } else {
+                    panic!();
+                }
+                if let Formula::Atom(x) = &*typings[1] {
+                    assert_eq!(x.name, "location");
+                    assert_eq!(
+                        x.variables,
+                        vec![Symbol::new_untyped("?loc1", TokenPosition::default())]
+                    )
+                } else {
+                    panic!();
+                }
+            }
+            _ => panic!(),
+        }
+    } else {
+        panic!("precondition does not match the pattern")
+    }
+    assert!(result
+        .domain
+        .constants
+        .unwrap()
+        .iter()
+        .all(|x| { x.symbol_type.is_none() && x.type_pos.is_none() }));
     let predicates = &result.domain.predicates;
     assert!(predicates.contains(&Predicate {
         name: "object",
@@ -404,6 +467,7 @@ pub fn untyping_test() {
         name_pos: TokenPosition::default(),
         variables: vec![Symbol::new_untyped("?var", TokenPosition::default())]
     }));
+    // assert problem changes
     let problem = &result.problem.unwrap();
     let objects = &problem.objects;
     for object in objects {

@@ -68,6 +68,26 @@ pub fn remove_types<'a>(program: &mut HDDLProgram<'a>) {
             }
         }
     }
+    // convert typed action params to untyped
+    for action in &mut program.domain.actions {
+        let mut conjuncts = vec![];
+        for param in action.parameters.iter_mut() {
+            param.type_pos = None;
+            let Some(t) = param.symbol_type.take() else {
+                continue;
+            };
+            conjuncts.push(Box::new(crate::Formula::Atom(Predicate::new(
+                t,
+                TokenPosition::default(),
+                vec![Symbol::new_untyped(param.name, TokenPosition::default())],
+            ))));
+        }
+        let conjuncts = crate::Formula::And(conjuncts);
+        action.preconditions = Some(match action.preconditions.take() {
+            Some(prec) => prec.and(conjuncts),
+            None => conjuncts,
+        });
+    }
     // Convert typed objects to untyped
     if let Some(problem) = &mut program.problem {
         for object in problem.objects.iter_mut() {
