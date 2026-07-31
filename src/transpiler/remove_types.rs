@@ -2,8 +2,7 @@ use core::panic;
 use std::collections::{HashMap, HashSet};
 use std::vec;
 
-use crate::semantic_analyzer::TypeChecker;
-use crate::{Formula, HDDLProgram, Predicate, RequirementType, Symbol, TokenPosition};
+use crate::*;
 
 pub fn remove_types<'a>(program: &mut HDDLProgram<'a>) {
     if program.domain.types.is_none() {
@@ -75,6 +74,59 @@ pub fn remove_types<'a>(program: &mut HDDLProgram<'a>) {
             &mut action.preconditions,
             minimize_constraints(constraints, &checker),
         );
+    }
+    // an init htn block is hoisted into a fresh domain task with a single method
+    // whose parameters take over the typings
+    if let Some(htn) = program.problem.as_mut().and_then(|p| p.init_tn.as_mut()) {
+        let has_typed_params = htn
+            .parameters
+            .iter()
+            .flatten()
+            .any(|param| param.symbol_type.is_some());
+        if has_typed_params {
+            let task_taken = program
+                .domain
+                .compound_tasks
+                .iter()
+                .any(|task| task.name == HDDLProgram::HTN_TOP_TASK);
+            let method_taken = program
+                .domain
+                .methods
+                .iter()
+                .any(|method| method.name.name == HDDLProgram::HTN_TOP_METHOD);
+            if task_taken || method_taken {
+                panic!(
+                    "unable to convert. {} or {} is already defined.",
+                    HDDLProgram::HTN_TOP_TASK, HDDLProgram::HTN_TOP_METHOD
+                );
+            }
+            let top = Symbol::new_untyped(HDDLProgram::HTN_TOP_TASK, TokenPosition::default());
+            let entry_tn = HTN {
+                subtasks: vec![Subtask {
+                    id: None,
+                    task: top.clone(),
+                    terms: vec![],
+                }],
+                ordering_pos: None,
+                orderings: TaskOrdering::Total,
+                constraints: None,
+            };
+            let params = htn.parameters.take().unwrap();
+            let tn = std::mem::replace(&mut htn.tn, entry_tn);
+            program.domain.add_compound_task(Task::new(
+                HDDLProgram::HTN_TOP_TASK,
+                TokenPosition::default(),
+                vec![],
+            ));
+            program.domain.add_method(Method {
+                name: Symbol::new_untyped(HDDLProgram::HTN_TOP_METHOD, TokenPosition::default()),
+                task: top,
+                task_terms: vec![],
+                params,
+                precondition: None,
+                tn,
+            });
+        }
     }
     // convert typed tasks to untyped
     let mut task_param_types: HashMap<&'a str, Vec<Option<&'a str>>> = HashMap::new();

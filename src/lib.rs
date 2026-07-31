@@ -24,6 +24,9 @@ pub struct HDDLProgram<'a> {
 }
 
 impl<'a> HDDLProgram<'a> {
+    pub const HTN_TOP_TASK: &'static str = "htn_top";
+    pub const HTN_TOP_METHOD: &'static str = "htn_top_method";
+
     pub fn from_hddl(
         domain: &'a Vec<u8>,
         problem: Option<&'a Vec<u8>>,

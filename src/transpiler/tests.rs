@@ -411,6 +411,10 @@ pub fn untyping_test() {
     )";
     let problem = "(define (problem p_transport) (:domain transport)
         (:objects c1 - car loc_0 - location pkg_0)
+        (:htn
+            :parameters (?l1 ?l2 - location ?veh - vehicle)
+            :subtasks (and (Drive ?l1 ?l2 ?veh))
+        )
         (:init (at pkg_0 loc_0))
     )";
     let domain_bytes = domain.as_bytes().to_vec();
@@ -528,7 +532,7 @@ pub fn untyping_test() {
         variables: vec![Symbol::new_untyped("?var", TokenPosition::default())]
     }));
     // assert problem changes
-    let problem = &result.problem.unwrap();
+    let problem = result.problem.as_ref().unwrap();
     let objects = &problem.objects;
     for object in objects {
         assert!(object.symbol_type.is_none());
@@ -575,97 +579,35 @@ pub fn untyping_test() {
         name_pos: TokenPosition::default(),
         variables: vec![Symbol::new_untyped("pkg0", TokenPosition::default())]
     }));
-}
-
-#[test]
-pub fn untyping_task_test() {
-    let domain = "(define (domain d)
-        (:types loc)
-        (:predicates (road ?a - loc ?b - loc))
-        (:task Goto
-            :parameters (?from ?to - loc)
-        )
-        (:method m_goto
-            :parameters (?a ?b - loc)
-            :task (Goto ?a ?b)
-            :precondition (road ?a ?b)
-            :subtasks (and (noop))
-        )
-        (:method m_goto_untyped_term
-            :parameters (?a - loc ?b)
-            :task (Goto ?a ?b)
-            :subtasks (and (noop))
-        )
-        (:method m_goto_repeated_term
-            :parameters (?a)
-            :task (Goto ?a ?a)
-            :subtasks (and (noop))
-        )
-    )";
-    let domain_bytes = domain.as_bytes().to_vec();
-    let program = HDDLProgram::from_hddl(&domain_bytes, None).unwrap();
-    let result = Transpiler::new(program)
-        .transform(crate::Transformation::RemoveTypes)
-        .into_program();
-
-    let task = &result.domain.compound_tasks[0];
-    assert!(task
-        .parameters
+    // assert :htn changes
+    let htn = problem.init_tn.as_ref().unwrap();
+    assert!(htn.parameters.is_none());
+    assert_eq!(htn.tn.subtasks.len(), 1);
+    assert_eq!(htn.tn.subtasks[0].task.name, HDDLProgram::HTN_TOP_TASK);
+    assert!(htn.tn.subtasks[0].terms.is_empty());
+    let task = result
+        .domain
+        .compound_tasks
+        .iter()
+        .find(|task| task.name == HDDLProgram::HTN_TOP_TASK)
+        .unwrap();
+    assert!(task.parameters.is_empty());
+    let method = result
+        .domain
+        .methods
+        .iter()
+        .find(|method| method.name.name == HDDLProgram::HTN_TOP_METHOD)
+        .unwrap();
+    assert_eq!(method.task.name, HDDLProgram::HTN_TOP_TASK);
+    assert!(method.task_terms.is_empty());
+    assert!(method
+        .params
         .iter()
         .all(|x| { x.symbol_type.is_none() && x.type_pos.is_none() }));
-
-    let typing = |t: &'static str, var: &'static str| {
-        Atom(Predicate::new(
-            t,
-            TokenPosition::default(),
-            vec![Symbol::new_untyped(var, TokenPosition::default())],
-        ))
-    };
-    let assert_typings = |formula: &Formula, expected: Vec<Formula>| match formula {
-        Formula::And(inner) => {
-            assert_eq!(inner.len(), expected.len());
-            for (found, expected) in inner.iter().zip(expected) {
-                match (&**found, expected) {
-                    (Atom(found), Atom(expected)) => {
-                        assert_eq!(found.name, expected.name);
-                        assert_eq!(found.variables, expected.variables);
-                    }
-                    _ => panic!(),
-                }
-            }
-        }
-        _ => panic!(),
-    };
-
-    let method = &result.domain.methods[0];
     match &method.precondition {
-        Some(prec) => assert_typings(
-            prec,
-            vec![
-                Atom(Predicate::new(
-                    "road",
-                    TokenPosition::default(),
-                    vec![
-                        Symbol::new_untyped("?a", TokenPosition::default()),
-                        Symbol::new_untyped("?b", TokenPosition::default()),
-                    ],
-                )),
-                typing("loc", "?a"),
-                typing("loc", "?b"),
-            ],
-        ),
+        Some(prec) => assert_typings(prec, vec!["location", "location", "vehicle"]),
         None => panic!(),
     }
-
-    let method = &result.domain.methods[1];
-    match &method.precondition {
-        Some(prec) => assert_typings(prec, vec![typing("loc", "?a"), typing("loc", "?b")]),
-        None => panic!(),
-    }
-
-    let method = &result.domain.methods[2];
-    match &method.precondition {
-        Some(prec) => assert_typings(prec, vec![typing("loc", "?a")]),
-        None => panic!(),
-    }
+    assert_eq!(method.tn.subtasks.len(), 1);
+    assert_eq!(method.tn.subtasks[0].task.name, "Drive");
 }
