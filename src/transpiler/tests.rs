@@ -167,6 +167,11 @@ pub fn action_display_round_trip_test() {
 	 )
 	)
 
+	(:action drop
+	 :parameters (?x - block)
+	 :effect (forall (?y) (when (at ?y) (not (at ?y))))
+	)
+
 )",
     );
 }
@@ -406,7 +411,12 @@ pub fn untyping_test() {
         )
         (:action act
          :parameters (?c - car ?loc1 - location)
-         :precondition (and (not (at ?c ?loc1))) 
+         :precondition (and (not (at ?c ?loc1)))
+        )
+        (:action act2
+         :parameters (?c - car)
+         :precondition (exists (?l - location) (at ?c ?l ?c))
+         :effect (forall (?l - location) (not (at ?c ?l ?c)))
         )
     )";
     let problem = "(define (problem p_transport) (:domain transport)
@@ -461,6 +471,67 @@ pub fn untyping_test() {
         }
     } else {
         panic!("precondition does not match the pattern")
+    }
+    // assert quantifier changes
+    let action = &result.domain.actions[1];
+    if let Some(Formula::And(prec)) = &action.preconditions {
+        assert_eq!(prec.len(), 2);
+        if let Formula::Exists(vars, body) = &*prec[0] {
+            assert!(vars
+                .iter()
+                .all(|x| { x.symbol_type.is_none() && x.type_pos.is_none() }));
+            if let Formula::And(inner) = &**body {
+                assert_eq!(inner.len(), 2);
+                if let Atom(typing) = &*inner[0] {
+                    assert_eq!(typing.name, "location");
+                    assert_eq!(
+                        typing.variables,
+                        vec![Symbol::new_untyped("?l", TokenPosition::default())]
+                    );
+                } else {
+                    panic!()
+                }
+                if let Atom(at) = &*inner[1] {
+                    assert_eq!(at.name, "at");
+                } else {
+                    panic!()
+                }
+            } else {
+                panic!()
+            }
+        } else {
+            panic!()
+        }
+        if let Atom(typing) = &*prec[1] {
+            assert_eq!(typing.name, "car");
+        } else {
+            panic!()
+        }
+    } else {
+        panic!()
+    }
+    if let Some(Formula::ForAll(vars, body)) = &action.effects {
+        assert!(vars
+            .iter()
+            .all(|x| { x.symbol_type.is_none() && x.type_pos.is_none() }));
+        if let Formula::Imply(lhs, rhs) = &**body {
+            assert_eq!(lhs.len(), 1);
+            if let Atom(typing) = &*lhs[0] {
+                assert_eq!(typing.name, "location");
+                assert_eq!(
+                    typing.variables,
+                    vec![Symbol::new_untyped("?l", TokenPosition::default())]
+                );
+            } else {
+                panic!()
+            }
+            assert_eq!(rhs.len(), 1);
+            assert!(matches!(&*rhs[0], Formula::Not(_)));
+        } else {
+            panic!()
+        }
+    } else {
+        panic!()
     }
     let task = &result.domain.compound_tasks[0];
     assert!(task

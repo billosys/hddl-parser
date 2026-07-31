@@ -95,6 +95,28 @@ impl<'a> Parser<'a> {
                             return Err(ParsingError::Syntactic(error));
                         }
                     },
+                    // Implication
+                    Token::Operator(OperationType::Implication) => {
+                        let lhs = self.parse_formula()?;
+                        let rhs = self.parse_formula()?;
+                        match self.tokenizer.get_token()? {
+                            Token::Punctuator(PunctuationType::RParentheses) => {
+                                let side = |formula| match formula {
+                                    Formula::And(terms) => terms,
+                                    other => vec![Box::new(other)],
+                                };
+                                return Ok(Formula::Imply(side(lhs), side(rhs)));
+                            }
+                            token => {
+                                let error = SyntacticError {
+                                    expected: "')' to close the implication".to_string(),
+                                    found: token.to_string(),
+                                    position: self.tokenizer.get_last_token_position(),
+                                };
+                                return Err(ParsingError::Syntactic(error));
+                            }
+                        }
+                    }
                     // Universal Quantifier
                     Token::Operator(OperationType::ForAll) => match self.tokenizer.get_token()? {
                         Token::Punctuator(PunctuationType::LParentheses) => {

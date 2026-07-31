@@ -69,6 +69,12 @@ pub fn remove_types<'a>(program: &mut HDDLProgram<'a>) {
     }
     // convert typed action params to untyped
     for action in program.domain.actions.iter_mut() {
+        if let Some(precondition) = &mut action.preconditions {
+            untype_formula(precondition, &checker);
+        }
+        if let Some(effect) = &mut action.effects {
+            untype_formula(effect, &checker);
+        }
         let constraints = collect_param_constraints(&mut action.parameters);
         apply_constraints(
             &mut action.preconditions,
@@ -141,6 +147,9 @@ pub fn remove_types<'a>(program: &mut HDDLProgram<'a>) {
     // convert typed methods to untyped;
     // each method also receives the typings of its task's terms
     for method in program.domain.methods.iter_mut() {
+        if let Some(precondition) = &mut method.precondition {
+            untype_formula(precondition, &checker);
+        }
         let mut constraints = collect_param_constraints(&mut method.params);
         if let Some(types) = task_param_types.get(method.task.name) {
             for (term, t) in method.task_terms.iter().zip(types) {
@@ -156,6 +165,9 @@ pub fn remove_types<'a>(program: &mut HDDLProgram<'a>) {
     }
     // Convert typed objects to untyped
     if let Some(problem) = &mut program.problem {
+        if let Some(goal) = &mut problem.goal {
+            untype_formula(goal, &checker);
+        }
         for object in problem.objects.iter_mut() {
             object.type_pos = None;
             let name = object.name;
@@ -205,11 +217,8 @@ fn minimize_constraints<'a>(
     kept
 }
 
-fn apply_constraints<'a>(
-    precondition: &mut Option<Formula<'a>>,
-    constraints: Vec<(&'a str, &'a str)>,
-) {
-    let conjuncts = constraints
+fn constraint_atoms<'a>(constraints: Vec<(&'a str, &'a str)>) -> Vec<Box<Formula<'a>>> {
+    constraints
         .into_iter()
         .map(|(var, t)| {
             Box::new(Formula::Atom(Predicate::new(
@@ -218,10 +227,54 @@ fn apply_constraints<'a>(
                 vec![Symbol::new_untyped(var, TokenPosition::default())],
             )))
         })
-        .collect();
-    let conjuncts = Formula::And(conjuncts);
+        .collect()
+}
+
+fn apply_constraints<'a>(
+    precondition: &mut Option<Formula<'a>>,
+    constraints: Vec<(&'a str, &'a str)>,
+) {
+    let conjuncts = Formula::And(constraint_atoms(constraints));
     *precondition = Some(match precondition.take() {
         Some(prec) => prec.and(conjuncts),
         None => conjuncts,
     });
+}
+
+fn untype_formula<'a>(formula: &mut Formula<'a>, checker: &TypeChecker<'a>) {
+    match formula {
+        Formula::Empty | Formula::Atom(_) | Formula::Equals(_, _) => {}
+        Formula::Not(inner) | Formula::Probabilistic(_, inner) => untype_formula(inner, checker),
+        Formula::And(terms) | Formula::Or(terms) | Formula::Xor(terms) => {
+            for term in terms.iter_mut() {
+                untype_formula(term, checker);
+            }
+        }
+        Formula::Imply(lhs, rhs) => {
+            for term in lhs.iter_mut().chain(rhs.iter_mut()) {
+                untype_formula(term, checker);
+            }
+        }
+        Formula::Exists(vars, body) => {
+            untype_formula(body, checker);
+            let constraints = minimize_constraints(collect_param_constraints(vars), checker);
+            if !constraints.is_empty() {
+                let mut conjuncts = constraint_atoms(constraints);
+                conjuncts.push(Box::new(std::mem::replace(&mut **body, Formula::Empty)));
+                **body = Formula::And(conjuncts);
+            }
+        }
+        Formula::ForAll(vars, body) => {
+            untype_formula(body, checker);
+            let constraints = minimize_constraints(collect_param_constraints(vars), checker);
+            if !constraints.is_empty() {
+                let atoms = constraint_atoms(constraints);
+                let rhs = match std::mem::replace(&mut **body, Formula::Empty) {
+                    Formula::And(terms) => terms,
+                    other => vec![Box::new(other)],
+                };
+                **body = Formula::Imply(atoms, rhs);
+            }
+        }
+    }
 }

@@ -298,7 +298,7 @@ impl<'a> LexicalAnalyzer<'a> {
             "not" => Some(OperationType::Not),
             "forall" => Some(OperationType::ForAll),
             "exists" => Some(OperationType::Exists),
-            "imply" => Some(OperationType::Implication),
+            "imply" | "when" => Some(OperationType::Implication),
             // Stochastic operators
             "probabilistic" => return Some(OperationType::Probabilistic),
             _ => None,
