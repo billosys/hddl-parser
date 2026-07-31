@@ -397,7 +397,8 @@ pub fn untyping_test() {
     let domain = "(define (domain transport)
         (:types car truck - vehicle vehicle - something location) 
         (:constants up - location)
-        (:predicates (at ?c - car ?l - location ?a))
+        (:predicates (at ?c - car ?l - location ?a - car))
+        (:functions (fuel ?c - car))
         (:task Drive
             :parameters (?l1 ?l2 - location ?veh - vehicle)
         )
@@ -411,7 +412,7 @@ pub fn untyping_test() {
         )
         (:action act
          :parameters (?c - car ?loc1 - location)
-         :precondition (and (not (at ?c ?loc1)))
+         :precondition (and (not (at ?c ?loc1 ?c)))
         )
         (:action act2
          :parameters (?c - car)
@@ -425,7 +426,7 @@ pub fn untyping_test() {
             :parameters (?l1 ?l2 - location ?veh - vehicle)
             :subtasks (and (Drive ?l1 ?l2 ?veh))
         )
-        (:init (at pkg_0 loc_0))
+        (:init (at c1 loc_0 c1))
     )";
     let domain_bytes = domain.as_bytes().to_vec();
     let problem_bytes = problem.as_bytes().to_vec();
@@ -433,6 +434,7 @@ pub fn untyping_test() {
     // assert domain changes
     let result = Transpiler::new(program)
         .transform(crate::Transformation::RemoveTypes)
+        .unwrap()
         .into_program();
     let action = &result.domain.actions[0];
     assert!(action
@@ -572,6 +574,16 @@ pub fn untyping_test() {
         .iter()
         .all(|x| { x.symbol_type.is_none() && x.type_pos.is_none() }));
     let predicates = &result.domain.predicates;
+    assert!(predicates.iter().all(|p| {
+        p.variables
+            .iter()
+            .all(|v| v.symbol_type.is_none() && v.type_pos.is_none())
+    }));
+    assert!(result.domain.functions.iter().all(|f| {
+        f.variables
+            .iter()
+            .all(|v| v.symbol_type.is_none() && v.type_pos.is_none())
+    }));
     assert!(predicates.contains(&Predicate {
         name: "object",
         name_pos: TokenPosition::default(),
@@ -681,4 +693,19 @@ pub fn untyping_test() {
     }
     assert_eq!(method.tn.subtasks.len(), 1);
     assert_eq!(method.tn.subtasks[0].task.name, "Drive");
+}
+
+#[test]
+pub fn untyping_rejects_invalid_program_test() {
+    let domain = "(define (domain d)
+        (:types car location)
+        (:predicates (at ?c - car ?l - location))
+        (:action act
+         :parameters (?l1 ?l2 - location)
+         :precondition (at ?l1 ?l2)
+        )
+    )";
+    let domain_bytes = domain.as_bytes().to_vec();
+    let transpiler = Transpiler::from_hddl(&domain_bytes, None).unwrap();
+    assert!(transpiler.transform(crate::Transformation::RemoveTypes).is_err());
 }

@@ -87,8 +87,10 @@ fn convert(args: ConvertArgs) {
         Err(parsing_error) => return eprintln!("{RED}[Error]{RESET} {parsing_error}"),
     };
     let transpiler = if args.untyped {
-        eprintln!("{YELLOW}[Warning]{RESET} 'untyped' is partially implemented: type predicates and init atoms are added, but type annotations are not stripped yet");
-        transpiler.transform(Transformation::RemoveTypes)
+        match transpiler.transform(Transformation::RemoveTypes) {
+            Ok(transpiler) => transpiler,
+            Err(error) => return eprintln!("{RED}[Error]{RESET} {error}"),
+        }
     } else {
         transpiler
     };

@@ -38,16 +38,17 @@ pub fn check_predicate_declarations<'a>(
                 check_predicate_declarations(&*f, declared_predicates)?;
             }
         }
-        Formula::ForAll(_, new_formula) => {
+        Formula::ForAll(_, new_formula) | Formula::Exists(_, new_formula) => {
             return check_predicate_declarations(&*new_formula, declared_predicates);
         }
         Formula::Equals(_, _) => {}
         Formula::Probabilistic(_, new_formula) => {
             return check_predicate_declarations(&*new_formula, declared_predicates);
         }
-        // TODO: add support for imply, and exists
-        _ => {
-            panic!()
+        Formula::Imply(lhs, rhs) => {
+            for f in lhs.iter().chain(rhs) {
+                check_predicate_declarations(&*f, declared_predicates)?;
+            }
         }
     }
     return Ok(());

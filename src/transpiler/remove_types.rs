@@ -40,6 +40,19 @@ pub fn remove_types<'a>(program: &mut HDDLProgram<'a>) {
         .domain
         .requirements
         .retain(|x| *x != RequirementType::TypedObjects);
+    // declaration typings carry no constraint; they are simply cleared
+    for predicate in program.domain.predicates.iter_mut() {
+        for var in predicate.variables.iter_mut() {
+            var.symbol_type = None;
+            var.type_pos = None;
+        }
+    }
+    for function in program.domain.functions.iter_mut() {
+        for var in function.variables.iter_mut() {
+            var.symbol_type = None;
+            var.type_pos = None;
+        }
+    }
     // convert typed domain constants to untyped
     let mut init = Vec::new();
     if let Some(constants) = &mut program.domain.constants {
