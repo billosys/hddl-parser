@@ -68,8 +68,8 @@ pub fn pddl_display_test() {
     assert_eq!(for_all.to_string(), "(forall (x - loc) (p_1))");
 
     let when = Formula::Imply(
-        vec![atom("p_1", vec![])],
-        vec![atom("p_2", vec![]), atom("p_3", vec![])],
+        atom("p_1", vec![]),
+        Box::new(Formula::And(vec![atom("p_2", vec![]), atom("p_3", vec![])])),
     );
     assert_eq!(
         when.to_string(),
@@ -517,8 +517,7 @@ pub fn untyping_test() {
             .iter()
             .all(|x| { x.symbol_type.is_none() && x.type_pos.is_none() }));
         if let Formula::Imply(lhs, rhs) = &**body {
-            assert_eq!(lhs.len(), 1);
-            if let Atom(typing) = &*lhs[0] {
+            if let Atom(typing) = &**lhs {
                 assert_eq!(typing.name, "location");
                 assert_eq!(
                     typing.variables,
@@ -527,8 +526,7 @@ pub fn untyping_test() {
             } else {
                 panic!()
             }
-            assert_eq!(rhs.len(), 1);
-            assert!(matches!(&*rhs[0], Formula::Not(_)));
+            assert!(matches!(&**rhs, Formula::Not(_)));
         } else {
             panic!()
         }

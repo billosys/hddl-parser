@@ -264,9 +264,8 @@ fn untype_formula<'a>(formula: &mut Formula<'a>, checker: &TypeChecker<'a>) {
             }
         }
         Formula::Imply(lhs, rhs) => {
-            for term in lhs.iter_mut().chain(rhs.iter_mut()) {
-                untype_formula(term, checker);
-            }
+            untype_formula(lhs, checker);
+            untype_formula(rhs, checker);
         }
         Formula::Exists(vars, body) => {
             untype_formula(body, checker);
@@ -281,12 +280,13 @@ fn untype_formula<'a>(formula: &mut Formula<'a>, checker: &TypeChecker<'a>) {
             untype_formula(body, checker);
             let constraints = minimize_constraints(collect_param_constraints(vars), checker);
             if !constraints.is_empty() {
-                let atoms = constraint_atoms(constraints);
-                let rhs = match std::mem::replace(&mut **body, Formula::Empty) {
-                    Formula::And(terms) => terms,
-                    other => vec![Box::new(other)],
+                let mut atoms = constraint_atoms(constraints);
+                let lhs = match atoms.len() {
+                    1 => atoms.pop().unwrap(),
+                    _ => Box::new(Formula::And(atoms)),
                 };
-                **body = Formula::Imply(atoms, rhs);
+                let rhs = Box::new(std::mem::replace(&mut **body, Formula::Empty));
+                **body = Formula::Imply(lhs, rhs);
             }
         }
     }

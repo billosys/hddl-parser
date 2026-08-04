@@ -46,9 +46,8 @@ pub fn check_predicate_declarations<'a>(
             return check_predicate_declarations(&*new_formula, declared_predicates);
         }
         Formula::Imply(lhs, rhs) => {
-            for f in lhs.iter().chain(rhs) {
-                check_predicate_declarations(&*f, declared_predicates)?;
-            }
+            check_predicate_declarations(&*lhs, declared_predicates)?;
+            check_predicate_declarations(&*rhs, declared_predicates)?;
         }
     }
     return Ok(());

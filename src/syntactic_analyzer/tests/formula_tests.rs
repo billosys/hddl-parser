@@ -40,7 +40,7 @@ mod tests {
         assert_eq!(conjoined_disjunction.is_simple_conjunction(), false);
         let xor = Formula::Xor(vec![atom("p_1"), atom("p_2")]);
         assert_eq!(xor.is_simple_conjunction(), false);
-        let imply = Formula::Imply(vec![atom("p_1")], vec![atom("p_2")]);
+        let imply = Formula::Imply(atom("p_1"), atom("p_2"));
         assert_eq!(imply.is_simple_conjunction(), false);
     }
 

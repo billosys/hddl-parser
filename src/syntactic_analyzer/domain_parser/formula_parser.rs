@@ -101,11 +101,7 @@ impl<'a> Parser<'a> {
                         let rhs = self.parse_formula()?;
                         match self.tokenizer.get_token()? {
                             Token::Punctuator(PunctuationType::RParentheses) => {
-                                let side = |formula| match formula {
-                                    Formula::And(terms) => terms,
-                                    other => vec![Box::new(other)],
-                                };
-                                return Ok(Formula::Imply(side(lhs), side(rhs)));
+                                return Ok(Formula::Imply(Box::new(lhs), Box::new(rhs)));
                             }
                             token => {
                                 let error = SyntacticError {
