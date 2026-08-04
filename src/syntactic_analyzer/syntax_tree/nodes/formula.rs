@@ -1,9 +1,10 @@
-use std::{fmt, vec};
+use core::panic;
+use std::{fmt, todo, vec};
 
 use serde::{Deserialize, Serialize};
 
-use crate::NumberType;
 use crate::transpiler::format_typed_list;
+use crate::NumberType;
 
 use super::*;
 
@@ -16,7 +17,7 @@ pub enum Formula<'a> {
     Or(Vec<Box<Formula<'a>>>),
     Xor(Vec<Box<Formula<'a>>>),
     // formula -> formula'
-    Imply(Vec<Box<Formula<'a>>>, Vec<Box<Formula<'a>>>),
+    Imply(Box<Formula<'a>>, Box<Formula<'a>>),
     // ∃vars: formula
     Exists(Vec<Symbol<'a>>, Box<Formula<'a>>),
     // ∀vars: formula
@@ -28,6 +29,59 @@ pub enum Formula<'a> {
 }
 
 impl<'a> Formula<'a> {
+    fn to_nnf(&self, negated: bool) -> Formula<'a> {
+        match (self, negated) {
+            (Formula::Empty | Formula::Atom(_), false) => self.clone(),
+            (Formula::Empty | Formula::Atom(_), true) => Formula::Not(Box::new(self.clone())),
+            (Formula::Not(f), _) => f.to_nnf(!negated),
+            (Formula::And(fs), false) | (Formula::Or(fs), true) => {
+                Formula::And(fs.iter().map(|f| Box::new(f.to_nnf(negated))).collect())
+            }
+            (Formula::Or(fs), false) | (Formula::And(fs), true) => {
+                Formula::Or(fs.iter().map(|f| Box::new(f.to_nnf(negated))).collect())
+            }
+            (Formula::ForAll(vars, f), false) | (Formula::Exists(vars, f), true) => {
+                Formula::ForAll(vars.clone(), Box::new(f.to_nnf(negated)))
+            }
+            (Formula::Exists(vars, f), false) | (Formula::ForAll(vars, f), true) => {
+                Formula::Exists(vars.clone(), Box::new(f.to_nnf(negated)))
+            }
+            (Formula::Imply(ps, qs), _) => {
+                Formula::Or(vec![Box::new(Formula::Not(ps.clone())), qs.clone()]).to_nnf(negated)
+            }
+            (Formula::Xor(fs), false) => {
+                // exactly one: some fᵢ holds and every other operand fails
+                let mut disjuncts = vec![];
+                for i in 0..fs.len() {
+                    let mut conjuncts = vec![Box::new(fs[i].to_nnf(false))];
+                    for j in (0..fs.len()).filter(|&j| j != i) {
+                        conjuncts.push(Box::new(fs[j].to_nnf(true)));
+                    }
+                    disjuncts.push(Box::new(Formula::And(conjuncts)));
+                }
+                Formula::Or(disjuncts)
+            }
+            (Formula::Xor(fs), true) => {
+                // negated: none holds, or some pair holds (~f1 ^ ... ^ ~fn) v (f1 ^ f2) v ... (fn-1 ^ fn)
+                let mut disjuncts = vec![Box::new(Formula::And(
+                    fs.iter().map(|f| Box::new(f.to_nnf(true))).collect(),
+                ))];
+                for i in 0..fs.len() {
+                    for j in i + 1..fs.len() {
+                        disjuncts.push(Box::new(Formula::And(vec![
+                            Box::new(fs[i].to_nnf(false)),
+                            Box::new(fs[j].to_nnf(false)),
+                        ])));
+                    }
+                }
+                Formula::Or(disjuncts)
+            }
+            (Formula::Probabilistic(_, _), _) | (Formula::Equals(_, _), _) => {
+                panic!("Unsupported formula!")
+            }
+        }
+    }
+
     pub fn get_propositional_predicates(&self) -> Vec<&Predicate<'a>> {
         let mut predicates = vec![];
         match &*self {
@@ -44,13 +98,10 @@ impl<'a> Formula<'a> {
                 }
             }
             Formula::Imply(ps, qs) => {
-                for p in ps {
-                    predicates.extend(p.get_propositional_predicates().iter());
-                }
-                for q in qs {
-                    predicates.extend(q.get_propositional_predicates().iter());
-                }
-            },
+                predicates.extend(ps.get_propositional_predicates().iter());
+
+                predicates.extend(qs.get_propositional_predicates().iter());
+            }
             Formula::Probabilistic(_, q) => {
                 predicates.extend(q.get_propositional_predicates().iter());
             }
@@ -102,17 +153,12 @@ impl<'a> fmt::Display for Formula<'a> {
                 [] => format!("({} )", name),
                 [single] => format!("({} {})", name, shift(single)),
                 _ => {
-                    let lines: String =
-                        terms.iter().map(|term| format!("\n\t{}", shift(term))).collect();
+                    let lines: String = terms
+                        .iter()
+                        .map(|term| format!("\n\t{}", shift(term)))
+                        .collect();
                     format!("({}{}\n)", name, lines)
                 }
-            }
-        }
-        // an implication side is a conjunction, but a single conjunct needs no "and" wrapper
-        fn implication_side(terms: &[Box<Formula>]) -> String {
-            match terms {
-                [term] => term.to_string(),
-                _ => connective("and", terms),
             }
         }
         match self {
@@ -132,8 +178,8 @@ impl<'a> fmt::Display for Formula<'a> {
                 write!(
                     f,
                     "(when {} {})",
-                    shift(&implication_side(lhs)),
-                    shift(&implication_side(rhs))
+                    shift(&lhs.to_string()),
+                    shift(&rhs.to_string())
                 )
             }
             Formula::Exists(vars, inner) => {
