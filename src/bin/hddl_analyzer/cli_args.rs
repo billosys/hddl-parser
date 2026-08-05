@@ -16,6 +16,8 @@ pub enum Commands {
     Verify(InputArgs),
     /// Show metadata about a domain
     Metadata(InputArgs),
+    /// Rewrite the input files in place, pretty-printed (HDDL only)
+    Format(InputArgs),
 }
 
 #[derive(Parser)]

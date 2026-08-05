@@ -74,6 +74,7 @@ pub fn main() {
         Commands::Convert(args) => convert(args),
         Commands::Verify(input) => verify(input),
         Commands::Metadata(input) => metadata(input),
+        Commands::Format(input) => format_files(input),
     }
 }
 
@@ -137,9 +138,39 @@ fn metadata(input: InputArgs) {
         Ok(data) => data,
         Err(error) => return eprintln!("{RED}[Error]{RESET} {error}"),
     };
-    match data.transpiler().and_then(|transpiler| transpiler.metadata()) {
+    match data
+        .transpiler()
+        .and_then(|transpiler| transpiler.metadata())
+    {
         Ok(result) => print!("{result}"),
         Err(parsing_error) => eprintln!("{RED}[Error]{RESET} {parsing_error}"),
+    }
+}
+
+// parses the input and writes it back pretty-printed
+fn format_files(input: InputArgs) {
+    let data = match InputData::read(&input) {
+        Ok(data) => data,
+        Err(error) => return eprintln!("{RED}[Error]{RESET} {error}"),
+    };
+    let transpiler = match data.transpiler() {
+        Ok(transpiler) => transpiler,
+        Err(parsing_error) => return eprintln!("{RED}[Error]{RESET} {parsing_error}"),
+    };
+    match &data {
+        InputData::Json(_) => {
+            return eprintln!(
+                "{RED}[Error]{RESET} {}",
+                "this is only supported for HDDL files."
+            )
+        }
+        InputData::Hddl { .. } => {
+            let (domain, problem) = transpiler.to_hddl();
+            write_file(&input.input_path, &domain);
+            if let Some(problem) = problem {
+                write_file(input.problem_path.as_deref().unwrap(), &problem);
+            }
+        }
     }
 }
 
