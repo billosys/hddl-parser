@@ -30,11 +30,15 @@ impl <'a> Predicate<'a> {
             variables: vec![]
         }
     }
+
+    pub fn arity(&self) -> usize {
+        self.variables.len()
+    }
 }
 
 impl <'a> PartialEq for Predicate<'a> {
     fn eq(&self, other: &Self) -> bool {
-        self.name.eq(other.name)
+        self.name.eq(other.name) && self.arity() == other.arity()
     }
 }
 
