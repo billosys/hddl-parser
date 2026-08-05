@@ -9,6 +9,14 @@ mod tests {
         Box::new(Formula::Atom(Predicate::new_dummy(name)))
     }
 
+    fn flat(f: &Formula) -> String {
+        f.to_string()
+            .split_whitespace()
+            .collect::<Vec<_>>()
+            .join(" ")
+            .replace(" )", ")")
+    }
+
     #[test]
     pub fn conjunction_of_literals_test() {
         let formula = Formula::And(vec![
@@ -102,5 +110,21 @@ mod tests {
             }
             _ => panic!("parsing errors"),
         }
+    }    
+
+    #[test]
+    fn nnf_then_dnf_test() {
+        // ¬(a → (b ∧ ¬c))
+        let f = Formula::Not(Box::new(Formula::Imply(
+            atom("a"),
+            Box::new(Formula::And(vec![
+                atom("b"),
+                Box::new(Formula::Not(atom("c"))),
+            ])),
+        )));
+        let nnf = f.to_nnf(false);
+        assert_eq!(flat(&nnf), "(and (a) (or (not (b)) (c)))");
+        let dnf = f.to_dnf();
+        assert_eq!(flat(&dnf), "(or (and (a) (not (b))) (and (a) (c)))");
     }
 }

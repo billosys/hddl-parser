@@ -29,7 +29,43 @@ pub enum Formula<'a> {
 }
 
 impl<'a> Formula<'a> {
-    fn to_nnf(&self, negated: bool) -> Formula<'a> {
+    pub fn to_dnf(&self) -> Formula<'a> {
+        fn cubes<'a>(f: &Formula<'a>) -> Vec<Vec<Formula<'a>>> {
+            match f {
+                Formula::Or(fs) => fs.iter().flat_map(|f| cubes(f)).collect(),
+                Formula::And(fs) => fs.iter().fold(vec![vec![]], |acc, f| {
+                    let rights = cubes(f);
+                    acc.iter()
+                        .flat_map(|left| {
+                            rights
+                                .iter()
+                                .map(move |right| left.iter().chain(right).cloned().collect())
+                        })
+                        .collect()
+                }),
+                // ∃x (C₁ ∨ … ∨ Cₖ) ≡ (∃x C₁) ∨ … ∨ (∃x Cₖ)
+                Formula::Exists(vars, f) => cubes(f)
+                    .into_iter()
+                    .map(|cube| {
+                        vec![Formula::Exists(
+                            vars.clone(),
+                            Box::new(Formula::And(cube.into_iter().map(Box::new).collect())),
+                        )]
+                    })
+                    .collect(),
+                literal => vec![vec![literal.clone()]],
+            }
+        }
+
+        Formula::Or(
+            cubes(&self.to_nnf(false))
+                .into_iter()
+                .map(|cube| Box::new(Formula::And(cube.into_iter().map(Box::new).collect())))
+                .collect(),
+        )
+    }
+
+    pub fn to_nnf(&self, negated: bool) -> Formula<'a> {
         match (self, negated) {
             (Formula::Empty | Formula::Atom(_), false) => self.clone(),
             (Formula::Empty | Formula::Atom(_), true) => Formula::Not(Box::new(self.clone())),
