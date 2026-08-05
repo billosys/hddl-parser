@@ -3,6 +3,19 @@ use std::collections::HashSet;
 use super::*;
 
 #[test]
+pub fn untyped_parameter_accepts_any_argument_test() {
+    let types = Some(vec![Symbol::new_untyped(
+        "block",
+        TokenPosition::default()
+    )]);
+    let checker = TypeChecker::new(&types);
+    assert!(checker.is_var_type_consistent(Some("block"), None));
+    assert!(!checker.is_var_type_consistent(None, Some("block")));
+    assert!(checker.is_var_type_consistent(None, None));
+    assert!(checker.is_var_type_consistent(Some("block"), Some("object")));
+}
+
+#[test]
 pub fn basic_type_checking_test () {
     let program = String::from(
         "(define (domain bal)

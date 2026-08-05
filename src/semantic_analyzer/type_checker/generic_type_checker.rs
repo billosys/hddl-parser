@@ -114,7 +114,7 @@ impl<'a> TypeChecker<'a> {
             }
             (None, Some(_)) => return false,
             (Some(_), None) => {
-                return false;
+                return true;
             }
         }
     }
