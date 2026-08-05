@@ -1,5 +1,5 @@
 use core::panic;
-use std::{fmt, todo, vec};
+use std::fmt;
 
 use serde::{Deserialize, Serialize};
 
@@ -7,6 +7,113 @@ use crate::transpiler::format_typed_list;
 use crate::NumberType;
 
 use super::*;
+
+// a formula in disjunctive normal form: a disjunction of cubes, each a
+// conjunction of literals. Transient computation result (never serialized).
+#[derive(Clone, Debug)]
+pub struct DNFFormula<'a> {
+    pub cubes: Vec<Cube<'a>>,
+}
+
+#[derive(Clone, Debug)]
+pub enum Literal<'a> {
+    Positive(Predicate<'a>),
+    Negative(Predicate<'a>),
+}
+
+#[derive(Clone, Debug)]
+pub struct Cube<'a> {
+    pub values: Vec<Literal<'a>>,
+}
+
+impl<'a> Literal<'a> {
+    pub fn predicate(&self) -> &Predicate<'a> {
+        match self {
+            Literal::Positive(predicate) | Literal::Negative(predicate) => predicate,
+        }
+    }
+
+    pub fn is_positive(&self) -> bool {
+        matches!(self, Literal::Positive(_))
+    }
+
+    pub fn into_formula(self) -> Formula<'a> {
+        match self {
+            Literal::Positive(predicate) => Formula::Atom(predicate),
+            Literal::Negative(predicate) => Formula::Not(Box::new(Formula::Atom(predicate))),
+        }
+    }
+}
+
+impl<'a> Cube<'a> {
+    pub fn len(&self) -> usize {
+        self.values.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.values.is_empty()
+    }
+
+    pub fn into_formula(mut self) -> Option<Formula<'a>> {
+        match self.values.len() {
+            0 => None,
+            1 => Some(self.values.pop().unwrap().into_formula()),
+            _ => Some(Formula::And(
+                self.values
+                    .into_iter()
+                    .map(|literal| Box::new(literal.into_formula()))
+                    .collect(),
+            )),
+        }
+    }
+
+    pub fn to_formula(&self) -> Formula<'a> {
+        self.clone().into_formula().unwrap_or(Formula::Empty)
+    }
+}
+
+impl<'a> DNFFormula<'a> {
+    pub fn len(&self) -> usize {
+        self.cubes.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.cubes.is_empty()
+    }
+
+    pub fn iter(&self) -> std::slice::Iter<'_, Cube<'a>> {
+        self.cubes.iter()
+    }
+}
+
+impl<'a> IntoIterator for DNFFormula<'a> {
+    type Item = Cube<'a>;
+    type IntoIter = std::vec::IntoIter<Cube<'a>>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.cubes.into_iter()
+    }
+}
+
+impl<'a, 'b> IntoIterator for &'b DNFFormula<'a> {
+    type Item = &'b Cube<'a>;
+    type IntoIter = std::slice::Iter<'b, Cube<'a>>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.cubes.iter()
+    }
+}
+
+impl<'a> fmt::Display for DNFFormula<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{}",
+            Formula::Or(self.cubes.iter().map(|cube| Box::new(cube.to_formula())).collect())
+        )
+    }
+}
+
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub enum Formula<'a> {
@@ -29,13 +136,31 @@ pub enum Formula<'a> {
 }
 
 impl<'a> Formula<'a> {
-    pub fn to_dnf(&self) -> Formula<'a> {
-        Formula::Or(
-            self.dnf_cubes()
-                .into_iter()
-                .map(|cube| Box::new(Formula::And(cube.into_iter().map(Box::new).collect())))
-                .collect(),
-        )
+    pub fn to_dnf(&self) -> DNFFormula<'a> {
+        let cubes = self
+            .dnf_cubes()
+            .into_iter()
+            .map(|cube| Cube {
+                values: cube
+                    .into_iter()
+                    .filter_map(|entry| match entry {
+                        Formula::Atom(predicate) => Some(Literal::Positive(predicate)),
+                        Formula::Not(inner) => match *inner {
+                            Formula::Atom(predicate) => Some(Literal::Negative(predicate)),
+                            other => panic!(
+                                "to_dnf: (not {other}) is not in NNF"
+                            ),
+                        },
+                        Formula::Empty => None,
+                        Formula::Equals(lhs, rhs) => panic!(
+                            "to_dnf: (= {lhs} {rhs}) is not a DNF literal; run remove-equality-constraints first"
+                        ),
+                        other => panic!("to_dnf: non-literal {other} in a cube"),
+                    })
+                    .collect(),
+            })
+            .collect();
+        DNFFormula { cubes }
     }
 
     // the disjuncts of the formula's DNF, each a list of literals and
@@ -178,7 +303,7 @@ impl<'a> Formula<'a> {
 
     pub(crate) fn is_literal(&self) -> bool {
         match self {
-            Formula::Atom(_) | Formula::Equals(_, _) => true,
+            Formula::Atom(_) => true,
             Formula::Not(inner) => matches!(&**inner, Formula::Atom(_) | Formula::Equals(_, _)),
             _ => false,
         }

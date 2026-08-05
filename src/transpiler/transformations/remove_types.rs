@@ -199,7 +199,6 @@ impl<'a> Transpiler<'a> {
             }
             problem.extend_init_state(init);
         }
-        self.refresh_requirements();
     }
 
     // strips the parameter typings, returning them as (variable, type) constraints

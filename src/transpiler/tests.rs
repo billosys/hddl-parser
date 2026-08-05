@@ -858,3 +858,110 @@ pub fn compile_equality_constraints_test() {
     }
     result.verify().unwrap();
 }
+
+#[test]
+pub fn conjunctive_preconditions_splits_action_test() {
+    let domain = "(define (domain disj)
+        (:predicates (p ?x) (q ?x) (r ?x))
+        (:task Top :parameters (?x))
+        (:method m_top
+            :parameters (?x)
+            :task (Top ?x)
+            :subtasks (and (act ?x))
+        )
+        (:action act
+         :parameters (?x)
+         :precondition (or (p ?x) (and (q ?x) (not (r ?x))))
+         :effect (r ?x)
+        )
+    )";
+    let domain_bytes = domain.as_bytes().to_vec();
+    let result = Transpiler::from_hddl(&domain_bytes, None)
+        .unwrap()
+        .transform(crate::Transformation::ConjunctivePreconditions)
+        .unwrap()
+        .into_program();
+    // the primitive is gone; a same-named compound task takes its place
+    assert!(!result.domain.actions.iter().any(|a| a.name == "act"));
+    let wrapper = result
+        .domain
+        .compound_tasks
+        .iter()
+        .find(|task| task.name == "act")
+        .unwrap();
+    assert_eq!(wrapper.parameters.len(), 1);
+    // one primitive copy per cube, each carrying the cube and cloned effects
+    let copy_0 = result.domain.actions.iter().find(|a| a.name == "act_a0").unwrap();
+    match &copy_0.preconditions {
+        Some(Formula::Atom(predicate)) => assert_eq!(predicate.name, "p"),
+        other => panic!("unexpected precondition {other:?}"),
+    }
+    let copy_1 = result.domain.actions.iter().find(|a| a.name == "act_a1").unwrap();
+    match &copy_1.preconditions {
+        Some(Formula::And(conjuncts)) => assert_eq!(conjuncts.len(), 2),
+        other => panic!("unexpected precondition {other:?}"),
+    }
+    for copy in [copy_0, copy_1] {
+        match &copy.effects {
+            Some(Formula::Atom(predicate)) => assert_eq!(predicate.name, "r"),
+            other => panic!("unexpected effect {other:?}"),
+        }
+    }
+    // one pass-through method per copy
+    for (method_name, copy_name) in [("act_m0", "act_a0"), ("act_m1", "act_a1")] {
+        let method = result
+            .domain
+            .methods
+            .iter()
+            .find(|m| m.name.name == method_name)
+            .unwrap();
+        assert_eq!(method.task.name, "act");
+        assert!(method.precondition.is_none());
+        assert_eq!(method.tn.subtasks.len(), 1);
+        assert_eq!(method.tn.subtasks[0].task.name, copy_name);
+    }
+}
+
+
+#[test]
+pub fn conjunctive_preconditions_splits_method_test() {
+    let domain = "(define (domain mdisj)
+        (:predicates (p ?x) (q ?x) (r ?x))
+        (:task Top :parameters (?x))
+        (:method m
+            :parameters (?x)
+            :task (Top ?x)
+            :precondition (or (p ?x) (q ?x))
+            :subtasks (and (act ?x))
+        )
+        (:action act
+         :parameters (?x)
+         :effect (r ?x)
+        )
+    )";
+    let domain_bytes = domain.as_bytes().to_vec();
+    let result = Transpiler::from_hddl(&domain_bytes, None)
+        .unwrap()
+        .transform(crate::Transformation::ConjunctivePreconditions)
+        .unwrap()
+        .into_program();
+    assert!(!result.domain.methods.iter().any(|m| m.name.name == "m"));
+    for (method_name, atom_name) in [("m_m0", "p"), ("m_m1", "q")] {
+        let copy = result
+            .domain
+            .methods
+            .iter()
+            .find(|m| m.name.name == method_name)
+            .unwrap();
+        assert_eq!(copy.task.name, "Top");
+        match &copy.precondition {
+            Some(Formula::Atom(predicate)) => assert_eq!(predicate.name, atom_name),
+            other => panic!("unexpected precondition {other:?}"),
+        }
+        assert_eq!(copy.tn.subtasks[0].task.name, "act");
+    }
+    // the action was untouched, no wrapper task appeared
+    assert_eq!(result.domain.actions.len(), 1);
+    assert_eq!(result.domain.compound_tasks.len(), 1);
+    result.verify().unwrap();
+}

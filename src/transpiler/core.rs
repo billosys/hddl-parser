@@ -112,11 +112,13 @@ impl<'a> Transpiler<'a> {
             preconditions.extend(method.precondition.iter());
         }
         preconditions.extend(program.problem.iter().flat_map(|p| p.goal.iter()));
-
+        
         let has_forall = preconditions
             .iter()
-            .chain(effects.iter())
             .any(|formula| formula.any_subformula(&mut |f| matches!(f, Formula::ForAll(_, _))));
+        let has_exists = preconditions
+            .iter()
+            .any(|formula| formula.any_subformula(&mut |f| matches!(f, Formula::Exists(_, _))));
         let has_negative = preconditions
             .iter()
             .any(|formula| formula.any_subformula(&mut |f| matches!(f, Formula::Not(_))));
@@ -142,8 +144,17 @@ impl<'a> Transpiler<'a> {
         drop(effects);
 
         let requirements = &mut program.domain.requirements;
+        if has_forall && !requirements.contains(&RequirementType::UniversalPreconditions) {
+            requirements.push(RequirementType::UniversalPreconditions);
+        }
         if !has_forall {
             requirements.retain(|r| *r != RequirementType::UniversalPreconditions);
+        }
+        if has_exists && !requirements.contains(&RequirementType::ExistentialPreconditions) {
+            requirements.push(RequirementType::ExistentialPreconditions);
+        }
+        if !has_exists {
+            requirements.retain(|r| *r != RequirementType::ExistentialPreconditions);
         }
         if has_negative && !requirements.contains(&RequirementType::NegativePreconditions) {
             requirements.push(RequirementType::NegativePreconditions);

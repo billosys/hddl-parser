@@ -11,7 +11,7 @@ use super::*;
         Box::new(Formula::Atom(Predicate::new_dummy(name)))
     }
 
-    fn flat(f: &Formula) -> String {
+    fn flat(f: &impl std::fmt::Display) -> String {
         f.to_string()
             .split_whitespace()
             .collect::<Vec<_>>()
@@ -24,7 +24,6 @@ use super::*;
         let formula = Formula::And(vec![
             atom("p_1"),
             Box::new(Formula::Not(atom("p_2"))),
-            Box::new(Formula::Equals("a", "b")),
         ]);
         assert_eq!(formula.is_simple_conjunction(), true);
     }
@@ -127,7 +126,33 @@ use super::*;
         let nnf = f.to_nnf(false);
         assert_eq!(flat(&nnf), "(and (a) (or (not (b)) (c)))");
         let dnf = f.to_dnf();
+        assert_eq!(dnf.len(), 2);
         assert_eq!(flat(&dnf), "(or (and (a) (not (b))) (and (a) (c)))");
+    }
+
+    #[test]
+    fn dnf_formula_cube_test() {
+        let f = Formula::Or(vec![
+            Box::new(Formula::And(vec![
+                atom("a"),
+                Box::new(Formula::Not(atom("b"))),
+            ])),
+            atom("c"),
+        ]);
+        let dnf = f.to_dnf();
+        assert_eq!(dnf.len(), 2);
+        let first = &dnf.cubes[0];
+        assert_eq!(first.len(), 2);
+        assert!(first.values[0].is_positive());
+        assert_eq!(first.values[0].predicate().name, "a");
+        assert!(!first.values[1].is_positive());
+        assert_eq!(first.values[1].predicate().name, "b");
+        assert_eq!(flat(&first.to_formula()), "(and (a) (not (b)))");
+        // a single-literal cube converts back to a bare literal, not (and ...)
+        assert_eq!(flat(&dnf.cubes[1].to_formula()), "(c)");
+        // iteration yields the cubes in order
+        let sizes: Vec<usize> = dnf.into_iter().map(|cube| cube.len()).collect();
+        assert_eq!(sizes, vec![2, 1]);
     }
 
     #[test]

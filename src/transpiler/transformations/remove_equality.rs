@@ -8,7 +8,6 @@ const PRED_NAME: &str = "EQUAL";
 impl<'a> Transpiler<'a> {
     pub(crate) fn remove_equality_constraints(&mut self) -> Result<(), ParsingError> {
         remove_equality_constraints(&mut self.program);
-        self.refresh_requirements();
         Ok(())
     }
 }
