@@ -2,6 +2,7 @@ use core::panic;
 use std::collections::HashSet;
 
 use super::*;
+use petgraph::visit::Reversed;
 
 #[derive(Clone)]
 pub struct TypeChecker<'a> {
@@ -63,6 +64,21 @@ impl<'a> TypeChecker<'a> {
             }
         }
         supertypes
+    }
+
+    pub fn get_subtypes(&self, of_type: &'a str) -> HashSet<&'a str> {
+        let mut subtypes = HashSet::new();
+        if !self.type_hierarchy.contains_node(of_type) {
+            panic!("Type {} is not defined.", of_type)
+        }
+        let reversed = Reversed(&self.type_hierarchy);
+        let mut dfs = Dfs::new(reversed, of_type);
+        while let Some(node) = dfs.next(reversed) {
+            if node != of_type {
+                subtypes.insert(node);
+            }
+        }
+        subtypes
     }
 
     pub fn verify_type_hierarchy(&self) -> Result<(), SemanticErrorType> {
