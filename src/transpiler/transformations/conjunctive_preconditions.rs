@@ -7,18 +7,16 @@ impl<'a> Transpiler<'a> {
     // Brings every action and method precondition into a conjunction of literals
     pub(crate) fn conjunctive_preconditions(&mut self) -> Result<(), ParsingError> {
         // the requirement flags are recomputed first so they reflect what the
-        // preconditions actually contain, then gate the pass
+        // preconditions actually contain
         self.refresh_requirements();
         let mut compile_equality = false;
+        let mut remove_quantifiers = false;
         for requirement in self.program.domain.requirements.iter() {
             match requirement {
                 RequirementType::UniversalPreconditions
                 | RequirementType::ExistentialPreconditions
                 | RequirementType::QuantifiedPreconditions => {
-                    return Err(ParsingError::Transformation(
-                        "quantified domains cannot be processed. Run the quantifier elimination first"
-                            .to_string(),
-                    ))
+                    remove_quantifiers = true
                 }
                 RequirementType::Equality => compile_equality = true,
                 _ => {}
@@ -26,6 +24,10 @@ impl<'a> Transpiler<'a> {
         }
         if compile_equality {
             self.remove_equality_constraints()?;
+        }
+
+        if remove_quantifiers {
+            self.remove_quantifiers()?;
         }
 
         // names already in use; synthesized copies must not collide with them

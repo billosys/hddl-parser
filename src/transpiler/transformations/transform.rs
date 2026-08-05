@@ -9,4 +9,6 @@ pub enum Transformation {
     RemoveEqualityConstraints,
     // types become unary predicates
     RemoveTypes,
+    // remove quantifiers
+    QuantifierElimintation
 }

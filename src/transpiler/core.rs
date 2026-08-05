@@ -47,6 +47,7 @@ impl<'a> Transpiler<'a> {
             Transformation::RemoveTypes => self.remove_types(),
             Transformation::ConjunctivePreconditions => self.conjunctive_preconditions()?,
             Transformation::RemoveEqualityConstraints => self.remove_equality_constraints()?,
+            Transformation::QuantifierElimintation => self.remove_quantifiers()?,
         }
         Ok(self)
     }

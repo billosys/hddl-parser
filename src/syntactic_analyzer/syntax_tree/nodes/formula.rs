@@ -109,11 +109,15 @@ impl<'a> fmt::Display for DNFFormula<'a> {
         write!(
             f,
             "{}",
-            Formula::Or(self.cubes.iter().map(|cube| Box::new(cube.to_formula())).collect())
+            Formula::Or(
+                self.cubes
+                    .iter()
+                    .map(|cube| Box::new(cube.to_formula()))
+                    .collect()
+            )
         )
     }
 }
-
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub enum Formula<'a> {
@@ -306,6 +310,26 @@ impl<'a> Formula<'a> {
             Formula::Atom(_) => true,
             Formula::Not(inner) => matches!(&**inner, Formula::Atom(_) | Formula::Equals(_, _)),
             _ => false,
+        }
+    }
+
+    pub fn is_quantified(&self) -> bool {
+        match self {
+            Formula::Empty | Formula::Atom(_) | Formula::Equals(_, _) => false,
+            Formula::And(inner) | Formula::Or(inner) | Formula::Xor(inner) => {
+                let any_quantified = inner.iter().map(|x| x.is_quantified()).any(|x| x);
+                return any_quantified;
+            },
+            Formula::Exists(_, _) | Formula::ForAll(_, _) => true,
+            Formula::Not(inner) => {
+                inner.is_quantified()
+            },
+            Formula::Imply(lhs, rhs ) => {
+                lhs.is_quantified() || rhs.is_quantified()
+            },
+            Formula::Probabilistic(_, inner ) => {
+                inner.is_quantified()
+            }
         }
     }
 

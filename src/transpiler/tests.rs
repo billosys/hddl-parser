@@ -924,6 +924,113 @@ pub fn conjunctive_preconditions_splits_action_test() {
 
 
 #[test]
+pub fn quantifier_elimination_test() {
+    let domain = "(define (domain qe)
+        (:types box - pkg pkg - object location - object)
+        (:predicates (at ?p - pkg ?l - location) (ready))
+        (:task Top :parameters (?l - location))
+        (:method m_top
+            :parameters (?l - location)
+            :task (Top ?l)
+            :precondition (exists (?b - box) (at ?b ?l))
+            :subtasks (and (act))
+        )
+        (:action act
+         :parameters ()
+         :precondition (and
+            (ready)
+            (forall (?l - location) (exists (?p - pkg) (at ?p ?l)))
+         )
+         :effect (forall (?p - pkg ?l - location) (not (at ?p ?l)))
+        )
+    )";
+    let problem = "(define (problem p_qe) (:domain qe)
+        (:objects p1 - pkg b1 - box loc_0 loc_1 - location)
+        (:init (at p1 loc_0))
+    )";
+    let domain_bytes = domain.as_bytes().to_vec();
+    let problem_bytes = problem.as_bytes().to_vec();
+    let result = Transpiler::from_hddl(&domain_bytes, Some(&problem_bytes))
+        .unwrap()
+        .transform(crate::Transformation::QuantifierElimintation)
+        .unwrap()
+        .into_program();
+    let assert_ground_atom = |formula: &Formula, name: &str, args: Vec<&str>| match formula {
+        Formula::Atom(predicate) => {
+            assert_eq!(predicate.name, name);
+            assert_eq!(
+                predicate.variables.iter().map(|v| v.name).collect::<Vec<_>>(),
+                args
+            );
+        }
+        other => panic!("expected atom ({name}), got {other:?}"),
+    };
+    // the nested forall/exists becomes a conjunction of disjunctions
+    let action = &result.domain.actions[0];
+    if let Some(Formula::And(outer)) = &action.preconditions {
+        assert_eq!(outer.len(), 2);
+        assert_ground_atom(&outer[0], "ready", vec![]);
+        if let Formula::And(per_location) = &*outer[1] {
+            assert_eq!(per_location.len(), 2);
+            for (disjunction, location) in per_location.iter().zip(["loc_0", "loc_1"]) {
+                if let Formula::Or(per_pkg) = &**disjunction {
+                    // exists over pkg covers the box subtype object too
+                    assert_eq!(per_pkg.len(), 2);
+                    assert_ground_atom(&per_pkg[0], "at", vec!["p1", location]);
+                    assert_ground_atom(&per_pkg[1], "at", vec!["b1", location]);
+                } else {
+                    panic!("expected a disjunction for {location}")
+                }
+            }
+        } else {
+            panic!("unexpected expansion {:?}", outer[1])
+        }
+    } else {
+        panic!("unexpected precondition {:?}", action.preconditions)
+    }
+    // a single forall binding two variables expands to the cartesian product
+    if let Some(Formula::And(effects)) = &action.effects {
+        let expected = [
+            ("p1", "loc_0"),
+            ("p1", "loc_1"),
+            ("b1", "loc_0"),
+            ("b1", "loc_1"),
+        ];
+        assert_eq!(effects.len(), expected.len());
+        for (effect, (pkg, location)) in effects.iter().zip(expected) {
+            if let Formula::Not(inner) = &**effect {
+                assert_ground_atom(inner, "at", vec![pkg, location]);
+            } else {
+                panic!("unexpected effect instance {effect:?}")
+            }
+        }
+    } else {
+        panic!("unexpected effect {:?}", action.effects)
+    }
+    // method precondition
+    let method = &result.domain.methods[0];
+    if let Some(Formula::Or(instances)) = &method.precondition {
+        assert_eq!(instances.len(), 1);
+        assert_ground_atom(&instances[0], "at", vec!["b1", "?l"]);
+    } else {
+        panic!("unexpected precondition {:?}", method.precondition)
+    }
+    // no quantifier survives anywhere
+    let quantifier_free = |formula: &Formula| {
+        !formula.any_subformula(&mut |f| {
+            matches!(f, Formula::ForAll(_, _) | Formula::Exists(_, _))
+        })
+    };
+    for action in result.domain.actions.iter() {
+        assert!(action.preconditions.iter().all(&quantifier_free));
+        assert!(action.effects.iter().all(&quantifier_free));
+    }
+    for method in result.domain.methods.iter() {
+        assert!(method.precondition.iter().all(&quantifier_free));
+    }
+}
+
+#[test]
 pub fn conjunctive_preconditions_splits_method_test() {
     let domain = "(define (domain mdisj)
         (:predicates (p ?x) (q ?x) (r ?x))

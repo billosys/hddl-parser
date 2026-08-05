@@ -5,9 +5,7 @@ use std::fs;
 
 #[test]
 pub fn cyclic_ordering_validation_test() {
-    let domain = fs::read(
-        "tests/flawed_domains/cyclic-ordering-for-subtasks-domain.hddl"
-    ).unwrap();
+    let domain = fs::read("tests/flawed_domains/cyclic-ordering-for-subtasks-domain.hddl").unwrap();
     match HDDLProgram::from_hddl(&domain, None).and_then(|program| program.verify()) {
         Ok(_) => panic!("error not found"),
         Err(err) => {
@@ -26,15 +24,12 @@ pub fn cyclic_ordering_validation_test() {
 
 #[test]
 pub fn cyclic_type_validation_test() {
-    let domain = fs::read(
-        "tests/flawed_domains/directly-cyclic-subtypes-domain.hddl"
-    ).unwrap();
+    let domain = fs::read("tests/flawed_domains/directly-cyclic-subtypes-domain.hddl").unwrap();
     match HDDLProgram::from_hddl(&domain, None).and_then(|program| program.verify()) {
         Ok(_) => panic!("error not found"),
         Err(err) => {
             if let hddl_analyzer::ParsingError::Semantic(x) = err {
                 if let SemanticErrorType::CyclicTypeDeclaration = x {
-                    
                 } else {
                     panic!("wrong error {:?}", x)
                 }
@@ -44,15 +39,12 @@ pub fn cyclic_type_validation_test() {
         }
     }
 
-    let domain = fs::read(
-        "tests/flawed_domains/indirectly-cyclic-subtypes-domain.hddl"
-    ).unwrap();
+    let domain = fs::read("tests/flawed_domains/indirectly-cyclic-subtypes-domain.hddl").unwrap();
     match HDDLProgram::from_hddl(&domain, None).and_then(|program| program.verify()) {
         Ok(_) => panic!("error not found"),
         Err(err) => {
             if let hddl_analyzer::ParsingError::Semantic(x) = err {
                 if let SemanticErrorType::CyclicTypeDeclaration = x {
-                    
                 } else {
                     panic!("wrong error {:?}", x)
                 }
@@ -65,15 +57,16 @@ pub fn cyclic_type_validation_test() {
 
 #[test]
 pub fn duplicate_action_validation_test() {
-    let domain = fs::read(
-        "tests/flawed_domains/duplicate-action-domain.hddl"
-    ).unwrap();
+    let domain = fs::read("tests/flawed_domains/duplicate-action-domain.hddl").unwrap();
     match HDDLProgram::from_hddl(&domain, None).and_then(|program| program.verify()) {
         Ok(_) => panic!("error not found"),
         Err(err) => {
             if let hddl_analyzer::ParsingError::Semantic(x) = err {
                 if let SemanticErrorType::DuplicateActionDeclaration(t) = x {
-                    assert_eq!(t.symbol, "move_seg_twe1_0_200_seg_twe2_0_50_south_south_medium");
+                    assert_eq!(
+                        t.symbol,
+                        "move_seg_twe1_0_200_seg_twe2_0_50_south_south_medium"
+                    );
                 } else {
                     panic!("wrong error {:?}", x)
                 }
@@ -86,9 +79,7 @@ pub fn duplicate_action_validation_test() {
 
 #[test]
 pub fn duplicate_task_validation_test() {
-    let domain = fs::read(
-        "tests/flawed_domains/duplicate-compound-task-domain.hddl"
-    ).unwrap();
+    let domain = fs::read("tests/flawed_domains/duplicate-compound-task-domain.hddl").unwrap();
     match HDDLProgram::from_hddl(&domain, None).and_then(|program| program.verify()) {
         Ok(_) => panic!("error not found"),
         Err(err) => {
@@ -107,9 +98,8 @@ pub fn duplicate_task_validation_test() {
 
 #[test]
 pub fn duplicate_method_validation_test() {
-    let domain = fs::read(
-        "tests/flawed_domains/duplicate-decomposition-method-domain.hddl"
-    ).unwrap();
+    let domain =
+        fs::read("tests/flawed_domains/duplicate-decomposition-method-domain.hddl").unwrap();
     match HDDLProgram::from_hddl(&domain, None).and_then(|program| program.verify()) {
         Ok(_) => panic!("error not found"),
         Err(err) => {
@@ -128,9 +118,7 @@ pub fn duplicate_method_validation_test() {
 
 #[test]
 pub fn duplicate_predicate_validation_test() {
-    let domain = fs::read(
-        "tests/flawed_domains/duplicate-predicate-domain.hddl"
-    ).unwrap();
+    let domain = fs::read("tests/flawed_domains/duplicate-predicate-domain.hddl").unwrap();
     match HDDLProgram::from_hddl(&domain, None).and_then(|program| program.verify()) {
         Ok(_) => panic!("error not found"),
         Err(err) => {
@@ -149,9 +137,7 @@ pub fn duplicate_predicate_validation_test() {
 
 #[test]
 pub fn duplicate_parameter_validation_test() {
-    let domain = fs::read(
-        "tests/flawed_domains/duplicate-parameters-domain.hddl"
-    ).unwrap();
+    let domain = fs::read("tests/flawed_domains/duplicate-parameters-domain.hddl").unwrap();
     match HDDLProgram::from_hddl(&domain, None).and_then(|program| program.verify()) {
         Ok(_) => panic!("error not found"),
         Err(err) => {
@@ -170,9 +156,7 @@ pub fn duplicate_parameter_validation_test() {
 
 #[test]
 pub fn extra_parantheses_validation_test() {
-    let domain = fs::read(
-        "tests/flawed_domains/extra-parentheses-domain.hddl"
-    ).unwrap();
+    let domain = fs::read("tests/flawed_domains/extra-parentheses-domain.hddl").unwrap();
     match HDDLProgram::from_hddl(&domain, None).and_then(|program| program.verify()) {
         Ok(_) => panic!("error not found"),
         Err(err) => {
@@ -186,11 +170,9 @@ pub fn extra_parantheses_validation_test() {
 }
 
 #[test]
-#[ignore="fix"]
+#[ignore = "fix"]
 pub fn forgotten_dash_validation_test() {
-    let domain = fs::read(
-        "tests/flawed_domains/forgotten-dash-domain.hddl"
-    ).unwrap();
+    let domain = fs::read("tests/flawed_domains/forgotten-dash-domain.hddl").unwrap();
     match HDDLProgram::from_hddl(&domain, None).and_then(|program| program.verify()) {
         Ok(_) => panic!("error not found"),
         Err(err) => {
@@ -205,9 +187,7 @@ pub fn forgotten_dash_validation_test() {
 
 #[test]
 pub fn forgotten_entry_validation_test() {
-    let domain = fs::read(
-        "tests/flawed_domains/forgotten-entries-domain.hddl"
-    ).unwrap();
+    let domain = fs::read("tests/flawed_domains/forgotten-entries-domain.hddl").unwrap();
     match HDDLProgram::from_hddl(&domain, None).and_then(|program| program.verify()) {
         Ok(_) => panic!("error not found"),
         Err(err) => {
@@ -223,9 +203,7 @@ pub fn forgotten_entry_validation_test() {
 #[test]
 #[ignore = "fix"]
 pub fn forgotten_question_mark_validation_test() {
-    let domain = fs::read(
-        "tests/flawed_domains/forgotten-question-mark-domain.hddl"
-    ).unwrap();
+    let domain = fs::read("tests/flawed_domains/forgotten-question-mark-domain.hddl").unwrap();
     match HDDLProgram::from_hddl(&domain, None).and_then(|program| program.verify()) {
         Ok(_) => panic!("error not found"),
         Err(err) => {
@@ -240,9 +218,8 @@ pub fn forgotten_question_mark_validation_test() {
 
 #[test]
 pub fn inconsistent_arity_predicate_validation_test() {
-    let domain = fs::read(
-        "tests/flawed_domains/inconsistent-num-parameters-predicate-domain.hddl"
-    ).unwrap();
+    let domain =
+        fs::read("tests/flawed_domains/inconsistent-num-parameters-predicate-domain.hddl").unwrap();
     match HDDLProgram::from_hddl(&domain, None).and_then(|program| program.verify()) {
         Ok(_) => panic!("error not found"),
         Err(err) => {
@@ -261,9 +238,9 @@ pub fn inconsistent_arity_predicate_validation_test() {
 
 #[test]
 pub fn inconsistent_type_predicate_validation_test() {
-    let domain = fs::read(
-        "tests/flawed_domains/inconsistent-type-parameters-predicate-domain.hddl"
-    ).unwrap();
+    let domain =
+        fs::read("tests/flawed_domains/inconsistent-type-parameters-predicate-domain.hddl")
+            .unwrap();
     match HDDLProgram::from_hddl(&domain, None).and_then(|program| program.verify()) {
         Ok(_) => panic!("error not found"),
         Err(err) => {
@@ -282,15 +259,17 @@ pub fn inconsistent_type_predicate_validation_test() {
 
 #[test]
 pub fn inconsistent_arity_task_validation_test() {
-    let domain = fs::read(
-        "tests/flawed_domains/inconsistent-num-parameters-task-domain.hddl"
-    ).unwrap();
+    let domain =
+        fs::read("tests/flawed_domains/inconsistent-num-parameters-task-domain.hddl").unwrap();
     match HDDLProgram::from_hddl(&domain, None).and_then(|program| program.verify()) {
         Ok(_) => panic!("error not found"),
         Err(err) => {
             if let hddl_analyzer::ParsingError::Semantic(x) = err {
                 if let SemanticErrorType::InconsistentTaskArity(t) = x {
-                    assert_eq!(t.symbol, "move_seg_ppdoor_0_40_seg_tww1_0_200_north_south_medium");
+                    assert_eq!(
+                        t.symbol,
+                        "move_seg_ppdoor_0_40_seg_tww1_0_200_north_south_medium"
+                    );
                 } else {
                     panic!()
                 }
@@ -303,9 +282,8 @@ pub fn inconsistent_arity_task_validation_test() {
 
 #[test]
 pub fn inconsistent_type_task_validation_test() {
-    let domain = fs::read(
-        "tests/flawed_domains/inconsistent-type-parameters-task-domain.hddl"
-    ).unwrap();
+    let domain =
+        fs::read("tests/flawed_domains/inconsistent-type-parameters-task-domain.hddl").unwrap();
     match HDDLProgram::from_hddl(&domain, None).and_then(|program| program.verify()) {
         Ok(_) => panic!("error not found"),
         Err(err) => {
@@ -324,9 +302,7 @@ pub fn inconsistent_type_task_validation_test() {
 
 #[test]
 pub fn undeclared_method_param_validation_test() {
-    let domain = fs::read(
-        "tests/flawed_domains/undeclared-method-parameter-domain.hddl"
-    ).unwrap();
+    let domain = fs::read("tests/flawed_domains/undeclared-method-parameter-domain.hddl").unwrap();
     match HDDLProgram::from_hddl(&domain, None).and_then(|program| program.verify()) {
         Ok(_) => panic!("error not found"),
         Err(err) => {
@@ -345,9 +321,7 @@ pub fn undeclared_method_param_validation_test() {
 
 #[test]
 pub fn undeclared_task_param_validation_test() {
-    let domain = fs::read(
-        "tests/flawed_domains/undeclared-task-parameter-domain.hddl"
-    ).unwrap();
+    let domain = fs::read("tests/flawed_domains/undeclared-task-parameter-domain.hddl").unwrap();
     match HDDLProgram::from_hddl(&domain, None).and_then(|program| program.verify()) {
         Ok(_) => panic!("error not found"),
         Err(err) => {
@@ -366,9 +340,7 @@ pub fn undeclared_task_param_validation_test() {
 
 #[test]
 pub fn undeclared_predicate_validation_test() {
-    let domain = fs::read(
-        "tests/flawed_domains/undefined-predicate-domain.hddl"
-    ).unwrap();
+    let domain = fs::read("tests/flawed_domains/undefined-predicate-domain.hddl").unwrap();
     match HDDLProgram::from_hddl(&domain, None).and_then(|program| program.verify()) {
         Ok(_) => panic!("error not found"),
         Err(err) => {
@@ -387,9 +359,7 @@ pub fn undeclared_predicate_validation_test() {
 
 #[test]
 pub fn undeclared_task_validation_test() {
-    let domain = fs::read(
-        "tests/flawed_domains/undefined-task-domain.hddl"
-    ).unwrap();
+    let domain = fs::read("tests/flawed_domains/undefined-task-domain.hddl").unwrap();
     match HDDLProgram::from_hddl(&domain, None).and_then(|program| program.verify()) {
         Ok(_) => panic!("error not found"),
         Err(err) => {
@@ -408,9 +378,7 @@ pub fn undeclared_task_validation_test() {
 
 #[test]
 pub fn undeclared_type_validation_test() {
-    let domain = fs::read(
-        "tests/flawed_domains/undefined-type-domain.hddl"
-    ).unwrap();
+    let domain = fs::read("tests/flawed_domains/undefined-type-domain.hddl").unwrap();
     match HDDLProgram::from_hddl(&domain, None).and_then(|program| program.verify()) {
         Ok(_) => panic!("error not found"),
         Err(err) => {
@@ -429,9 +397,8 @@ pub fn undeclared_type_validation_test() {
 
 #[test]
 pub fn no_primitive_refinement_validation_test() {
-    let domain = fs::read(
-        "tests/flawed_domains/abstract-task-without-refinement-domain.hddl"
-    ).unwrap();
+    let domain =
+        fs::read("tests/flawed_domains/abstract-task-without-refinement-domain.hddl").unwrap();
     match HDDLProgram::from_hddl(&domain, None).and_then(|program| program.verify()) {
         Ok(warnings) => {
             assert_eq!(warnings.len(), 1);
@@ -439,9 +406,9 @@ pub fn no_primitive_refinement_validation_test() {
                 WarningType::NoPrimitiveRefinement(x) => {
                     assert_eq!(x.symbol, "AchieveSomeGoal")
                 }
-                _ => panic!()
+                _ => panic!(),
             }
-        },
+        }
         Err(err) => {
             panic!()
         }
@@ -450,9 +417,8 @@ pub fn no_primitive_refinement_validation_test() {
 
 #[test]
 pub fn no_method_validation_test() {
-    let domain = fs::read(
-        "tests/flawed_domains/abstract-task-without-decomposition-domain.hddl"
-    ).unwrap();
+    let domain =
+        fs::read("tests/flawed_domains/abstract-task-without-decomposition-domain.hddl").unwrap();
     match HDDLProgram::from_hddl(&domain, None).and_then(|program| program.verify()) {
         Ok(warnings) => {
             assert_eq!(warnings.len(), 1);
@@ -460,9 +426,9 @@ pub fn no_method_validation_test() {
                 WarningType::NoPrimitiveRefinement(x) => {
                     assert_eq!(x.symbol, "AchieveSomeGoal")
                 }
-                _ => panic!()
+                _ => panic!(),
             }
-        },
+        }
         Err(err) => {
             panic!()
         }
@@ -471,11 +437,10 @@ pub fn no_method_validation_test() {
 
 #[test]
 pub fn ignore_possibly_complementary_effects_validation_test() {
-    let domain = fs::read(
-        "tests/flawed_domains/possible-complementary-effects-domain.hddl"
-    ).unwrap();
+    let domain =
+        fs::read("tests/flawed_domains/possible-complementary-effects-domain.hddl").unwrap();
     match HDDLProgram::from_hddl(&domain, None).and_then(|program| program.verify()) {
-        Ok(_) => {},
+        Ok(_) => {}
         Err(err) => {
             panic!()
         }

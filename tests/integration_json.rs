@@ -159,7 +159,10 @@ pub fn json_cyclic_ordering_no_pos_domain_no_panic() {
         Err(ParsingError::Semantic(SemanticErrorType::CyclicOrderingDeclaration(pos))) => {
             assert_eq!(pos.line, 0);
         }
-        other => panic!("expected a CyclicOrderingDeclaration error, got {:?}", other),
+        other => panic!(
+            "expected a CyclicOrderingDeclaration error, got {:?}",
+            other
+        ),
     }
 }
 
@@ -195,7 +198,10 @@ pub fn json_cyclic_ordering_no_pos_problem_no_panic() {
         Err(ParsingError::Semantic(SemanticErrorType::CyclicOrderingDeclaration(pos))) => {
             assert_eq!(pos.line, 0);
         }
-        other => panic!("expected a CyclicOrderingDeclaration error, got {:?}", other),
+        other => panic!(
+            "expected a CyclicOrderingDeclaration error, got {:?}",
+            other
+        ),
     }
 }
 
