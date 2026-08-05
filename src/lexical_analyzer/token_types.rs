@@ -92,9 +92,13 @@ pub enum RequirementType {
     TypedObjects,
     NegativePreconditions,
     UniversalPreconditions,
+    ExistentialPreconditions,
+    QuantifiedPreconditions,
     Equality,
     STRIPS,
     ProbabilisticEffects,
+    ConditionalEffects,
+    DomainAxioms,
 }
 
 impl fmt::Display for RequirementType {
@@ -105,9 +109,13 @@ impl fmt::Display for RequirementType {
             RequirementType::TypedObjects => ":typing",
             RequirementType::NegativePreconditions => ":negative-preconditions",
             RequirementType::UniversalPreconditions => ":universal-preconditions",
+            RequirementType::ExistentialPreconditions => ":existential-preconditions",
+            RequirementType::QuantifiedPreconditions => ":quantified-preconditions",
             RequirementType::Equality => ":equality",
             RequirementType::STRIPS => ":strips",
             RequirementType::ProbabilisticEffects => ":probabilistic-effects",
+            RequirementType::ConditionalEffects => ":conditional-effects",
+            RequirementType::DomainAxioms => ":domain-axioms",
         };
         write!(f, "{}", requirement)
     }
