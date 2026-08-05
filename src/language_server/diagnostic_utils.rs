@@ -193,6 +193,18 @@ impl From<ParsingError> for Diagnostic {
                     None,
                 )
             }
+            ParsingError::Transformation(message) => Diagnostic::new(
+                Range {
+                    start: Position::new(0, 0),
+                    end: Position::new(1, 0),
+                },
+                Some(DiagnosticSeverity::ERROR),
+                None,
+                source,
+                message,
+                None,
+                None,
+            ),
             ParsingError::Semantic(semantic_error) => {
                 match semantic_error {
                     // Duplicate Errors

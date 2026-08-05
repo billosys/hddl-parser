@@ -3,7 +3,9 @@ use super::*;
 #[cfg(test)]
 mod tests {
 
-    use super::*;
+    use std::{assert_eq, panic, vec};
+
+use super::*;
 
     fn atom(name: &str) -> Box<Formula> {
         Box::new(Formula::Atom(Predicate::new_dummy(name)))
@@ -126,5 +128,73 @@ mod tests {
         assert_eq!(flat(&nnf), "(and (a) (or (not (b)) (c)))");
         let dnf = f.to_dnf();
         assert_eq!(flat(&dnf), "(or (and (a) (not (b))) (and (a) (c)))");
+    }
+
+    #[test]
+    fn dnf_cubes_test() {
+        // the cubes are exactly the disjuncts of to_dnf
+        let f = Formula::And(vec![
+            atom("a"),
+            Box::new(Formula::Or(vec![atom("b"), atom("c")])),
+        ]);
+        let cubes = f.dnf_cubes();
+        assert_eq!(cubes.len(), 2);
+        assert_eq!(flat(&cubes[0][0]), "(a)");
+        assert_eq!(flat(&cubes[0][1]), "(b)");
+        assert_eq!(flat(&cubes[1][0]), "(a)");
+        assert_eq!(flat(&cubes[1][1]), "(c)");
+    }
+
+    #[test]
+    fn substitute_test() {
+        let predicate1 = Box::new(
+            Formula::Atom(
+                Predicate { name: "a", name_pos: TokenPosition::default(), variables: vec![
+                    Symbol::new_untyped("?x", TokenPosition::default()), Symbol::new_untyped("?y", TokenPosition::default()), 
+                ]}
+            )
+        );
+        let predicate2 = Box::new(
+            Formula::Atom(
+                Predicate { name: "b", name_pos: TokenPosition::default(), variables: vec![
+                    Symbol::new_untyped("?z", TokenPosition::default()), Symbol::new_untyped("?x", TokenPosition::default()), 
+                ]}
+            )
+        );
+        let formula = Formula::And(
+            vec![
+                predicate1,
+                Box::new(Formula::Not(predicate2))
+            ]
+        );
+        match formula.substitute("?x", &Symbol::new_untyped("ground", TokenPosition::default())) {
+            Formula::And(inner) => {
+                assert_eq!(2, inner.len());
+                match &*inner[0] {
+                    Formula::Atom(pred) => {
+                        assert_eq!("a", pred.name);
+                        assert_eq!(2, pred.variables.len());
+                        assert_eq!("ground", pred.variables[0].name);
+                        assert!(pred.variables[0].symbol_type.is_none());
+                        assert_eq!("?y", pred.variables[1].name);
+                    }
+                    _ => panic!()
+                }
+                match &*inner[1] {
+                    Formula::Not(negated) => match &**negated {
+                        Formula::Atom(pred) => {
+                            assert_eq!("b", pred.name);
+                            assert_eq!(2, pred.variables.len());
+                            assert_eq!("?z", pred.variables[0].name);
+                            assert_eq!("ground", pred.variables[1].name);
+                            assert!(pred.variables[1].symbol_type.is_none());
+                        }
+                        _ => panic!()
+                    },
+                    _ => panic!()
+                }
+            }
+            _ => panic!()
+        }
     }
 }

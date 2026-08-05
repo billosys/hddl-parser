@@ -5,7 +5,9 @@ pub enum ParsingError{
     Lexiacal(LexicalError),
     Syntactic(SyntacticError),
     Semantic(SemanticErrorType),
-    JSON(JsonError)
+    JSON(JsonError),
+    // a transformation could not be applied to the (otherwise valid) program
+    Transformation(String)
 }
 
 impl From<LexicalError> for ParsingError {
@@ -47,7 +49,8 @@ impl std::fmt::Display for ParsingError {
             Self::Lexiacal(error) => write!(f, "{}", error),
             Self::Syntactic(error) => write!(f, "{}", error),
             Self::Semantic(error) => write!(f, "{}", error),
-            Self::JSON(error) => write!(f, "{}", error)
+            Self::JSON(error) => write!(f, "{}", error),
+            Self::Transformation(message) => write!(f, "{}", message)
         }
     }
 }

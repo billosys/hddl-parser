@@ -1,9 +1,16 @@
-use crate::{HDDLProgram, MetaData, ParsingError, WarningType};
+use std::collections::HashSet;
 
-use super::{Input, Transformation};
+use crate::*;
+
+// synthesized identifiers must outlive the parsed program, whose strings all
+// borrow from the input buffer; leaking gives them 'static, which coerces to
+// any 'a. the volume is bounded by the number of synthesized names per run.
+pub(crate) fn leak(name: String) -> &'static str {
+    Box::leak(name.into_boxed_str())
+}
 
 pub struct Transpiler<'a> {
-    program: HDDLProgram<'a>,
+    pub(crate) program: HDDLProgram<'a>,
 }
 
 impl<'a> Transpiler<'a> {
@@ -30,10 +37,16 @@ impl<'a> Transpiler<'a> {
     }
 
     // verifies the program, then applies a transformation; chainable before emission
-    pub fn transform(mut self, transformation: Transformation) -> Result<Transpiler<'a>, ParsingError> {
+    pub fn transform(
+        mut self,
+        transformation: Transformation,
+    ) -> Result<Transpiler<'a>, ParsingError> {
         self.verify()?;
         match transformation {
-            Transformation::RemoveTypes => super::remove_types::remove_types(&mut self.program),
+            // TODO: make the transformation return actual errors
+            Transformation::RemoveTypes => self.remove_types(),
+            Transformation::ConjunctivePreconditions => self.conjunctive_preconditions()?,
+            Transformation::RemoveEqualityConstraints => self.remove_equality_constraints()?,
         }
         Ok(self)
     }
@@ -50,14 +63,108 @@ impl<'a> Transpiler<'a> {
         serde_json::to_string_pretty(&self.program).unwrap()
     }
 
+    // predicates are identified by name and arity
+    fn is_declared(&self, predicate_name: &str, arity: usize) -> bool {
+        self.program
+            .domain
+            .predicates
+            .iter()
+            .any(|x| x.name == predicate_name && x.arity() == arity)
+    }
+
     pub fn to_hddl(&self) -> (String, Option<String>) {
         (
             self.program.domain.to_string(),
-            self.program.problem.as_ref().map(|problem| problem.to_string()),
+            self.program
+                .problem
+                .as_ref()
+                .map(|problem| problem.to_string()),
         )
     }
 
     pub fn into_program(self) -> HDDLProgram<'a> {
         self.program
+    }
+
+    // a predicate name unused for the given arity: `name` itself when free,
+    // otherwise the first numeric-suffixed variant that is
+    pub(crate) fn fresh_predicate_name(&self, name: &'a str, arity: usize) -> &'a str {
+        if !self.is_declared(name, arity) {
+            return name;
+        }
+        let fresh = (0..)
+            .map(|i| format!("{name}_{i}"))
+            .find(|candidate| !self.is_declared(candidate, arity))
+            .unwrap();
+        leak(fresh)
+    }
+
+    // recompute the requirement flags from the actual content
+    pub(crate) fn refresh_requirements(&mut self) {
+        let program = &mut self.program;
+        let mut preconditions: Vec<&Formula> = vec![];
+        let mut effects: Vec<&Formula> = vec![];
+        for action in program.domain.actions.iter() {
+            preconditions.extend(action.preconditions.iter());
+            effects.extend(action.effects.iter());
+        }
+        for method in program.domain.methods.iter() {
+            preconditions.extend(method.precondition.iter());
+        }
+        preconditions.extend(program.problem.iter().flat_map(|p| p.goal.iter()));
+
+        let has_forall = preconditions
+            .iter()
+            .chain(effects.iter())
+            .any(|formula| formula.any_subformula(&mut |f| matches!(f, Formula::ForAll(_, _))));
+        let has_negative = preconditions
+            .iter()
+            .any(|formula| formula.any_subformula(&mut |f| matches!(f, Formula::Not(_))));
+        let has_constraints = program
+            .domain
+            .methods
+            .iter()
+            .filter_map(|method| method.tn.constraints.as_ref())
+            .chain(
+                program
+                    .problem
+                    .iter()
+                    .filter_map(|p| p.init_tn.as_ref())
+                    .filter_map(|init_tn| init_tn.tn.constraints.as_ref()),
+            )
+            .any(|constraints| !constraints.is_empty());
+        let has_equality = has_constraints
+            || preconditions
+                .iter()
+                .chain(effects.iter())
+                .any(|formula| formula.any_subformula(&mut |f| matches!(f, Formula::Equals(_, _))));
+        drop(preconditions);
+        drop(effects);
+
+        let requirements = &mut program.domain.requirements;
+        if !has_forall {
+            requirements.retain(|r| *r != RequirementType::UniversalPreconditions);
+        }
+        if has_negative && !requirements.contains(&RequirementType::NegativePreconditions) {
+            requirements.push(RequirementType::NegativePreconditions);
+        }
+        if has_equality && !requirements.contains(&RequirementType::Equality) {
+            requirements.push(RequirementType::Equality);
+        }
+        if !has_equality {
+            requirements.retain(|r| *r != RequirementType::Equality);
+        }
+        if let Some(problem) = program.problem.as_mut() {
+            if !has_forall {
+                problem
+                    .requirements
+                    .retain(|r| *r != RequirementType::UniversalPreconditions);
+            }
+            if !has_equality {
+                problem
+                    .requirements
+                    .retain(|r| *r != RequirementType::Equality);
+            }
+        }
     }
 }

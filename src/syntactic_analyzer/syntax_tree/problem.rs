@@ -46,6 +46,9 @@ impl <'a> ProblemAST<'a> {
     pub fn add_init_state(&mut self, state: Vec<Predicate<'a>>) {
         self.init_state = state;
     }
+    pub fn extend_init_state(&mut self, state: Vec<Predicate<'a>>) {
+        self.init_state.extend(state);
+    }
     pub fn add_goal(&mut self, goal: Formula<'a>) {
         self.goal = Some(goal);
     }

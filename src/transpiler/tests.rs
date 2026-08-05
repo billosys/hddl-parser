@@ -3,7 +3,6 @@ use std::{assert_eq, println, vec};
 
 use super::{Input, Transpiler};
 use crate::{
-    transpiler::transform,
     AbstractSyntaxTree, Action,
     Formula::{self, Atom},
     HDDLProgram, LexicalAnalyzer, NumberType, Parser, Predicate, Subtask, Symbol, TokenPosition,
@@ -706,4 +705,156 @@ pub fn untyping_rejects_invalid_program_test() {
     let domain_bytes = domain.as_bytes().to_vec();
     let transpiler = Transpiler::from_hddl(&domain_bytes, None).unwrap();
     assert!(transpiler.transform(crate::Transformation::RemoveTypes).is_err());
+}
+
+#[test]
+pub fn untyping_preserves_init_test() {
+    let domain = "(define (domain transport)
+        (:types car location)
+        (:constants up - location)
+        (:predicates (at ?c - car ?l - location))
+        (:action act
+         :parameters (?c - car ?loc1 - location)
+         :effect (not (at ?c ?loc1))
+        )
+    )";
+    let problem = "(define (problem p_transport) (:domain transport)
+        (:objects c1 - car loc_0 - location)
+        (:init (at c1 loc_0))
+    )";
+    let domain_bytes = domain.as_bytes().to_vec();
+    let problem_bytes = problem.as_bytes().to_vec();
+    let program = HDDLProgram::from_hddl(&domain_bytes, Some(&problem_bytes)).unwrap();
+    let result = Transpiler::new(program)
+        .transform(crate::Transformation::RemoveTypes)
+        .unwrap()
+        .into_program();
+    let init = &result.problem.as_ref().unwrap().init_state;
+    // the original facts survive untyping
+    assert_eq!(
+        init.iter()
+            .filter(|f| f.name == "at"
+                && f.variables.iter().map(|v| v.name).collect::<Vec<_>>() == vec!["c1", "loc_0"])
+            .count(),
+        1
+    );
+    // and each type atom is emitted exactly once
+    for (type_name, object) in [("car", "c1"), ("location", "loc_0"), ("location", "up")] {
+        assert_eq!(
+            init.iter()
+                .filter(|f| f.name == type_name
+                    && f.variables.iter().map(|v| v.name).collect::<Vec<_>>() == vec![object])
+                .count(),
+            1,
+            "expected exactly one ({type_name} {object}) fact"
+        );
+    }
+}
+
+#[test]
+pub fn compile_equality_test() {
+    let domain = "(define (domain eq)
+        (:predicates (p ?x) (r ?x))
+        (:task Top :parameters (?x ?y))
+        (:method m
+            :parameters (?x ?y)
+            :task (Top ?x ?y)
+            :precondition (not (= ?x ?y))
+            :subtasks (and (act ?x))
+        )
+        (:action act
+         :parameters (?x)
+         :effect (forall (?z) (when (= ?z ?x) (r ?z)))
+        )
+    )";
+    let problem = "(define (problem p_eq) (:domain eq)
+        (:objects a b)
+        (:init (p a))
+    )";
+    let domain_bytes = domain.as_bytes().to_vec();
+    let problem_bytes = problem.as_bytes().to_vec();
+    let result = Transpiler::from_hddl(&domain_bytes, Some(&problem_bytes))
+        .unwrap()
+        .transform(crate::Transformation::RemoveEqualityConstraints)
+        .unwrap()
+        .into_program();
+    // the equal predicate is declared and replaces every = literal
+    assert!(result.domain.predicates.iter().any(|p| p.name == "EQUAL"));
+    match &result.domain.methods[0].precondition {
+        Some(Formula::Not(inner)) => match &**inner {
+            Formula::Atom(predicate) => {
+                assert_eq!(predicate.name, "EQUAL");
+                assert_eq!(predicate.variables[0].name, "?x");
+                assert_eq!(predicate.variables[1].name, "?y");
+            }
+            other => panic!("unexpected literal {other:?}"),
+        },
+        other => panic!("unexpected precondition {other:?}"),
+    }
+    // the rewrite reaches inside effect conditions
+    let effect = result.domain.actions[0].effects.as_ref().unwrap();
+    let mut rewritten = false;
+    let mut leftover_equals = false;
+    effect.any_subformula(&mut |f| {
+        match f {
+            Formula::Atom(predicate) if predicate.name == "EQUAL" => rewritten = true,
+            Formula::Equals(_, _) => leftover_equals = true,
+            _ => {}
+        }
+        false
+    });
+    assert!(rewritten && !leftover_equals);
+    // one reflexive init fact per object
+    let init = &result.problem.as_ref().unwrap().init_state;
+    for object in ["a", "b"] {
+        assert_eq!(
+            init.iter()
+                .filter(|f| f.name == "EQUAL"
+                    && f.variables.iter().map(|v| v.name).collect::<Vec<_>>()
+                        == vec![object, object])
+                .count(),
+            1
+        );
+    }
+    result.verify().unwrap();
+}
+
+// method task-network equality constraints become precondition literals
+#[test]
+pub fn compile_equality_constraints_test() {
+    let domain = "(define (domain eqc)
+        (:predicates (r ?x))
+        (:task Top :parameters (?x ?y))
+        (:method m
+            :parameters (?x ?y)
+            :task (Top ?x ?y)
+            :subtasks (and (act ?x))
+            :constraints (and (not (= ?x ?y)))
+        )
+        (:action act
+         :parameters (?x)
+         :effect (r ?x)
+        )
+    )";
+    let problem = "(define (problem p_eqc) (:domain eqc)
+        (:objects a b)
+        (:init (r a))
+    )";
+    let domain_bytes = domain.as_bytes().to_vec();
+    let problem_bytes = problem.as_bytes().to_vec();
+    let result = Transpiler::from_hddl(&domain_bytes, Some(&problem_bytes))
+        .unwrap()
+        .transform(crate::Transformation::RemoveEqualityConstraints)
+        .unwrap()
+        .into_program();
+    let method = &result.domain.methods[0];
+    assert!(method.tn.constraints.is_none());
+    match &method.precondition {
+        Some(Formula::Not(inner)) => match &**inner {
+            Formula::Atom(predicate) => assert_eq!(predicate.name, "EQUAL"),
+            other => panic!("unexpected literal {other:?}"),
+        },
+        other => panic!("unexpected precondition {other:?}"),
+    }
+    result.verify().unwrap();
 }

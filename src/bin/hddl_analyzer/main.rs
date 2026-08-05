@@ -86,14 +86,13 @@ fn convert(args: ConvertArgs) {
         Ok(transpiler) => transpiler,
         Err(parsing_error) => return eprintln!("{RED}[Error]{RESET} {parsing_error}"),
     };
-    let transpiler = if args.untyped {
-        match transpiler.transform(Transformation::RemoveTypes) {
+    let mut transpiler = transpiler;
+    for transformation in args.transform.iter() {
+        transpiler = match transpiler.transform(transformation.clone()) {
             Ok(transpiler) => transpiler,
             Err(error) => return eprintln!("{RED}[Error]{RESET} {error}"),
-        }
-    } else {
-        transpiler
-    };
+        };
+    }
     match args.to {
         OutputFormat::Json => write_or_print(args.output_file.as_deref(), &transpiler.to_json()),
         OutputFormat::Hddl => {

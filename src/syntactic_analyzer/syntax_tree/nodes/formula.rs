@@ -30,6 +30,17 @@ pub enum Formula<'a> {
 
 impl<'a> Formula<'a> {
     pub fn to_dnf(&self) -> Formula<'a> {
+        Formula::Or(
+            self.dnf_cubes()
+                .into_iter()
+                .map(|cube| Box::new(Formula::And(cube.into_iter().map(Box::new).collect())))
+                .collect(),
+        )
+    }
+
+    // the disjuncts of the formula's DNF, each a list of literals and
+    // existentially quantified conjunctions
+    pub fn dnf_cubes(&self) -> Vec<Vec<Formula<'a>>> {
         fn cubes<'a>(f: &Formula<'a>) -> Vec<Vec<Formula<'a>>> {
             match f {
                 Formula::Or(fs) => fs.iter().flat_map(|f| cubes(f)).collect(),
@@ -57,12 +68,7 @@ impl<'a> Formula<'a> {
             }
         }
 
-        Formula::Or(
-            cubes(&self.to_nnf(false))
-                .into_iter()
-                .map(|cube| Box::new(Formula::And(cube.into_iter().map(Box::new).collect())))
-                .collect(),
-        )
+        cubes(&self.to_nnf(false))
     }
 
     pub fn to_nnf(&self, negated: bool) -> Formula<'a> {
@@ -112,8 +118,10 @@ impl<'a> Formula<'a> {
                 }
                 Formula::Or(disjuncts)
             }
-            (Formula::Probabilistic(_, _), _) | (Formula::Equals(_, _), _) => {
-                panic!("Unsupported formula!")
+            (Formula::Equals(_, _), false) => self.clone(),
+            (Formula::Equals(_, _), true) => Formula::Not(Box::new(self.clone())),
+            (Formula::Probabilistic(_, _), _) => {
+                panic!("probabilistic formulae are not supported.")
             }
         }
     }
@@ -168,11 +176,92 @@ impl<'a> Formula<'a> {
         Formula::And(conjuncts)
     }
 
-    fn is_literal(&self) -> bool {
+    pub(crate) fn is_literal(&self) -> bool {
         match self {
             Formula::Atom(_) | Formula::Equals(_, _) => true,
-            Formula::Not(inner) => matches!(&**inner, Formula::Atom(_)),
+            Formula::Not(inner) => matches!(&**inner, Formula::Atom(_) | Formula::Equals(_, _)),
             _ => false,
+        }
+    }
+
+    // ground substitution of the variable `var` by `value`
+    pub fn substitute(&self, var: &str, value: &Symbol<'a>) -> Formula<'a> {
+        match self {
+            Formula::Empty => Formula::Empty,
+            Formula::Atom(predicate) => {
+                let mut predicate = predicate.clone();
+                for symbol in predicate.variables.iter_mut() {
+                    if symbol.name == var {
+                        *symbol = value.clone();
+                    }
+                }
+                Formula::Atom(predicate)
+            }
+            Formula::Not(inner) => Formula::Not(Box::new(inner.substitute(var, value))),
+            Formula::And(terms) => Formula::And(
+                terms
+                    .iter()
+                    .map(|term| Box::new(term.substitute(var, value)))
+                    .collect(),
+            ),
+            Formula::Or(terms) => Formula::Or(
+                terms
+                    .iter()
+                    .map(|term| Box::new(term.substitute(var, value)))
+                    .collect(),
+            ),
+            Formula::Xor(terms) => Formula::Xor(
+                terms
+                    .iter()
+                    .map(|term| Box::new(term.substitute(var, value)))
+                    .collect(),
+            ),
+            Formula::Imply(lhs, rhs) => Formula::Imply(
+                Box::new(lhs.substitute(var, value)),
+                Box::new(rhs.substitute(var, value)),
+            ),
+            Formula::Exists(vars, body) => {
+                if vars.iter().any(|v| v.name == var) {
+                    self.clone()
+                } else {
+                    Formula::Exists(vars.clone(), Box::new(body.substitute(var, value)))
+                }
+            }
+            Formula::ForAll(vars, body) => {
+                if vars.iter().any(|v| v.name == var) {
+                    self.clone()
+                } else {
+                    Formula::ForAll(vars.clone(), Box::new(body.substitute(var, value)))
+                }
+            }
+            Formula::Probabilistic(probability, inner) => {
+                Formula::Probabilistic(probability.clone(), Box::new(inner.substitute(var, value)))
+            }
+            Formula::Equals(lhs, rhs) => Formula::Equals(
+                if *lhs == var { value.name } else { lhs },
+                if *rhs == var { value.name } else { rhs },
+            ),
+        }
+    }
+
+    // whether any subformula (including self) satisfies the predicate; unlike
+    // get_propositional_predicates, the walk descends into quantifier bodies.
+    pub fn any_subformula<F: FnMut(&Formula<'a>) -> bool>(&self, predicate: &mut F) -> bool {
+        if predicate(self) {
+            return true;
+        }
+        match self {
+            Formula::Empty | Formula::Atom(_) | Formula::Equals(_, _) => false,
+            Formula::Not(inner)
+            | Formula::Probabilistic(_, inner)
+            | Formula::Exists(_, inner)
+            | Formula::ForAll(_, inner) => inner.any_subformula(predicate),
+            Formula::And(terms) | Formula::Or(terms) | Formula::Xor(terms) => {
+                terms.iter().any(|term| term.any_subformula(predicate))
+            }
+            Formula::Imply(lhs, rhs) => {
+                lhs.any_subformula(predicate) || rhs.any_subformula(predicate)
+            }
         }
     }
 }
