@@ -1,6 +1,6 @@
 # Arc03: Rust Best-Practices Audit And Fixes
 
-Version: 1.2
+Version: 1.3
 Date: 2026-08-25
 Expected branches: `audit/rust-best-practices`, then smaller `test/...` and
 `fix/...` branches as the audit requires.
@@ -22,7 +22,7 @@ feels intentionally consistent after those repairs land.
 |-------|-------|------------|-------|
 | slice01-diagnosis-only-audit | Read-only Rust audit using the collaboration-framework code-audit discipline and rust-guidelines substrate. | Arc01/Arc02 local quality baseline. | CDC-verified. Created `workbench/2026.08.25-audit-index.md` and `workbench/2026.08.25-audit-results-rust.md`; no Rust source, tests, manifests, CI, or README edits. |
 | slice02-baseline-characterization-tests | Add missing unit/integration tests that capture current behavior in areas the audit expects later fixes to touch. | Slice01 findings. | CDC-verified. Added `tests/current_behavior.rs` and `tests/lsp_current_behavior.rs`; no production behavior or policy changes. LSP contention and brittle panic-path coverage have explicit re-entry conditions. |
-| slice03-triage-and-fix-map | Convert the audit findings and baseline-test evidence into focused fix slices and upstream PR grouping. | Slice01 and Slice02. | Decides which findings are in Arc03, which are deferred, and which cohesion-only concerns move to Arc04. |
+| slice03-triage-and-fix-map | Convert the audit findings and baseline-test evidence into focused fix slices and upstream PR grouping. | Slice01 and Slice02. | Open. Planning-only slice; creates `fix-map.md`, updates this arc plan, and opens concrete repair-slice open sets where the scope is ready. |
 | slice04-plus-focused-fixes | Implement the focused Rust best-practice repair slices opened by Slice03. | Slice03. | Exact slice count is intentionally deferred until the audit and baseline tests reveal the true shape. |
 
 ## Dependencies
@@ -57,6 +57,13 @@ baselined before production code changes.
 | A3-6 | Arc03 bubble-up findings are routed into Arc04 or project-level deferrals before Arc03 closes. | `rg -n "Arc04|cohesion|deferred|bubble-up" 01-cleanup/arc03-rust-best-practices/closing-report.md 01-cleanup/project-plan.md` | correctness | project-plan | open | | Prevents audit findings from silently disappearing. |
 
 ## Version History
+
+### v1.3 - 2026-08-25
+
+Slice03 opened as a planning-only triage and fix-map slice. It must account
+for all eight Rust audit findings, map Slice02 baselines to repair slices, and
+replace or refine the placeholder focused-fixes slice before production
+repairs begin.
 
 ### v1.2 - 2026-08-25
 
