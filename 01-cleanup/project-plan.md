@@ -1,6 +1,6 @@
 # HDDL-Parser Cleanup Project Plan
 
-Version: 1.6
+Version: 1.7
 Date: 2026-08-25
 Planning branch: `planning` orphan branch
 Implementation base: local `main` at `ec2d70e`
@@ -36,7 +36,7 @@ Explicit non-goals:
 |-----|------------|--------|--------------|
 | arc01-github-actions-ci | Adds the first GitHub Actions CI workflow and status-facing project polish. | closed locally; PR-ready after upstream base settles | Warning-fix PR #5 merged or equivalent local baseline. |
 | arc02-rust-2024-edition | Migrates the crate to the latest Rust edition using the standard edition workflow. | active; slices CDC-verified, arc close pending | arc01 gives CI coverage for the migration PR. |
-| arc03-rust-best-practices | Audits Rust API, error handling, CLI, tests, and maintainability issues; baselines behavior with tests before production repairs. | active; Slice01 open | arc01 gives CI coverage; arc02 defines the target edition. |
+| arc03-rust-best-practices | Audits Rust API, error handling, CLI, tests, and maintainability issues; baselines behavior with tests before production repairs. | active; Slice01 CDC-verified, Slice02 open | arc01 gives CI coverage; arc02 defines the target edition. |
 | arc04-rust-cohesion-audit | Performs the final whole-codebase consistency pass so Rust idioms, error shapes, data-flow patterns, and module conventions feel deliberately unified. | placeholder opened | arc03 fixes land first so cohesion is audited against the settled codebase. |
 
 ## Current Status
@@ -48,12 +48,11 @@ including the strict Rust 2024 compatibility CI gate. Arc02 still needs
 arc-level composition closure and upstream base reconciliation before the Rust
 2024 PR should be opened.
 
-Arc03 is now active for planning and read-only audit work. Slice01 is explicitly
-diagnosis-only and may create audit reports, but no source/test/manifest/CI/
-README edits. Slice02 is reserved for baseline characterization tests before
-any production repair slice begins. Arc04 remains the final placeholder: a
-whole-codebase cohesion pass that runs after Arc03 so consistency is judged
-against the repaired codebase.
+Arc03 is active. Slice01 is CDC-verified as a diagnosis-only audit with only
+workbench audit artifacts in the implementation worktree. Slice02 is now open
+for baseline characterization tests before any production repair slice begins.
+Arc04 remains the final placeholder: a whole-codebase cohesion pass that runs
+after Arc03 so consistency is judged against the repaired codebase.
 
 The warning-fix PR is treated as predecessor work, not part of this planning
 packet.
@@ -72,6 +71,12 @@ arc can be executed as a focused PR or PR series.
 | P-5 | Arc04 final Rust cohesion audit has a placeholder that records scope, dependency, and the project-wide consistency emphasis. | `test -f 01-cleanup/arc04-rust-cohesion-audit/arc-plan.md` and `rg -n "consistency|cohesion|unified" 01-cleanup/arc04-rust-cohesion-audit/arc-plan.md` | correctness | operator-follow-up | done | Arc04 placeholder opened with whole-codebase consistency scope. | Arc04 remains deferred until Arc03 repairs land. |
 
 ## Version History
+
+### v1.7 - 2026-08-25
+
+Arc03 Slice01 CDC verification landed, including normalization of the audit
+index top severity label to `Blocker`. Arc03 Slice02 opened as the dedicated
+test-only characterization baseline before production fixes.
 
 ### v1.6 - 2026-08-25
 
