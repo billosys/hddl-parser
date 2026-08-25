@@ -8,6 +8,16 @@ Current worktree state: `feature/add-ci` has uncommitted `.github/workflows/ci.y
 
 ## Verdict
 
+Closed after Slice04 remediation. The initial CDC pass correctly found that
+strict Clippy failed, but Slice04 fixed the Clippy warning debt at commit
+`c7b4828`; CDC reproduced `cargo clippy --all-targets -- -D warnings` exiting
+0 after that remediation.
+
+The historical initial verdict is preserved below because it explains why
+Slice04 expanded to include Clippy remediation.
+
+## Initial Verdict
+
 Not closed. The workflow command rows are reproduced, but the local composite
 quality gate does not pass. Arc01 row A-2 must remain open until the strict
 Clippy gate exits 0 or the ledger is explicitly amended by the operator.
@@ -57,8 +67,10 @@ only current implementation dirt is `.github/workflows/ci.yml`.
 
 ## Bubble-Up Check
 
-Arc01 does not need a plan change yet, but Arc01 row A-2 cannot be marked done.
-The arc's next decision is whether to:
+Arc01 row A-2 may now be treated as verified because Slice04 discharged the
+strict-Clippy blocker.
+
+Historical note: before Slice04, the arc's next decision was whether to:
 
 - keep Slice02 open until strict Clippy is green, or
 - amend F-4 as a deliberate deferral and track the Clippy-clean requirement as
