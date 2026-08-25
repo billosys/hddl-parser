@@ -60,9 +60,9 @@ baselined before production code changes.
 
 ### v1.1 - 2026-08-25
 
-Slice01 CDC verification landed and the audit index severity label was
-normalized from `Critical` to `Blocker`. Slice02 opened as a test-only
-characterization baseline before any production repair slices begin.
+Slice01 CDC verification landed and the audit index top severity label was
+normalized to `Blocker`. Slice02 opened as a test-only characterization
+baseline before any production repair slices begin.
 
 ### v1.0 - 2026-08-25
 
