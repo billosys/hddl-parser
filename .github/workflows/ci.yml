@@ -18,12 +18,12 @@ jobs:
       fail-fast: false
       matrix:
         os:
-          - ubuntu-latest
-          - macos-latest
+          - ubuntu-24.04
+          - macos-15
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Cache cargo
         uses: actions/cache@v4
@@ -38,8 +38,10 @@ jobs:
 
       - name: Install Rust
         run: |
-          rustup toolchain install stable --profile minimal --component rustfmt --component clippy
+          rustup toolchain install stable --profile minimal
+          rustup update stable
           rustup default stable
+          rustup component add rustfmt clippy --toolchain stable
 
       - name: Show toolchain
         run: |
@@ -47,3 +49,15 @@ jobs:
           cargo --version
           cargo fmt --version
           cargo clippy --version
+
+      - name: Check formatting
+        run: cargo fmt --check
+
+      - name: Check
+        run: cargo check --all-targets
+
+      - name: Clippy
+        run: cargo clippy --all-targets -- -D warnings
+
+      - name: Test
+        run: cargo test --all-targets
