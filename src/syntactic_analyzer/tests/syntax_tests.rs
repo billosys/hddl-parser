@@ -1155,7 +1155,7 @@ mod tests {
         .into_bytes();
         let lexer = LexicalAnalyzer::new(&program);
         match Parser::new(lexer).parse() {
-            Ok(AbstractSyntaxTree::Domain(ast)) => {}
+            Ok(AbstractSyntaxTree::Domain(_)) => {}
             Ok(_) => panic!(),
             Err(token) => panic!("{:?}", token),
         }
@@ -1176,7 +1176,7 @@ mod tests {
         .into_bytes();
         let lexer = LexicalAnalyzer::new(&program);
         match Parser::new(lexer).parse() {
-            Ok(AbstractSyntaxTree::Domain(ast)) => {}
+            Ok(AbstractSyntaxTree::Domain(_)) => {}
             Ok(_) => panic!(),
             Err(token) => panic!("{:?}", token),
         }

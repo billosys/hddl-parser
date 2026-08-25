@@ -60,7 +60,7 @@ pub fn tdg_correctness_test () {
             let p_parser = Parser::new(p_lexer);
             let p_ast = p_parser.parse().unwrap();
             match p_ast {
-                AbstractSyntaxTree::Problem(p_ast) => {
+                AbstractSyntaxTree::Problem(_) => {
                     let tdg = TDG::new(&d);
                     let reachable_abs_1 = tdg.reachable("abs_1");
                     assert_eq!(reachable_abs_1.compounds.len(), 3);
@@ -134,7 +134,7 @@ pub fn tdg_non_recursive_test () {
             let p_parser = Parser::new(p_lexer);
             let p_ast = p_parser.parse().unwrap();
             match p_ast {
-                AbstractSyntaxTree::Problem(p_ast) => {
+                AbstractSyntaxTree::Problem(_) => {
                     let tdg = TDG::new(&d);
                     let nullables = tdg.compute_nullables();
                     let recursion_info = tdg.classify_cycles(&nullables);
@@ -204,7 +204,7 @@ pub fn tdg_recursive_test () {
             let p_parser = Parser::new(p_lexer);
             let p_ast = p_parser.parse().unwrap();
             match p_ast {
-                AbstractSyntaxTree::Problem(p_ast) => {
+                AbstractSyntaxTree::Problem(_) => {
                     let tdg = TDG::new(&d);
                     let nullables = tdg.compute_nullables();
                     let recursion_info = tdg.classify_cycles(&nullables);
@@ -274,7 +274,7 @@ pub fn tdg_grow_and_shrink_cycle_test () {
             let p_parser = Parser::new(p_lexer);
             let p_ast = p_parser.parse().unwrap();
             match p_ast {
-                AbstractSyntaxTree::Problem(p_ast) => {
+                AbstractSyntaxTree::Problem(_) => {
                     let tdg = TDG::new(&d);
                     let nullables = tdg.compute_nullables();
                     let recursion_info =  tdg.classify_cycles(&nullables);
@@ -350,7 +350,7 @@ pub fn tdg_grow_and_shrink_cycle_partial_order_1_test () {
             let p_parser = Parser::new(p_lexer);
             let p_ast = p_parser.parse().unwrap();
             match p_ast {
-                AbstractSyntaxTree::Problem(p_ast) => {
+                AbstractSyntaxTree::Problem(_) => {
                     let tdg = TDG::new(&d);
                     let nullables = tdg.compute_nullables();
                     let recursion_info = tdg.classify_cycles(&nullables);
@@ -424,7 +424,7 @@ pub fn tdg_growing_cycle_test () {
             let p_parser = Parser::new(p_lexer);
             let p_ast = p_parser.parse().unwrap();
             match p_ast {
-                AbstractSyntaxTree::Problem(p_ast) => {
+                AbstractSyntaxTree::Problem(_) => {
                     let tdg = TDG::new(&d);
                     let nullables = tdg.compute_nullables();
                     let recursion_info = tdg.classify_cycles(&nullables);
@@ -509,7 +509,7 @@ pub fn satelite_domain_cycle_test () {
             let p_parser = Parser::new(p_lexer);
             let p_ast = p_parser.parse().unwrap();
             match p_ast {
-                AbstractSyntaxTree::Problem(p_ast) => {
+                AbstractSyntaxTree::Problem(_) => {
                     let tdg = TDG::new(&d);
                     let nullables = tdg.compute_nullables();
                     let recursion_info = tdg.classify_cycles(&nullables);
@@ -596,7 +596,7 @@ pub fn tdg_nullables_test () {
             let p_parser = Parser::new(p_lexer);
             let p_ast = p_parser.parse().unwrap();
             match p_ast {
-                AbstractSyntaxTree::Problem(p_ast) => {
+                AbstractSyntaxTree::Problem(_) => {
                     let tdg = TDG::new(&d);
                     assert_eq!(tdg.compute_nullables(), HashSet::from(["abs_1", "abs_2", "abs_3"]))
                 }

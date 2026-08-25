@@ -7,7 +7,7 @@ mod tests {
 
 use super::*;
 
-    fn atom(name: &str) -> Box<Formula> {
+    fn atom(name: &str) -> Box<Formula<'_>> {
         Box::new(Formula::Atom(Predicate::new_dummy(name)))
     }
 
