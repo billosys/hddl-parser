@@ -10,9 +10,9 @@ pub use transpiler::{Input, Transformation, Transpiler};
 
 pub use crate::lexical_analyzer::*;
 pub use output::*;
-pub use syntactic_analyzer::*;
 use semantic_analyzer::*;
 use serde::{Deserialize, Serialize};
+pub use syntactic_analyzer::*;
 
 #[derive(Serialize, Deserialize)]
 pub struct HDDLProgram<'a> {

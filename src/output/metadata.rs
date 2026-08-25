@@ -37,7 +37,11 @@ impl Display for RecursionInfo {
         write!(f, "{}", headline)?;
         format_task_cycles(f, "Recursive tasks", &self.recursive_tasks)?;
         format_task_cycles(f, "Zero-Cost Recursive tasks", &self.eps_prefix_tasks)?;
-        format_task_cycles(f, "Zero-Cost Empty Recursive tasks", &self.empty_recursive_tasks)?;
+        format_task_cycles(
+            f,
+            "Zero-Cost Empty Recursive tasks",
+            &self.empty_recursive_tasks,
+        )?;
         format_task_cycles(
             f,
             "Growing Zero-Cost Recursive tasks",
@@ -45,13 +49,8 @@ impl Display for RecursionInfo {
         )?;
         format_task_cycles(f, "Grow and Shrink tasks", &self.grow_and_shrink_tasks)?;
         if !self.acyclic_tasks.is_empty() {
-            writeln!(
-                f,
-                "\n\tAcyclic tasks: {}",
-                self.acyclic_tasks.len(),
-            )?;
+            writeln!(f, "\n\tAcyclic tasks: {}", self.acyclic_tasks.len(),)?;
             write!(f, "\t\t{}", self.acyclic_tasks.join("\n\t\t"))?;
-                
         }
         Ok(())
     }

@@ -111,7 +111,7 @@ impl<'a> Transpiler<'a> {
             preconditions.extend(method.precondition.iter());
         }
         preconditions.extend(program.problem.iter().flat_map(|p| p.goal.iter()));
-        
+
         let has_forall = preconditions
             .iter()
             .any(|formula| formula.any_subformula(&mut |f| matches!(f, Formula::ForAll(_, _))));
