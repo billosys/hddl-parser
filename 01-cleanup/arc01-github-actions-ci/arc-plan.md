@@ -33,7 +33,7 @@ for the Rust crate.
 
 | ID | Criterion | Verify | Significance | Origin | Status | Evidence | Notes |
 |----|-----------|--------|--------------|--------|--------|----------|-------|
-| A-1 | slice01 workflow scaffold closes. | `test -f 01-cleanup/arc01-github-actions-ci/slice01-workflow-scaffold/cdc-verification.md` | correctness | arc-plan | open | | attested by child close |
+| A-1 | slice01 workflow scaffold closes. | `test -f 01-cleanup/arc01-github-actions-ci/slice01-workflow-scaffold/cdc-verification.md` | correctness | arc-plan | done | `slice01-workflow-scaffold/cdc-verification.md` verifies all 5 slice rows with reproduced evidence. | attested by child close |
 | A-2 | slice02 quality gates close. | `test -f 01-cleanup/arc01-github-actions-ci/slice02-rust-quality-gates/cdc-verification.md` | correctness | arc-plan | open | | attested by child close |
 | A-3 | slice03 test matrix closes. | `test -f 01-cleanup/arc01-github-actions-ci/slice03-test-matrix/cdc-verification.md` | correctness | arc-plan | open | | attested by child close |
 | A-4 | slice04 binary smoke/status closes. | `test -f 01-cleanup/arc01-github-actions-ci/slice04-binary-smoke-and-status/cdc-verification.md` | correctness | arc-plan | open | | attested by child close |
