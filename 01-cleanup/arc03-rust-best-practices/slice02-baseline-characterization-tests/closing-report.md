@@ -57,7 +57,7 @@ All required gates passed:
 
 Additional scope checks passed:
 
-- `git diff --name-only` lists only `tests/current_behavior.rs` and `tests/lsp_current_behavior.rs` for Slice02 feature changes.
+- `git diff --name-only main..HEAD` lists only `tests/current_behavior.rs` and `tests/lsp_current_behavior.rs` for Slice02 feature changes.
 - `git diff -- Cargo.toml .gitignore Cargo.lock` produced no output.
 - `git diff -- tests src Cargo.toml | rg "#\\[ignore\\]|ignore ="` produced no output and exited `1`, confirming no new ignored tests.
 
