@@ -11,4 +11,4 @@ pub use semantic::*;
 pub use json::*;
 
 
-use crate::lexical_analyzer::{Token, TokenPosition};
+use crate::lexical_analyzer::TokenPosition;

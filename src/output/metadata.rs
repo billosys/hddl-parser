@@ -71,21 +71,6 @@ fn format_task_cycles(
     for initiator in tasks.keys() {
         let cycles = &tasks[initiator];
         write!(f, "\n\t\t{} ({} cycle(s))", initiator, cycles.len())?;
-        // for cycle in cycles {
-        //     write!(f, "\n\t\t\tCycle: ")?;
-        //     format_task_pairs(cycle, f)?;
-        // }
-    }
-    Ok(())
-}
-
-fn format_task_pairs(pairs: &[(String, String)], f: &mut Formatter<'_>) -> std::fmt::Result {
-    for (i, (task, method)) in pairs.iter().enumerate() {
-        if i != pairs.len() - 1 {
-            write!(f, "[{}]-({})->", task, method)?;
-        } else {
-            write!(f, "[{}]", task)?;
-        }
     }
     Ok(())
 }

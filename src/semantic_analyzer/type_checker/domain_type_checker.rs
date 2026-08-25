@@ -1,7 +1,5 @@
 use std::collections::{HashMap, HashSet};
 
-use crate::lexical_analyzer::TokenPosition;
-
 use super::*;
 
 #[derive(Clone)]
@@ -75,7 +73,7 @@ impl<'a> DomainTypeChecker<'a> {
                             },
                         }
                     }
-                    let mut expected_list: Vec<&Option<&str>> = predicate_definition
+                    let expected_list: Vec<&Option<&str>> = predicate_definition
                         .variables
                         .iter()
                         .map(|x| &x.symbol_type)

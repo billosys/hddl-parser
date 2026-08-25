@@ -23,7 +23,7 @@ impl <'a> Predicate<'a> {
             variables
         }
     }
-    pub fn new_dummy(name: &'a str) -> Predicate {
+    pub fn new_dummy(name: &'a str) -> Predicate<'a> {
         Predicate {
             name,
             name_pos: TokenPosition { line: 0 },

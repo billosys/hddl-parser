@@ -1,5 +1,3 @@
-use std::collections::HashSet;
-
 use crate::*;
 
 // synthesized identifiers must outlive the parsed program, whose strings all

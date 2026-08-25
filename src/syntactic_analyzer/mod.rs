@@ -1,5 +1,6 @@
 mod parser;
 mod definition_types;
+#[cfg(test)]
 mod tests;
 mod domain_parser;
 mod problem_parser;

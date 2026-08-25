@@ -1,5 +1,6 @@
 mod tokenizer;
 mod token_types;
+#[cfg(test)]
 mod tests;
 mod token_pos;
 

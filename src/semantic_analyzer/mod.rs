@@ -1,5 +1,6 @@
 mod undefined_elements;
 mod type_checker;
+#[cfg(test)]
 mod tests;
 mod analyzers;
 mod tdg;
