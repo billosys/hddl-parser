@@ -18,8 +18,8 @@ samples, structural JSON assertions, sharding, or CI policy changes.
 
 In scope:
 
-- Add a Rust-native measurement utility under `examples/`, preferably
-  `examples/corpus_measure.rs`.
+- Add a Rust-native measurement utility as an explicit Cargo example target,
+  with source at `tools/corpus_measure.rs`.
 - Deterministically enumerate all `tests/ipc` domain/problem cases using sorted
   paths and stable case IDs.
 - Measure parse/verify behavior for each case.

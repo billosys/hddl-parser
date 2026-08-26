@@ -21,9 +21,9 @@ Read first:
 
 Add a measurement utility, not a new correctness gate.
 
-Implement a Rust-native utility under `examples/`, preferably:
+Implement a Rust-native utility as an explicit Cargo example target:
 
-- `examples/corpus_measure.rs`
+- `tools/corpus_measure.rs`
 
 The utility should deterministically enumerate all IPC corpus domain/problem
 cases under `tests/ipc` using sorted paths. Give each case a stable,
@@ -62,7 +62,10 @@ Do not remove `#[ignore]` from `ipc_validation_test` or
 `json_round_trip_ipc`.
 
 Do not add a new ignored test. The measurement utility should be an example
-target, not another skipped test hidden inside `cargo test`.
+target, not another skipped test hidden inside `cargo test`. Declare it with
+`[[example]]` in `Cargo.toml` so `cargo run --locked --example corpus_measure`
+stays available without making the source look like user-facing library sample
+code.
 
 Do not change GitHub Actions, introduce corpus sharding, add a checked-in corpus
 manifest, or decide the final branch-push/PR/main policy in this slice.

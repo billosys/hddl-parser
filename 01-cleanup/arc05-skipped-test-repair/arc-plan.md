@@ -1,6 +1,6 @@
 # Arc05: Skipped Test Repair
 
-Version: 1.6
+Version: 1.7
 Date: 2026-08-26
 Expected investigation branch: `audit/ignored-tests`
 Expected repair branches: smaller `fix/...` branches as Slice01 requires
@@ -57,12 +57,20 @@ slow/corpus CI policy, does not remove the corpus `#[ignore]` annotations, and
 does not add sharding, manifests, or custom test harnesses. Status:
 CDC-verified.
 
+### slice04-corpus-addressability-and-policy
+
+Make the corpus measurement utility policy-ready without wiring CI yet. This
+slice adds addressable corpus selections, a checked-in fast-selection policy,
+named fast/full command surfaces, and explicit JSON assertion behavior so the
+remaining corpus tests can move behind intentional gates rather than inherited
+`#[ignore]` annotations. Status: open.
+
 ### Later Repair Slices
 
-Do not pre-open additional repair slices until the fast non-corpus repairs and
-the corpus measurement slice are complete. Later slices should be cut from the
-remaining investigation findings and timing evidence by route and review
-boundary, for example:
+Do not pre-open additional repair slices beyond Slice04 until the addressable
+corpus policy substrate is complete. Later slices should be cut from the
+remaining investigation findings, timing evidence, and Slice04 policy surface
+by route and review boundary, for example:
 
 - Test-only repairs where the implementation already behaves correctly and the
   test is stale, slow, or poorly scoped.
@@ -116,17 +124,26 @@ unknown behavior.
 | A5-4 | Repaired tests either run in the default locked test gate or move behind an explicit slow/corpus gate with documented invocation. | `cargo test --locked --all-targets` and inspect any slow-test command introduced by later slices. | serious | arc-plan | open | Slice02 repair commit `e534df2` puts the three fast non-corpus ignored tests in the default locked gate. Slice03 leaves the two corpus ignores in place and records opt-in measurement commands plus timing evidence for the later slow/corpus policy slice. | Corpus policy is not finalized yet. |
 | A5-5 | Arc05 closes with a composition report showing no inherited ignored-test behavior remains unexplained. | `test -f 01-cleanup/arc05-skipped-test-repair/closing-report.md` and inspect row walk. | serious | project-management | open | | |
 | A5-6 | Corpus slow-test policy decisions are based on deterministic case inventory and phase-level timing evidence rather than inferred runtime. | `test -f 01-cleanup/arc05-skipped-test-repair/slice03-corpus-measurement/closing-report.md` and inspect the measurement report for corpus counts, slowest cases, parse/verify timing, JSON phase timing, and structural-vs-string JSON comparison notes. | correctness | operator-follow-up | done | Slice03 CDC verification reproduced deterministic inventory of 900 cases, full measurement completion with 0 failures and 0 JSON equality disagreements, phase totals, distribution buckets, slowest cases/domains, and next-slice policy options. | Slice03 is measurement-first and does not finalize the CI policy by itself. |
+| A5-7 | The remaining corpus ignored tests have an addressable fast/full policy substrate before CI wiring or ignore removal. | `test -f 01-cleanup/arc05-skipped-test-repair/slice04-corpus-addressability-and-policy/cc-prompt.md` and inspect Slice04 close evidence for named fast/full commands, checked-in selection policy, JSON assertion policy, and unchanged workflow files. | serious | Slice03 bubble-up | open | Slice04 open set created from Slice03 measurement evidence. | Slice04 should not remove the two corpus ignores or change GitHub Actions. |
 
 ## Version History
+
+### v1.7 - 2026-08-26
+
+Opened Slice04 as the corpus addressability and policy substrate. The slice is
+scoped to stable selections, named fast/full commands, checked-in fast corpus
+policy, and explicit JSON string/structural assertion behavior. CI wiring and
+corpus `#[ignore]` removal remain later work after the policy surface exists.
 
 ### v1.6 - 2026-08-26
 
 Slice03 CDC verification landed. CDC independently reproduced bounded,
 filtered, and full 900-case corpus measurement runs, confirmed both generated
 CSV reports contain 900 clean case rows, and verified that default tests, CI,
-Cargo manifests, and the two corpus ignored tests remain unchanged. Next Arc05
-work should make the corpus addressable and policy-ready before wiring the
-branch/PR/post-merge gates.
+and the two corpus ignored tests remain unchanged. `Cargo.toml` changed only to
+declare the explicit `corpus_measure` example target at `tools/corpus_measure.rs`.
+Next Arc05 work should make the corpus addressable and policy-ready before
+wiring the branch/PR/post-merge gates.
 
 ### v1.5 - 2026-08-26
 

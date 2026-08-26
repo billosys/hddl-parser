@@ -1,6 +1,6 @@
 # HDDL-Parser Cleanup Project Plan
 
-Version: 2.25
+Version: 2.26
 Date: 2026-08-25
 Planning branch: `planning` orphan branch
 Implementation base: local `main` at `ec2d70e`
@@ -41,7 +41,7 @@ Explicit non-goals:
 | arc02-rust-2024-edition | Migrates the crate to the latest Rust edition using the standard edition workflow. | active; slices CDC-verified, arc close pending | arc01 gives CI coverage for the migration PR. |
 | arc03-rust-best-practices | Audits Rust API, error handling, CLI, tests, and maintainability issues; baselines behavior with tests before production repairs. | closed locally | arc01 gives CI coverage; arc02 defines the target edition. |
 | arc04-rust-cohesion-audit | Performs the final whole-codebase consistency pass so Rust idioms, error shapes, data-flow patterns, and module conventions feel deliberately unified. | closed locally | arc03 local feature state at `d820065` gives the repaired-codebase audit base. |
-| arc05-skipped-test-repair | Investigates and repairs inherited ignored tests, including refactoring or rewriting tested code when an ignored test exposes stale or defective behavior. | active; Slice03 CDC-verified | arc04 closed locally at final cohesion baseline `7e2d8a7`. |
+| arc05-skipped-test-repair | Investigates and repairs inherited ignored tests, including refactoring or rewriting tested code when an ignored test exposes stale or defective behavior. | active; Slice04 open | arc04 closed locally at final cohesion baseline `7e2d8a7`. |
 
 ## Current Status
 
@@ -103,7 +103,9 @@ the default locked gate. Slice03 is CDC-verified: the IPC corpus measurement
 utility completed all 900 cases with zero failures and zero JSON equality
 disagreements in both CC's workbench report and CDC's independent temp-report
 rerun, giving Arc05 timing-backed inputs for the remaining corpus policy and
-infrastructure work before the final ignored tests are moved.
+infrastructure work before the final ignored tests are moved. Slice04 is open
+to make the corpus addressable and policy-ready before CI wiring or corpus
+ignore removal.
 
 The warning-fix PR is treated as predecessor work, not part of this planning
 packet.
@@ -126,23 +128,33 @@ arc can be executed as a focused PR or PR series.
 
 ## Version History
 
+### v2.26 - 2026-08-26
+
+Opened Arc05 Slice04 for corpus addressability and policy. The project now has
+a measurement-backed next step before CI wiring: add a checked-in fast
+selection, named fast/full command surfaces, and explicit string/structural
+JSON assertion policy while keeping workflows and the two corpus ignored tests
+unchanged.
+
 ### v2.25 - 2026-08-26
 
 Arc05 Slice03 CDC verification landed. CDC reproduced bounded, filtered, and
 full 900-case corpus measurements, confirmed zero failures and zero JSON
-equality disagreements, and verified that default tests, CI, manifests, and the
-remaining corpus ignored tests were not changed. Arc05 should next design
-addressable corpus policy from the measured inventory before selecting branch,
-PR, and post-merge gates.
+equality disagreements, and verified that default tests, CI, and the remaining
+corpus ignored tests were not changed. `Cargo.toml` changed only to declare the
+explicit `corpus_measure` example target at `tools/corpus_measure.rs`. Arc05
+should next design addressable corpus policy from the measured inventory before
+selecting branch, PR, and post-merge gates.
 
 ### v2.24 - 2026-08-26
 
 Arc05 Slice03 locally closed corpus measurement. The full 900-case IPC
 parse/verify and JSON round-trip measurement completed with zero failures and
-zero equality disagreements, while default tests, CI, manifests, and corpus
-`#[ignore]` annotations remained unchanged. The next Arc05 boundary should use
-the measurement evidence to design addressable corpus policy before deciding
-branch/PR/post-merge coverage.
+zero equality disagreements, while default tests, CI, and corpus `#[ignore]`
+annotations remained unchanged. The Cargo manifest change is limited to the
+explicit example-target declaration for the tool. The next Arc05 boundary
+should use the measurement evidence to design addressable corpus policy before
+deciding branch/PR/post-merge coverage.
 
 ### v2.23 - 2026-08-26
 

@@ -21,10 +21,12 @@ left unchanged.
 
 ### M5-1
 
-Done. `examples/corpus_measure.rs` exists and compiles under
-`cargo check --locked --all-targets`. The slice added no ignored test and no
-custom test harness. `rg -n "corpus_measure" Cargo.toml examples tests` finds
-only the example source comment.
+Done. `tools/corpus_measure.rs` exists and compiles under
+`cargo check --locked --all-targets`. `Cargo.toml` declares it as an explicit
+`[[example]]` target named `corpus_measure`, preserving
+`cargo run --locked --example corpus_measure` while avoiding a user-facing
+`examples/` source directory. The slice added no ignored test and no custom
+test harness.
 
 ### M5-2
 
@@ -99,8 +101,9 @@ passed, and the only remaining ignored Rust tests are:
 - `tests/integration_json.rs:17`
 - `tests/integration_ipc.rs:7`
 
-`git diff -- .github/workflows Cargo.toml tests/integration_ipc.rs tests/integration_json.rs`
-is empty.
+`git diff -- .github/workflows tests/integration_ipc.rs tests/integration_json.rs`
+is empty. `Cargo.toml` changes only to declare the explicit `corpus_measure`
+example target.
 
 ### M5-8
 
