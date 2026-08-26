@@ -1,7 +1,7 @@
 # Arc04: Rust Cohesion Audit And Fixes
 
-Version: 1.2
-Date: 2026-08-26
+Version: 1.4
+Date: 2026-08-25
 Expected audit branch: `audit/rust-cohesion`
 Expected repair branches: smaller `fix/...` branches as Slice02 requires
 
@@ -57,14 +57,37 @@ Turn Slice01 findings into a repair map. Each finding must be assigned to one of
 these outcomes: focused repair slice, no-op accepted variation, later-arc
 deferral with a concrete re-entry condition, or duplicate of an already-fixed
 Arc03 issue. This slice opens the repair slices required by the map. Status:
-opened as a planning-only slice; implementation, tests, manifests, workflows,
-README files, and behavior remain out of scope.
+CDC-verified. The map opens Slice03, Slice04, and Slice05, and holds public API
+breaking changes behind operator GO or later-arc deferral.
 
-### slice03-plus-focused-cohesion-repairs
+### slice03-characterization-baselines
 
-Placeholder for the focused repair slices opened by Slice02. Each repair slice
-must handle one cohesive pattern family and must first add or identify any
-missing behavior-preservation tests needed for the change.
+Add test-only characterization coverage for current public imports, Vec-backed
+input APIs, malformed problem-parser panic behavior, current error variants,
+formula normalization panic contracts, and public misspelled variants. Status:
+opened by Slice02. This slice must not change production behavior.
+
+### slice04-parser-api-and-error-boundary
+
+Repair parser byte-input cohesion by changing borrowed inputs from `&Vec<u8>` to
+`&[u8]` where no Vec behavior is needed, while preserving Vec-backed callers.
+Also convert the malformed problem-parser panic path to a structured syntactic
+error after Slice03 baselines exist. Status: opened by Slice02. Public
+crate-root export narrowing requires operator GO before implementation.
+
+### slice05-test-helper-and-private-naming-cohesion
+
+Consolidate duplicated test assertion helpers and repair private/test-only
+naming drift after the behavior baselines and parser repair are settled. Status:
+opened by Slice02. Public enum variant spelling repairs remain out of scope
+unless the operator explicitly approves a public API compatibility plan.
+
+### Public API Gates And Deferrals
+
+Root export narrowing, public error taxonomy redesign, public formula API
+contract changes, and public enum spelling repairs are not approved by Slice02.
+They are deferred to a future public API/error/AST contract arc unless the
+operator gives explicit GO after the Slice03 characterization baseline.
 
 ## Dependencies
 
@@ -137,13 +160,28 @@ intentional variation.
 | ID | Criterion | Verify | Significance | Origin | Status | Evidence | Notes |
 |----|-----------|--------|--------------|--------|--------|----------|-------|
 | A4-1 | Slice01 runs as a diagnosis-only, read-only cohesion audit from Arc03 final feature state. | `test -f 01-cleanup/arc04-rust-cohesion-audit/slice01-cohesion-diagnosis-audit/closing-report.md` and inspect row walk. | serious | collaboration-framework | done | `slice01-cohesion-diagnosis-audit/cdc-verification.md` verifies 12/12 rows, workbench-only implementation diff, six cohesion findings, seven negative checks, RUST-007 re-entry, and full locked quality gate reproduction. | Slice02 is the next planning-only fix-map slice. |
-| A4-2 | Slice02 maps every Slice01 finding to a focused repair slice, accepted variation, later-arc deferral, or duplicate/no-op. | `test -f 01-cleanup/arc04-rust-cohesion-audit/slice02-triage-and-fix-map/fix-map.md` and inspect mapping. | serious | project-management | open | | |
+| A4-2 | Slice02 maps every Slice01 finding to a focused repair slice, accepted variation, later-arc deferral, or duplicate/no-op. | `test -f 01-cleanup/arc04-rust-cohesion-audit/slice02-triage-and-fix-map/fix-map.md` and inspect mapping. | serious | project-management | done | `slice02-triage-and-fix-map/cdc-verification.md` verifies all six cohesion findings are dispositioned, public API gates are explicit, Slice03-Slice05 open sets are complete, and no downstream close artifacts were created. | Slice03 characterization baselines are next. |
 | A4-3 | Accepted Rust idiom variations are explicitly documented with local reasons instead of silently drifting. | `rg -n "accepted variation|intentional divergence|local reason" 01-cleanup/arc04-rust-cohesion-audit` | correctness | operator-follow-up | open | | |
 | A4-4 | Every production repair slice opened by Slice02 closes with CDC verification and a focused behavior-preservation story. | `find 01-cleanup/arc04-rust-cohesion-audit -path '*/closing-report.md' -print` and inspect repair rows. | serious | collaboration-framework | open | | |
 | A4-5 | Final Arc04 feature state passes the full local gate, including locked Cargo verification. | `cargo fmt --check && cargo check --locked --all-targets && RUSTFLAGS="-D rust-2024-compatibility" cargo check --locked --all-targets && cargo clippy --locked --all-targets -- -D warnings && cargo test --locked --all-targets && cargo build --locked --release --bins && ./target/release/hddl_analyzer --help && actionlint .github/workflows/ci.yml && git diff --check` | serious | arc01-arc03 | open | | |
 | A4-6 | Arc04 close report bubbles up whether HDDL-Parser cleanup can close or needs another remediation arc. | `test -f 01-cleanup/arc04-rust-cohesion-audit/closing-report.md` and inspect final decision. | serious | project-management | open | | |
 
 ## Version History
+
+### v1.4 - 2026-08-25
+
+Slice02 CDC verification landed. The fix map is now accepted as the Arc04 repair
+sequence: Slice03 characterization baselines, Slice04 parser API/error-boundary
+repair, and Slice05 test-helper/private-naming cohesion, with public API breaks
+still gated by operator GO or future public API/error/AST contract work.
+
+### v1.3 - 2026-08-25
+
+Slice02 locally closed the triage/fix map and replaced the placeholder repair
+entry with concrete downstream slices: Slice03 characterization baselines,
+Slice04 parser API/error-boundary repair, and Slice05 test-helper/private-naming
+cohesion. Public API breaking changes remain behind operator GO or later-arc
+deferral.
 
 ### v1.2 - 2026-08-26
 
