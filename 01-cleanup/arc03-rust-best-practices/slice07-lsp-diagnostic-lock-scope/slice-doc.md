@@ -1,9 +1,11 @@
 # Slice07: LSP Diagnostic Lock Scope
 
-Version: 1.0
-Date: 2026-08-25
+Version: 1.1
+Date: 2026-08-26
 Arc: `arc03-rust-best-practices`
 Expected implementation branch: `fix/lsp-diagnostic-lock-scope`
+Expected base: `fix/lsp-error-boundaries-and-metadata` at `fbb27d7`, unless
+Slice06 has already been merged upstream.
 
 ## Goal
 
@@ -37,3 +39,15 @@ Prefer a deterministic runtime test if it can be written without public API wide
 - Existing LSP behavior tests pass.
 - Any missing deterministic contention test has a concrete re-entry condition.
 - The full local workflow-equivalent gate passes.
+
+## Version History
+
+### v1.1 - 2026-08-26
+
+Refreshed the open set after Slice06 CDC verification. Slice07 should start
+from `fbb27d7` or a merged equivalent so the lock-scope-only diff is checked
+against the settled LSP error-boundary and metadata repairs.
+
+### v1.0 - 2026-08-25
+
+Initial open set from Slice03 fix mapping.

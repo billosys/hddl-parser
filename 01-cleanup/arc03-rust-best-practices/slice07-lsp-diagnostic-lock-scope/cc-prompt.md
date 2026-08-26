@@ -5,6 +5,11 @@ You are working in HDDL-Parser on Arc03 Slice07:
 
 This is a focused repair slice for RUST-004.
 
+Start from the verified Slice06 base,
+`fix/lsp-error-boundaries-and-metadata` at `fbb27d7`, unless Slice06 has
+already been merged upstream. Create `fix/lsp-diagnostic-lock-scope` from that
+base.
+
 Read first:
 
 - `/Users/oubiwann/lab/billosys/hddl-parser/.worktrees/planning/01-cleanup/project-plan.md`
@@ -26,6 +31,9 @@ Constraints:
 - Do not add timing-fragile tests.
 - Do not make private internals public only for tests.
 - If a deterministic runtime contention test is not feasible, record source-level evidence and a precise re-entry condition.
+- Treat Slice06 LSP error-boundary and metadata behavior as settled baseline;
+  keep this slice focused on dropping the diagnostic document-map read guard
+  before awaited work.
 
 Run and record:
 
@@ -40,7 +48,7 @@ cargo build --release --bins
 ./target/release/hddl_analyzer --help
 actionlint .github/workflows/ci.yml
 git diff --check
-git diff --name-only
+git diff --name-only fbb27d7..HEAD
 rg -n "documents\\.read\\(\\)\\.await|get\\(|\\.await" src/language_server/request_handler.rs
 ```
 
