@@ -9,7 +9,7 @@ impl<'a> Parser<'a> {
                     match self.tokenizer.get_token()? {
                         // predicate definitions
                         Token::Keyword(KeywordName::Predicates) => {
-                            let predicates = self.parse_predicates()?;
+                            let predicates = self.parse_predicate_definitions()?;
                             for predicate in predicates {
                                 syntax_tree.add_predicate(predicate);
                             }

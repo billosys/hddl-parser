@@ -107,7 +107,7 @@ pub fn predicates_duplicate_test() {
             (:predicates
                 (pred_1 ?a_1 ?a_2 - t_1 ?a_3 - t_2)
                 (pred_2)
-                (pred_1 a_1 a_2 a_3)
+                (pred_1 ?a_1 ?a_2 ?a_3)
             )
          ) ",
     )

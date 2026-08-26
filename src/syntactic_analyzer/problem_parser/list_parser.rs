@@ -2,11 +2,30 @@ use super::*;
 
 impl<'a> Parser<'a> {
     pub fn parse_args(&self) -> Result<Vec<Symbol<'a>>, ParsingError> {
+        self.parse_symbol_list(false)
+    }
+
+    pub fn parse_variable_args(&self) -> Result<Vec<Symbol<'a>>, ParsingError> {
+        self.parse_symbol_list(true)
+    }
+
+    fn parse_symbol_list(
+        &self,
+        require_variable_names: bool,
+    ) -> Result<Vec<Symbol<'a>>, ParsingError> {
         let mut objects = vec![];
         let mut result = vec![];
         let mut token = self.tokenizer.get_token()?;
         loop {
             while let Token::Identifier(symbol) = token {
+                if require_variable_names && !symbol.starts_with('?') {
+                    let error = SyntacticError {
+                        expected: "a variable name starting with '?'".to_string(),
+                        found: format!("Identifier {symbol}"),
+                        position: self.tokenizer.get_last_token_position(),
+                    };
+                    return Err(ParsingError::Syntactic(error));
+                }
                 objects.push((symbol, self.tokenizer.get_last_token_position()));
                 token = self.tokenizer.get_token()?;
             }

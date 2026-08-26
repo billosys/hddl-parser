@@ -6,20 +6,24 @@ mod tests {
     use super::*;
 
     #[test]
-    #[ignore = "stupid test, rewrite from scratch"]
     pub fn file_type_test() {
-        let program = String::from("(define (domain jajaja) (:predicates ()) ) ").into_bytes();
+        let program = String::from("(define (domain jajaja) (:predicates))").into_bytes();
         let lexer = LexicalAnalyzer::new(&program);
         let parser = Parser::new(lexer);
         match parser.parse() {
-            Ok(_) => {}
+            Ok(AbstractSyntaxTree::Domain(domain)) => {
+                assert_eq!(domain.name, "jajaja");
+            }
             _ => panic!("parsing error"),
         }
-        let program = String::from("(define (problem jajaja2) (domain blahblah)) ").into_bytes();
+        let program = String::from("(define (problem jajaja2) (domain blahblah))").into_bytes();
         let lexer = LexicalAnalyzer::new(&program);
         let parser = Parser::new(lexer);
         match parser.parse() {
-            Ok(_) => {}
+            Ok(AbstractSyntaxTree::Problem(problem)) => {
+                assert_eq!(problem.name, "jajaja2");
+                assert_eq!(problem.domain_name, "blahblah");
+            }
             _ => panic!("parsing error"),
         }
     }
@@ -127,7 +131,7 @@ mod tests {
                 (:predicates 
                     (pred_1 ?a_1 ?a_2 - t_1 ?a_3 - t_2)
                     (pred_2)
-                    (pred_3 a_1 a_2)
+                    (pred_3 ?a_1 ?a_2)
                 )
              ) ",
         )
@@ -162,7 +166,7 @@ mod tests {
                             .iter()
                             .map(|x| (x.name, x.symbol_type))
                             .collect();
-                        assert_eq!(items, vec![("a_1", None), ("a_2", None)]);
+                        assert_eq!(items, vec![("?a_1", None), ("?a_2", None)]);
                     } else {
                         panic!("parsing error")
                     }

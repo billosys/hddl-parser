@@ -123,10 +123,11 @@ pub fn extra_parentheses_validation_test() {
 }
 
 #[test]
-#[ignore = "fix"]
 pub fn forgotten_dash_validation_test() {
     expect_syntactic_error("forgotten-dash-domain.hddl", |error| {
-        assert_eq!(error.found, "Keyword :effect");
+        assert_eq!(error.expected, "a variable name starting with '?'");
+        assert_eq!(error.found, "Identifier airplane");
+        assert_eq!(error.position.line, 33);
     });
 }
 
@@ -138,10 +139,11 @@ pub fn forgotten_entry_validation_test() {
 }
 
 #[test]
-#[ignore = "fix"]
 pub fn forgotten_question_mark_validation_test() {
     expect_syntactic_error("forgotten-question-mark-domain.hddl", |error| {
-        assert_eq!(error.position.line, 63);
+        assert_eq!(error.expected, "a variable name starting with '?'");
+        assert_eq!(error.found, "Identifier s");
+        assert_eq!(error.position.line, 35);
     });
 }
 

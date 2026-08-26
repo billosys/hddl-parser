@@ -7,7 +7,7 @@ pub fn undefined_predicate_action_precondition_test() {
             (:predicates 
                 (hold ?a_1 ?a_2)
                 (pred_2)
-                (at a_1)
+                (at ?a_1)
             )
             (:action a_1
              :parameters (p_1 p_2 p_3)
