@@ -1,6 +1,6 @@
 # Arc05: Skipped Test Repair
 
-Version: 1.1
+Version: 1.2
 Date: 2026-08-26
 Expected investigation branch: `audit/ignored-tests`
 Expected repair branches: smaller `fix/...` branches as Slice01 requires
@@ -38,10 +38,22 @@ runtime behavior when run explicitly, intended covered behavior, tested code
 path, likely failure class, and recommended follow-up route. Status: locally
 closed; CDC verification pending.
 
+### slice02-fast-ignored-test-repair
+
+Repair the three fast ignored tests identified by Slice01: rewrite
+`file_type_test` as a meaningful parser classification test, repair the
+malformed typed-parameter diagnostics exposed by
+`forgotten_dash_validation_test` and
+`forgotten_question_mark_validation_test`, and remove only those three
+`#[ignore]` annotations once the tests pass in the default locked gate. Status:
+open.
+
 ### Later Repair Slices
 
-Do not pre-open repair slices until Slice01 closes. Later slices should be cut
-from the investigation findings by route and review boundary, for example:
+Do not pre-open additional repair slices until the fast non-corpus repairs are
+complete and the slow/corpus strategy is settled. Later slices should be cut
+from the remaining investigation findings by route and review boundary, for
+example:
 
 - Test-only repairs where the implementation already behaves correctly and the
   test is stale, slow, or poorly scoped.
@@ -88,11 +100,20 @@ unknown behavior.
 |----|-----------|--------|--------------|--------|--------|----------|-------|
 | A5-1 | Slice01 investigates every ignored Rust test without changing source, tests, manifests, workflows, README, fixtures, or ignore annotations. | `rg -n "#\\[ignore" src tests -g '*.rs'` and inspect Slice01 close evidence; `git diff --name-status` confirms read-only implementation scope. | serious | operator-follow-up | open | `slice01-ignored-test-investigation/closing-report.md` locally closes the read-only investigation; implementation `git diff --name-status` is empty and the allowed workbench report is ignored. CDC verification is pending. | |
 | A5-2 | Slice01 classifies each ignored test into a follow-up route: test-only fix, code-and-test repair, code-and-test rewrite, slow/corpus gate, or valid deferral. | `test -f 01-cleanup/arc05-skipped-test-repair/slice01-ignored-test-investigation/closing-report.md` and inspect classification matrix. | serious | operator-follow-up | open | Slice01 local close classifies `file_type_test` as test-only fix; the two forgotten-declaration tests as code-and-test repair; and the IPC/JSON corpus tests as slow/corpus gate. CDC verification is pending. | |
-| A5-3 | Later repair slices are opened only after Slice01 findings identify concrete route boundaries. | `find 01-cleanup/arc05-skipped-test-repair -maxdepth 2 -name 'slice-doc.md' -print` and inspect arc version history. | correctness | project-management | open | `find 01-cleanup/arc05-skipped-test-repair -maxdepth 2 -name 'slice-doc.md' -print` shows only Slice01 during local close. | Only Slice01 is opened at arc start; downstream slices remain unopened pending CDC review. |
+| A5-3 | Later repair slices are opened only after Slice01 findings identify concrete route boundaries. | `find 01-cleanup/arc05-skipped-test-repair -maxdepth 2 -name 'slice-doc.md' -print` and inspect arc version history. | correctness | project-management | open | `slice02-fast-ignored-test-repair` opened from Slice01's route matrix for the one test-only fix and two code-and-test repairs. | Additional corpus-policy slices remain unopened while CDC and operator discuss the test-infrastructure design. |
 | A5-4 | Repaired tests either run in the default locked test gate or move behind an explicit slow/corpus gate with documented invocation. | `cargo test --locked --all-targets` and inspect any slow-test command introduced by later slices. | serious | arc-plan | open | | |
 | A5-5 | Arc05 closes with a composition report showing no inherited ignored-test behavior remains unexplained. | `test -f 01-cleanup/arc05-skipped-test-repair/closing-report.md` and inspect row walk. | serious | project-management | open | | |
 
 ## Version History
+
+### v1.2 - 2026-08-26
+
+Opened Slice02 from Slice01's route matrix. Scope is limited to the three fast
+non-corpus ignored tests: `file_type_test`,
+`forgotten_dash_validation_test`, and
+`forgotten_question_mark_validation_test`. The IPC and JSON corpus ignored
+tests remain deliberately outside Slice02 while the operator and CDC design the
+slow/corpus measurement and infrastructure strategy.
 
 ### v1.1 - 2026-08-26
 
