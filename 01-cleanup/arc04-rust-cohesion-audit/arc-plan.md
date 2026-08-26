@@ -1,6 +1,6 @@
 # Arc04: Rust Cohesion Audit And Fixes
 
-Version: 1.4
+Version: 1.5
 Date: 2026-08-25
 Expected audit branch: `audit/rust-cohesion`
 Expected repair branches: smaller `fix/...` branches as Slice02 requires
@@ -65,7 +65,8 @@ breaking changes behind operator GO or later-arc deferral.
 Add test-only characterization coverage for current public imports, Vec-backed
 input APIs, malformed problem-parser panic behavior, current error variants,
 formula normalization panic contracts, and public misspelled variants. Status:
-opened by Slice02. This slice must not change production behavior.
+CDC-verified. The slice added a single integration test file and changed no
+production behavior.
 
 ### slice04-parser-api-and-error-boundary
 
@@ -162,11 +163,18 @@ intentional variation.
 | A4-1 | Slice01 runs as a diagnosis-only, read-only cohesion audit from Arc03 final feature state. | `test -f 01-cleanup/arc04-rust-cohesion-audit/slice01-cohesion-diagnosis-audit/closing-report.md` and inspect row walk. | serious | collaboration-framework | done | `slice01-cohesion-diagnosis-audit/cdc-verification.md` verifies 12/12 rows, workbench-only implementation diff, six cohesion findings, seven negative checks, RUST-007 re-entry, and full locked quality gate reproduction. | Slice02 is the next planning-only fix-map slice. |
 | A4-2 | Slice02 maps every Slice01 finding to a focused repair slice, accepted variation, later-arc deferral, or duplicate/no-op. | `test -f 01-cleanup/arc04-rust-cohesion-audit/slice02-triage-and-fix-map/fix-map.md` and inspect mapping. | serious | project-management | done | `slice02-triage-and-fix-map/cdc-verification.md` verifies all six cohesion findings are dispositioned, public API gates are explicit, Slice03-Slice05 open sets are complete, and no downstream close artifacts were created. | Slice03 characterization baselines are next. |
 | A4-3 | Accepted Rust idiom variations are explicitly documented with local reasons instead of silently drifting. | `rg -n "accepted variation|intentional divergence|local reason" 01-cleanup/arc04-rust-cohesion-audit` | correctness | operator-follow-up | open | | |
-| A4-4 | Every production repair slice opened by Slice02 closes with CDC verification and a focused behavior-preservation story. | `find 01-cleanup/arc04-rust-cohesion-audit -path '*/closing-report.md' -print` and inspect repair rows. | serious | collaboration-framework | open | | |
+| A4-4 | Every production repair slice opened by Slice02 closes with CDC verification and a focused behavior-preservation story. | `find 01-cleanup/arc04-rust-cohesion-audit -path '*/closing-report.md' -print` and inspect repair rows. | serious | collaboration-framework | open | | Slice03 characterization baseline is CDC-verified; Slice04 and Slice05 repair slices remain open. |
 | A4-5 | Final Arc04 feature state passes the full local gate, including locked Cargo verification. | `cargo fmt --check && cargo check --locked --all-targets && RUSTFLAGS="-D rust-2024-compatibility" cargo check --locked --all-targets && cargo clippy --locked --all-targets -- -D warnings && cargo test --locked --all-targets && cargo build --locked --release --bins && ./target/release/hddl_analyzer --help && actionlint .github/workflows/ci.yml && git diff --check` | serious | arc01-arc03 | open | | |
 | A4-6 | Arc04 close report bubbles up whether HDDL-Parser cleanup can close or needs another remediation arc. | `test -f 01-cleanup/arc04-rust-cohesion-audit/closing-report.md` and inspect final decision. | serious | project-management | open | | |
 
 ## Version History
+
+### v1.5 - 2026-08-25
+
+Slice03 CDC verification landed. The characterization baseline is test-only and
+pins public imports, Vec-backed parser/transpiler inputs, malformed problem
+panic behavior, transformation error messages, public misspelled variants, and
+formula panic contracts. Slice04 is now ready to start.
 
 ### v1.4 - 2026-08-25
 
