@@ -1,6 +1,6 @@
 # Arc05: Skipped Test Repair
 
-Version: 1.2
+Version: 1.3
 Date: 2026-08-26
 Expected investigation branch: `audit/ignored-tests`
 Expected repair branches: smaller `fix/...` branches as Slice01 requires
@@ -48,12 +48,20 @@ malformed typed-parameter diagnostics exposed by
 `#[ignore]` annotations once the tests pass in the default locked gate. Status:
 open.
 
+### slice03-corpus-measurement
+
+Add a Rust-native corpus measurement utility that deterministically enumerates
+the IPC corpus and records phase-level timings for parse/verify and JSON
+round-trip behavior. This slice measures first: it does not choose the final
+slow/corpus CI policy, does not remove the corpus `#[ignore]` annotations, and
+does not add sharding, manifests, or custom test harnesses. Status: open.
+
 ### Later Repair Slices
 
-Do not pre-open additional repair slices until the fast non-corpus repairs are
-complete and the slow/corpus strategy is settled. Later slices should be cut
-from the remaining investigation findings by route and review boundary, for
-example:
+Do not pre-open additional repair slices until the fast non-corpus repairs and
+the corpus measurement slice are complete. Later slices should be cut from the
+remaining investigation findings and timing evidence by route and review
+boundary, for example:
 
 - Test-only repairs where the implementation already behaves correctly and the
   test is stale, slow, or poorly scoped.
@@ -63,6 +71,9 @@ example:
   test shape are too stale or incoherent to repair safely in place.
 - Slow/corpus test policy work if long-running IPC/JSON coverage should move
   behind a named opt-in command rather than stay as ordinary ignored tests.
+- Corpus structure work if measurement shows a checked-in manifest,
+  addressable case IDs, representative fast samples, or structural JSON
+  assertions are needed before CI policy changes.
 
 ## Dependencies
 
@@ -103,8 +114,20 @@ unknown behavior.
 | A5-3 | Later repair slices are opened only after Slice01 findings identify concrete route boundaries. | `find 01-cleanup/arc05-skipped-test-repair -maxdepth 2 -name 'slice-doc.md' -print` and inspect arc version history. | correctness | project-management | open | `slice02-fast-ignored-test-repair` opened from Slice01's route matrix for the one test-only fix and two code-and-test repairs. | Additional corpus-policy slices remain unopened while CDC and operator discuss the test-infrastructure design. |
 | A5-4 | Repaired tests either run in the default locked test gate or move behind an explicit slow/corpus gate with documented invocation. | `cargo test --locked --all-targets` and inspect any slow-test command introduced by later slices. | serious | arc-plan | open | | |
 | A5-5 | Arc05 closes with a composition report showing no inherited ignored-test behavior remains unexplained. | `test -f 01-cleanup/arc05-skipped-test-repair/closing-report.md` and inspect row walk. | serious | project-management | open | | |
+| A5-6 | Corpus slow-test policy decisions are based on deterministic case inventory and phase-level timing evidence rather than inferred runtime. | `test -f 01-cleanup/arc05-skipped-test-repair/slice03-corpus-measurement/closing-report.md` and inspect the measurement report for corpus counts, slowest cases, parse/verify timing, JSON phase timing, and structural-vs-string JSON comparison notes. | correctness | operator-follow-up | open | | Slice03 is measurement-first and must not finalize the CI policy by itself. |
 
 ## Version History
+
+### v1.3 - 2026-08-26
+
+Opened Slice03 as a measurement-first corpus slice. The slice records
+deterministic IPC corpus inventory and phase-level timings for parse/verify and
+JSON round-trip behavior before the project chooses whether later corpus work
+needs manifests, addressable case IDs, representative fast samples, structural
+JSON assertions, sharding, or CI policy changes. Operator direction captured:
+fast representative corpus coverage may belong on branch pushes, while full
+corpus coverage should target PRs and post-merge `main` on both Linux and
+macOS, not only one platform.
 
 ### v1.2 - 2026-08-26
 
