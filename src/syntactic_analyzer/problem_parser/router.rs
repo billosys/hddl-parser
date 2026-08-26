@@ -65,8 +65,16 @@ impl<'a> Parser<'a> {
                 Token::EOF | Token::Punctuator(PunctuationType::RParentheses) => {
                     return Ok(syntax_tree);
                 }
-                err => {
-                    panic!("unexpected token {:?}", err)
+                token => {
+                    let error = SyntacticError {
+                        expected: format!(
+                            "either ')' to close the definition of {}, or '(' to start defining new components",
+                            meta_data.problem_name
+                        ),
+                        found: token.to_string(),
+                        position: self.tokenizer.get_last_token_position(),
+                    };
+                    return Err(ParsingError::Syntactic(error));
                 }
             }
         }

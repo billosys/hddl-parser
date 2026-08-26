@@ -20,7 +20,7 @@ fn atom(name: &'static str, vars: Vec<&'static str>) -> Box<Formula<'static>> {
     )))
 }
 
-fn parse_domain(program: &Vec<u8>) -> crate::DomainAST<'_> {
+fn parse_domain(program: &[u8]) -> crate::DomainAST<'_> {
     let lexer = LexicalAnalyzer::new(program);
     match Parser::new(lexer).parse() {
         Ok(AbstractSyntaxTree::Domain(ast)) => ast,
@@ -28,7 +28,7 @@ fn parse_domain(program: &Vec<u8>) -> crate::DomainAST<'_> {
     }
 }
 
-fn parse_problem(program: &Vec<u8>) -> crate::ProblemAST<'_> {
+fn parse_problem(program: &[u8]) -> crate::ProblemAST<'_> {
     let lexer = LexicalAnalyzer::new(program);
     match Parser::new(lexer).parse() {
         Ok(AbstractSyntaxTree::Problem(ast)) => ast,

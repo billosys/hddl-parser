@@ -40,6 +40,19 @@ fn vec_backed_hddl_program_api_parses_domain_and_problem() {
 }
 
 #[test]
+fn byte_slice_hddl_program_api_parses_domain_and_problem() {
+    let domain = ipc_domain();
+    let problem = ipc_problem();
+
+    let program = HDDLProgram::from_hddl(domain.as_slice(), Some(problem.as_slice())).unwrap();
+    let metadata = program.metadata().unwrap();
+
+    assert_eq!(metadata.domain_name, "BLOCKS");
+    assert_eq!(metadata.n_actions, 5);
+    assert_eq!(metadata.n_tasks, 4);
+}
+
+#[test]
 fn vec_backed_transpiler_and_input_hddl_apis_parse_domain_and_problem() {
     let domain = ipc_domain();
     let problem = ipc_problem();
@@ -48,6 +61,22 @@ fn vec_backed_transpiler_and_input_hddl_apis_parse_domain_and_problem() {
     let from_input = Transpiler::from_input(Input::Hddl {
         domain: &domain,
         problem: Some(&problem),
+    })
+    .unwrap();
+
+    assert_eq!(direct.metadata().unwrap().domain_name, "BLOCKS");
+    assert_eq!(from_input.metadata().unwrap().domain_name, "BLOCKS");
+}
+
+#[test]
+fn byte_slice_transpiler_and_input_hddl_apis_parse_domain_and_problem() {
+    let domain = ipc_domain();
+    let problem = ipc_problem();
+
+    let direct = Transpiler::from_hddl(domain.as_slice(), Some(problem.as_slice())).unwrap();
+    let from_input = Transpiler::from_input(Input::Hddl {
+        domain: domain.as_slice(),
+        problem: Some(problem.as_slice()),
     })
     .unwrap();
 
@@ -67,12 +96,27 @@ fn representative_crate_root_exports_are_importable() {
 }
 
 #[test]
-fn malformed_problem_top_level_token_currently_panics() {
+fn malformed_problem_top_level_token_returns_syntactic_error() {
     let problem = b"(define (problem malformed) (:domain d) unexpected)".to_vec();
 
     let result = panic::catch_unwind(|| HDDLProgram::from_hddl(&problem, None));
 
-    assert!(result.is_err());
+    let error = match result.expect("malformed problem should return an error instead of panicking")
+    {
+        Err(error) => error,
+        Ok(_) => panic!("malformed problem should not parse successfully"),
+    };
+
+    match error {
+        ParsingError::Syntactic(error) => {
+            assert_eq!(
+                error.expected,
+                "either ')' to close the definition of malformed, or '(' to start defining new components"
+            );
+            assert_eq!(error.found, "Identifier unexpected");
+        }
+        other => panic!("expected syntactic error, got {other:?}"),
+    }
 }
 
 #[test]

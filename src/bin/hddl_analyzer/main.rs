@@ -62,8 +62,8 @@ impl InputData {
         Transpiler::from_input(match self {
             InputData::Json(json) => Input::Json(json),
             InputData::Hddl { domain, problem } => Input::Hddl {
-                domain,
-                problem: problem.as_ref(),
+                domain: domain.as_slice(),
+                problem: problem.as_ref().map(Vec::as_slice),
             },
         })
     }

@@ -27,8 +27,8 @@ impl<'a> HDDLProgram<'a> {
     pub const HTN_TOP_METHOD: &'static str = "htn_top_method";
 
     pub fn from_hddl(
-        domain: &'a Vec<u8>,
-        problem: Option<&'a Vec<u8>>,
+        domain: &'a [u8],
+        problem: Option<&'a [u8]>,
     ) -> Result<HDDLProgram<'a>, ParsingError> {
         let lexer = LexicalAnalyzer::new(domain);
         let domain_parser = syntactic_analyzer::Parser::new(lexer);

@@ -13,13 +13,13 @@ use tower_lsp::lsp_types::{Diagnostic, DiagnosticSeverity, Position, Range};
 use tower_lsp::lsp_types::{DiagnosticRelatedInformation, Location, Url};
 use tower_lsp::lsp_types::{DocumentDiagnosticReport, FullDocumentDiagnosticReport};
 
-pub fn classify_file(content: &Vec<u8>) -> FileVariant {
+pub fn classify_file(content: &[u8]) -> FileVariant {
     let lexer = LexicalAnalyzer::new(content);
     let parser = Parser::new(lexer);
     parser.classify()
 }
 
-pub fn diagnose_domain(content: &Vec<u8>) -> DocumentDiagnosticReportResult {
+pub fn diagnose_domain(content: &[u8]) -> DocumentDiagnosticReportResult {
     let lexer = LexicalAnalyzer::new(content);
     let parser = Parser::new(lexer);
     let mut items = vec![];
@@ -64,8 +64,8 @@ pub fn generate_empty_report() -> DocumentDiagnosticReportResult {
 }
 
 pub fn diagnose_problem(
-    domain_content: Option<&Vec<u8>>,
-    problem_content: &Vec<u8>,
+    domain_content: Option<&[u8]>,
+    problem_content: &[u8],
 ) -> DocumentDiagnosticReportResult {
     let mut items = vec![];
     let mut symbol_table = None;

@@ -66,7 +66,7 @@ impl RequestHandler {
     async fn diagnose_problem_with_sibling_domain(
         &self,
         file_path: PathBuf,
-        document: &Vec<u8>,
+        document: &[u8],
     ) -> DocumentDiagnosticReportResult {
         let Some(root_folder) = file_path.parent() else {
             return diagnose_problem(None, document);

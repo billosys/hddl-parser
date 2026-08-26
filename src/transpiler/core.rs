@@ -17,8 +17,8 @@ impl<'a> Transpiler<'a> {
     }
 
     pub fn from_hddl(
-        domain: &'a Vec<u8>,
-        problem: Option<&'a Vec<u8>>,
+        domain: &'a [u8],
+        problem: Option<&'a [u8]>,
     ) -> Result<Transpiler<'a>, ParsingError> {
         Ok(Transpiler::new(HDDLProgram::from_hddl(domain, problem)?))
     }

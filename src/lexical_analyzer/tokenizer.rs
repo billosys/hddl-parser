@@ -3,13 +3,13 @@ use std::{cell::Cell, str::from_utf8};
 use super::*;
 
 pub struct LexicalAnalyzer<'a> {
-    program: &'a Vec<u8>,
+    program: &'a [u8],
     cursor: Cell<usize>,
     last_token_pos: Cell<TokenPosition>,
 }
 
 impl<'a> LexicalAnalyzer<'a> {
-    pub fn new(program: &'a Vec<u8>) -> LexicalAnalyzer<'a> {
+    pub fn new(program: &'a [u8]) -> LexicalAnalyzer<'a> {
         LexicalAnalyzer {
             program,
             cursor: Cell::new(0),
