@@ -1,6 +1,6 @@
 # HDDL-Parser Cleanup Project Plan
 
-Version: 2.16
+Version: 2.17
 Date: 2026-08-25
 Planning branch: `planning` orphan branch
 Implementation base: local `main` at `ec2d70e`
@@ -22,6 +22,9 @@ The project delivers:
   when findings are too broad for one reviewable patch.
 - A final Rust cohesion audit/fix pass that checks the whole codebase for
   intentionally consistent idioms, not merely locally-correct Rust.
+- A skipped-test repair arc that investigates every ignored test, then fixes
+  the tests and any underlying code they reveal as stale, incorrect, or in need
+  of rewrite.
 
 Explicit non-goals:
 
@@ -37,7 +40,8 @@ Explicit non-goals:
 | arc01-github-actions-ci | Adds the first GitHub Actions CI workflow and status-facing project polish. | closed locally; PR-ready after upstream base settles | Warning-fix PR #5 merged or equivalent local baseline. |
 | arc02-rust-2024-edition | Migrates the crate to the latest Rust edition using the standard edition workflow. | active; slices CDC-verified, arc close pending | arc01 gives CI coverage for the migration PR. |
 | arc03-rust-best-practices | Audits Rust API, error handling, CLI, tests, and maintainability issues; baselines behavior with tests before production repairs. | closed locally | arc01 gives CI coverage; arc02 defines the target edition. |
-| arc04-rust-cohesion-audit | Performs the final whole-codebase consistency pass so Rust idioms, error shapes, data-flow patterns, and module conventions feel deliberately unified. | active; Slice04 CDC-verified; Slice05 next | arc03 local feature state at `d820065` gives the repaired-codebase audit base. |
+| arc04-rust-cohesion-audit | Performs the final whole-codebase consistency pass so Rust idioms, error shapes, data-flow patterns, and module conventions feel deliberately unified. | active; Slice05 locally closed, CDC verification pending | arc03 local feature state at `d820065` gives the repaired-codebase audit base. |
+| arc05-skipped-test-repair | Investigates and repairs inherited ignored tests, including refactoring or rewriting tested code when an ignored test exposes stale or defective behavior. | planned; Slice01 open set created | arc04 should close first so test-repair work starts from the final cohesion baseline. |
 
 ## Current Status
 
@@ -87,6 +91,11 @@ duplication is consolidated without weakening assertion precision, scoped
 private/test-only spelling drift is repaired, and public misspelled enum
 variants remain deferred. CDC verification is pending.
 
+Arc05 is planned as a follow-on remediation arc for inherited ignored tests.
+Slice01 is opened as an investigation-only slice that records exactly why each
+ignored test is skipped and whether later slices should fix only the test,
+repair the code and the test together, or rewrite the code and test together.
+
 The warning-fix PR is treated as predecessor work, not part of this planning
 packet.
 
@@ -103,8 +112,16 @@ arc can be executed as a focused PR or PR series.
 | P-4 | Project boundaries keep CI, edition migration, best-practices, and cohesion work in separate upstream PRs or PR families. | `rg -n "fix/cargo-warnings|feature/add-ci|edition/rust-2024|best-practices|cohesion|separate" 01-cleanup/project-plan.md 01-cleanup/arc*/arc-plan.md` | serious | issue-4 | done | Slice03 fix map separates Arc03 into PR groups for CLI exits, structured parser/transform errors, LSP robustness, and Cargo reproducibility, while RUST-007 is deferred to Arc04 cohesion. | Upstream branches should stay focused even if multiple Arc03 slices later land in one coordinated PR family. |
 | P-5 | Arc04 final Rust cohesion audit records scope, dependency, and the project-wide consistency emphasis. | `test -f 01-cleanup/arc04-rust-cohesion-audit/arc-plan.md` and `rg -n "consistency|cohesion|unified" 01-cleanup/arc04-rust-cohesion-audit/arc-plan.md` | correctness | operator-follow-up | done | Arc04 opened with whole-codebase consistency scope. | Arc04 is now active. |
 | P-6 | Arc04 is active and Slice01 opens as a read-only cohesion diagnosis audit from Arc03 final feature state. | `test -f 01-cleanup/arc04-rust-cohesion-audit/slice01-cohesion-diagnosis-audit/cc-prompt.md` and `rg -n "diagnosis-only|read-only|d820065|RUST-007|cohesion" 01-cleanup/arc04-rust-cohesion-audit/arc-plan.md 01-cleanup/arc04-rust-cohesion-audit/slice01-cohesion-diagnosis-audit/*.md` | serious | operator-follow-up | done | Arc04 promoted to active and Slice01 open set created. | Slice01 is the current Arc04 entry point. |
+| P-7 | Arc05 skipped-test repair arc is planned with a read-only Slice01 investigation open set before any ignored tests or tested code are changed. | `test -f 01-cleanup/arc05-skipped-test-repair/arc-plan.md` and `test -f 01-cleanup/arc05-skipped-test-repair/slice01-ignored-test-investigation/cc-prompt.md` and `rg -n "investigation-only|read-only|ignored tests|fix only the test|repair the code|rewrite the code" 01-cleanup/arc05-skipped-test-repair` | correctness | operator-follow-up | done | Arc05 arc plan and Slice01 open set created. | Later repair slices remain intentionally unopened until Slice01 classifies the ignored tests. |
 
 ## Version History
+
+### v2.17 - 2026-08-26
+
+Arc05 added as a follow-on remediation arc for inherited ignored tests. Slice01
+opens as a read-only investigation that must classify each ignored test before
+later repair slices decide whether to fix tests, update code and tests, or
+rewrite code and tests together.
 
 ### v2.16 - 2026-08-26
 
