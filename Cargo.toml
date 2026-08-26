@@ -17,6 +17,9 @@ path = "tests/integration_flawed.rs"
 name = "json"
 path = "tests/integration_json.rs"
 
+[[example]]
+name = "corpus_measure"
+path = "tools/corpus_measure.rs"
 
 [dependencies]
 clap = { version = "4.5.20", features = ["derive"] }
