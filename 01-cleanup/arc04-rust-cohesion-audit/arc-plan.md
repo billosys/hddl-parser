@@ -1,6 +1,6 @@
 # Arc04: Rust Cohesion Audit And Fixes
 
-Version: 1.0
+Version: 1.1
 Date: 2026-08-26
 Expected audit branch: `audit/rust-cohesion`
 Expected repair branches: smaller `fix/...` branches as Slice02 requires
@@ -47,7 +47,9 @@ Run a diagnosis-only, read-only cohesion audit across the Arc03-repaired Rust
 codebase. Produce non-overwriting workbench reports using filenames that include
 `cohesion`, identify cohesion findings by theme, record accepted variations, and
 capture RUST-007 disposition options. No production, test, manifest, workflow,
-README, or behavior changes are allowed in this slice.
+README, or behavior changes are allowed in this slice. Status: CDC-verified;
+delivered six cohesion findings, seven negative checks, and concrete Slice02
+handoff items.
 
 ### slice02-triage-and-fix-map
 
@@ -132,7 +134,7 @@ intentional variation.
 
 | ID | Criterion | Verify | Significance | Origin | Status | Evidence | Notes |
 |----|-----------|--------|--------------|--------|--------|----------|-------|
-| A4-1 | Slice01 runs as a diagnosis-only, read-only cohesion audit from Arc03 final feature state. | `test -f 01-cleanup/arc04-rust-cohesion-audit/slice01-cohesion-diagnosis-audit/closing-report.md` and inspect row walk. | serious | collaboration-framework | open | | |
+| A4-1 | Slice01 runs as a diagnosis-only, read-only cohesion audit from Arc03 final feature state. | `test -f 01-cleanup/arc04-rust-cohesion-audit/slice01-cohesion-diagnosis-audit/closing-report.md` and inspect row walk. | serious | collaboration-framework | done | `slice01-cohesion-diagnosis-audit/cdc-verification.md` verifies 12/12 rows, workbench-only implementation diff, six cohesion findings, seven negative checks, RUST-007 re-entry, and full locked quality gate reproduction. | Slice02 is the next planning-only fix-map slice. |
 | A4-2 | Slice02 maps every Slice01 finding to a focused repair slice, accepted variation, later-arc deferral, or duplicate/no-op. | `test -f 01-cleanup/arc04-rust-cohesion-audit/slice02-triage-and-fix-map/fix-map.md` and inspect mapping. | serious | project-management | open | | |
 | A4-3 | Accepted Rust idiom variations are explicitly documented with local reasons instead of silently drifting. | `rg -n "accepted variation|intentional divergence|local reason" 01-cleanup/arc04-rust-cohesion-audit` | correctness | operator-follow-up | open | | |
 | A4-4 | Every production repair slice opened by Slice02 closes with CDC verification and a focused behavior-preservation story. | `find 01-cleanup/arc04-rust-cohesion-audit -path '*/closing-report.md' -print` and inspect repair rows. | serious | collaboration-framework | open | | |
@@ -140,6 +142,12 @@ intentional variation.
 | A4-6 | Arc04 close report bubbles up whether HDDL-Parser cleanup can close or needs another remediation arc. | `test -f 01-cleanup/arc04-rust-cohesion-audit/closing-report.md` and inspect final decision. | serious | project-management | open | | |
 
 ## Version History
+
+### v1.1 - 2026-08-26
+
+Slice01 CDC verification landed. The cohesion diagnosis audit produced six
+findings, seven negative checks, and concrete Slice02 handoff items while
+preserving the read-only implementation boundary.
 
 ### v1.0 - 2026-08-26
 
