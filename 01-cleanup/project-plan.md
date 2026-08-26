@@ -1,6 +1,6 @@
 # HDDL-Parser Cleanup Project Plan
 
-Version: 2.13
+Version: 2.14
 Date: 2026-08-25
 Planning branch: `planning` orphan branch
 Implementation base: local `main` at `ec2d70e`
@@ -78,8 +78,11 @@ CDC-verified: it maps all six findings, opens Slice03 test-only
 characterization baselines, Slice04 parser API/error-boundary repair, and
 Slice05 test-helper/private-naming cohesion, and keeps public API breaking
 changes behind explicit operator GO or a later public API/error/AST contract
-arc. Slice03 is CDC-verified with a test-only integration baseline, so Slice04
-can proceed against pinned current behavior.
+arc. Slice03 is CDC-verified with a test-only integration baseline. Slice04 is
+locally closed: borrowed byte-input APIs now accept `&[u8]`, Vec-backed callers
+remain covered, the malformed problem-parser panic path now returns
+`ParsingError::Syntactic`, and crate-root export narrowing remains skipped and
+gated. CDC verification is pending before Slice05 proceeds.
 
 The warning-fix PR is treated as predecessor work, not part of this planning
 packet.
@@ -99,6 +102,15 @@ arc can be executed as a focused PR or PR series.
 | P-6 | Arc04 is active and Slice01 opens as a read-only cohesion diagnosis audit from Arc03 final feature state. | `test -f 01-cleanup/arc04-rust-cohesion-audit/slice01-cohesion-diagnosis-audit/cc-prompt.md` and `rg -n "diagnosis-only|read-only|d820065|RUST-007|cohesion" 01-cleanup/arc04-rust-cohesion-audit/arc-plan.md 01-cleanup/arc04-rust-cohesion-audit/slice01-cohesion-diagnosis-audit/*.md` | serious | operator-follow-up | done | Arc04 promoted to active and Slice01 open set created. | Slice01 is the current Arc04 entry point. |
 
 ## Version History
+
+### v2.14 - 2026-08-25
+
+Arc04 Slice04 locally closed the parser API/error-boundary repair. The feature
+branch changes borrowed parser/transpiler/LSP byte-input boundaries from
+`&Vec<u8>` to `&[u8]`, preserves Vec-backed callers through characterization
+coverage, returns a structured syntactic error for the malformed problem-parser
+path, and leaves crate-root public export narrowing behind the explicit
+operator-GO gate. CDC verification is pending.
 
 ### v2.13 - 2026-08-25
 
