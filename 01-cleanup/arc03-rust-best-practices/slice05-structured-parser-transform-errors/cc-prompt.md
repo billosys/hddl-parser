@@ -5,6 +5,10 @@ You are working in HDDL-Parser on Arc03 Slice05:
 
 This is a focused repair slice for RUST-002 and RUST-003.
 
+Start from the verified Slice04 base, `fix/cli-error-exit-codes` at
+`f3a3f8d`, unless Slice04 has already been merged upstream. Create
+`fix/structured-parser-transform-errors` from that base.
+
 Read first:
 
 - `/Users/oubiwann/lab/billosys/hddl-parser/.worktrees/planning/01-cleanup/project-plan.md`
@@ -25,6 +29,9 @@ Constraints:
 - Do not change LSP behavior, dependency policy, or public API re-export design.
 - Prefer the existing `ParsingError` channel unless the codebase clearly needs a narrower new error type.
 - Update the current `catch_unwind` tests into ordinary `Err` assertions.
+- Preserve Slice04's CLI process contract: once these panics become structured
+  errors, CLI probes should exit non-zero through the ordinary `[Error]` path,
+  not panic with exit `101`.
 
 Run and record:
 
@@ -39,7 +46,7 @@ cargo build --release --bins
 ./target/release/hddl_analyzer --help
 actionlint .github/workflows/ci.yml
 git diff --check
-git diff --name-only
+git diff --name-only f3a3f8d..HEAD
 ```
 
 Also rerun the two audit panic probes and confirm they no longer exit via panic code `101`.

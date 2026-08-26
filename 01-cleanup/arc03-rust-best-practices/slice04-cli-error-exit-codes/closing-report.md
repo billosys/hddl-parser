@@ -3,6 +3,7 @@
 Date: 2026-08-25
 Feature branch: `fix/cli-error-exit-codes`
 Base commit: `b596714 Add baseline characterization tests`
+Feature commit: `f3a3f8d Fix CLI error exit codes`
 
 ## Summary
 
@@ -11,13 +12,16 @@ Slice04 fixes RUST-001 by making `hddl_analyzer` command handlers return
 `[Error]` messages to stderr and return `ExitCode::FAILURE`; successful
 commands return `ExitCode::SUCCESS`.
 
-The Slice04-owned implementation diff is limited to:
+The accepted Slice04 feature diff contains:
 
+- `.gitignore`
 - `src/bin/hddl_analyzer/main.rs`
 - `tests/current_behavior.rs`
 
-The feature worktree also has a pre-existing uncommitted `.gitignore` change
-adding `workbench`; Slice04 did not edit that file.
+The Rust behavior diff is limited to CLI exit-code repair and directly updated
+CLI baselines. The `.gitignore` change only adds `workbench`, which the
+operator explicitly approved because workbench artifacts are not tracked in
+their repositories.
 
 ## Final CLI Process Contract
 
@@ -74,13 +78,15 @@ All required commands passed:
 ignored tests. `cargo test --all-targets` passed with the existing ignored
 legacy tests unchanged.
 
-`git diff --name-only` output includes the pre-existing `.gitignore` dirty
-file plus the two Slice04-owned files. The scoped Slice04 diff is
-`src/bin/hddl_analyzer/main.rs` and `tests/current_behavior.rs`.
+`git diff --name-only b596714..HEAD` output is `.gitignore`,
+`src/bin/hddl_analyzer/main.rs`, and `tests/current_behavior.rs`. CDC accepted
+the `.gitignore` line as operator-approved repository hygiene; the Rust
+behavior diff remains limited to `src/bin/hddl_analyzer/main.rs` and
+`tests/current_behavior.rs`.
 
 ## Ledger Walk
 
-- C4-1: Done. Slice04-owned changes are limited to CLI exit-code repair and directly updated CLI baselines; pre-existing `.gitignore` dirt is disclosed.
+- C4-1: Done. Accepted Slice04 changes are limited to CLI exit-code repair, directly updated CLI baselines, and operator-approved `workbench` ignore hygiene.
 - C4-2: Done. Missing input exits non-zero and preserves stderr error output.
 - C4-3: Done. Unsupported extension exits non-zero and preserves stderr error output.
 - C4-4: Done. Semantic verification failure exits non-zero and preserves stderr diagnostics.

@@ -2,7 +2,7 @@
 
 | ID | Criterion | Verify | Significance | Origin | Status | Evidence | Notes |
 |----|-----------|--------|--------------|--------|--------|----------|-------|
-| C4-1 | The slice diff is limited to CLI exit-code repair and the directly updated CLI baselines. | `git diff --name-only main..HEAD` and inspect changed files. | serious | RUST-001 | done | Working tree on `b596714`; Slice04-owned diff is `src/bin/hddl_analyzer/main.rs` and `tests/current_behavior.rs`. Plain `git diff --name-only` also lists pre-existing `.gitignore`. | `.gitignore` was dirty before Slice04 and was not edited by this slice. |
+| C4-1 | The slice diff is limited to CLI exit-code repair, directly updated CLI baselines, and operator-approved workbench ignore hygiene. | `git diff --name-only b596714..HEAD` and inspect changed files. | serious | RUST-001 | done | Feature commit `f3a3f8d` changes `.gitignore`, `src/bin/hddl_analyzer/main.rs`, and `tests/current_behavior.rs`. The Rust behavior diff is limited to CLI exit plumbing and updated CLI baselines; `.gitignore` only adds `workbench`. | Operator confirmed workbench artifacts are not tracked in their repos and asked CDC to include this commit. |
 | C4-2 | `hddl_analyzer` returns non-zero for missing input while preserving stderr error output. | `rg -n "missing_input|non.*zero|stderr" tests/current_behavior.rs` and `cargo test --test current_behavior`. | serious | RUST-001 | done | `cli_missing_input_exits_nonzero_and_writes_error_to_stderr` passed; release probe exited `1` and printed `[Error] No such file or directory (os error 2)` on stderr. | |
 | C4-3 | `hddl_analyzer` returns non-zero for unsupported input extension while preserving stderr error output. | `rg -n "unsupported.*extension|non.*zero|stderr" tests/current_behavior.rs` and `cargo test --test current_behavior`. | serious | RUST-001 | done | `cli_unsupported_extension_exits_nonzero_and_writes_error_to_stderr` passed; release probe exited `1` and printed `[Error] unrecognized input extension '.toml' (expected .hddl or .json)` on stderr. | |
 | C4-4 | `hddl_analyzer verify` returns non-zero for parse/semantic failure while preserving diagnostics on stderr. | `rg -n "semantic_failure|non.*zero|stderr" tests/current_behavior.rs` and `cargo test --test current_behavior`. | serious | RUST-001 | done | `cli_semantic_failure_exits_nonzero_and_writes_error_to_stderr` passed in `cargo test --test current_behavior`. | |
@@ -18,4 +18,4 @@ The Slice02 subprocess tests made the process-contract change small and mechanic
 
 ## Closure
 
-Closed by CC on 2026-08-25 as a working-tree repair on top of `b596714`. Final row count: C4-1 through C4-9 done, with no deferred or no-op Slice04 rows.
+Closed by CC on 2026-08-25 as feature commit `f3a3f8d` on top of `b596714`. Final row count: C4-1 through C4-9 done, with no deferred or no-op Slice04 rows.
