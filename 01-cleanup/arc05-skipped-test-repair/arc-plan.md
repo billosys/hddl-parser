@@ -1,6 +1,6 @@
 # Arc05: Skipped Test Repair
 
-Version: 1.4
+Version: 1.6
 Date: 2026-08-26
 Expected investigation branch: `audit/ignored-tests`
 Expected repair branches: smaller `fix/...` branches as Slice01 requires
@@ -54,7 +54,8 @@ Add a Rust-native corpus measurement utility that deterministically enumerates
 the IPC corpus and records phase-level timings for parse/verify and JSON
 round-trip behavior. This slice measures first: it does not choose the final
 slow/corpus CI policy, does not remove the corpus `#[ignore]` annotations, and
-does not add sharding, manifests, or custom test harnesses. Status: open.
+does not add sharding, manifests, or custom test harnesses. Status:
+CDC-verified.
 
 ### Later Repair Slices
 
@@ -112,11 +113,29 @@ unknown behavior.
 | A5-1 | Slice01 investigates every ignored Rust test without changing source, tests, manifests, workflows, README, fixtures, or ignore annotations. | `rg -n "#\\[ignore" src tests -g '*.rs'` and inspect Slice01 close evidence; `git diff --name-status` confirms read-only implementation scope. | serious | operator-follow-up | open | `slice01-ignored-test-investigation/closing-report.md` locally closes the read-only investigation; implementation `git diff --name-status` is empty and the allowed workbench report is ignored. CDC verification is pending. | |
 | A5-2 | Slice01 classifies each ignored test into a follow-up route: test-only fix, code-and-test repair, code-and-test rewrite, slow/corpus gate, or valid deferral. | `test -f 01-cleanup/arc05-skipped-test-repair/slice01-ignored-test-investigation/closing-report.md` and inspect classification matrix. | serious | operator-follow-up | open | Slice01 local close classifies `file_type_test` as test-only fix; the two forgotten-declaration tests as code-and-test repair; and the IPC/JSON corpus tests as slow/corpus gate. CDC verification is pending. | |
 | A5-3 | Later repair slices are opened only after Slice01 findings identify concrete route boundaries. | `find 01-cleanup/arc05-skipped-test-repair -maxdepth 2 -name 'slice-doc.md' -print` and inspect arc version history. | correctness | project-management | done | `slice02-fast-ignored-test-repair` opened from Slice01's route matrix and CDC-verified; `slice03-corpus-measurement` opened for the remaining corpus route. | Additional corpus-policy slices remain unopened until Slice03 measurement evidence lands. |
-| A5-4 | Repaired tests either run in the default locked test gate or move behind an explicit slow/corpus gate with documented invocation. | `cargo test --locked --all-targets` and inspect any slow-test command introduced by later slices. | serious | arc-plan | open | | |
+| A5-4 | Repaired tests either run in the default locked test gate or move behind an explicit slow/corpus gate with documented invocation. | `cargo test --locked --all-targets` and inspect any slow-test command introduced by later slices. | serious | arc-plan | open | Slice02 repair commit `e534df2` puts the three fast non-corpus ignored tests in the default locked gate. Slice03 leaves the two corpus ignores in place and records opt-in measurement commands plus timing evidence for the later slow/corpus policy slice. | Corpus policy is not finalized yet. |
 | A5-5 | Arc05 closes with a composition report showing no inherited ignored-test behavior remains unexplained. | `test -f 01-cleanup/arc05-skipped-test-repair/closing-report.md` and inspect row walk. | serious | project-management | open | | |
-| A5-6 | Corpus slow-test policy decisions are based on deterministic case inventory and phase-level timing evidence rather than inferred runtime. | `test -f 01-cleanup/arc05-skipped-test-repair/slice03-corpus-measurement/closing-report.md` and inspect the measurement report for corpus counts, slowest cases, parse/verify timing, JSON phase timing, and structural-vs-string JSON comparison notes. | correctness | operator-follow-up | open | | Slice03 is measurement-first and must not finalize the CI policy by itself. |
+| A5-6 | Corpus slow-test policy decisions are based on deterministic case inventory and phase-level timing evidence rather than inferred runtime. | `test -f 01-cleanup/arc05-skipped-test-repair/slice03-corpus-measurement/closing-report.md` and inspect the measurement report for corpus counts, slowest cases, parse/verify timing, JSON phase timing, and structural-vs-string JSON comparison notes. | correctness | operator-follow-up | done | Slice03 CDC verification reproduced deterministic inventory of 900 cases, full measurement completion with 0 failures and 0 JSON equality disagreements, phase totals, distribution buckets, slowest cases/domains, and next-slice policy options. | Slice03 is measurement-first and does not finalize the CI policy by itself. |
 
 ## Version History
+
+### v1.6 - 2026-08-26
+
+Slice03 CDC verification landed. CDC independently reproduced bounded,
+filtered, and full 900-case corpus measurement runs, confirmed both generated
+CSV reports contain 900 clean case rows, and verified that default tests, CI,
+Cargo manifests, and the two corpus ignored tests remain unchanged. Next Arc05
+work should make the corpus addressable and policy-ready before wiring the
+branch/PR/post-merge gates.
+
+### v1.5 - 2026-08-26
+
+Slice03 locally closed corpus measurement. The Rust-native measurement utility
+enumerated 900 IPC cases, completed the full parse/verify plus JSON
+round-trip run with zero failures and zero equality disagreements, and wrote
+ignored workbench CSV/summary evidence. Arc05 now has timing-backed corpus
+policy inputs, but the remaining IPC/JSON ignored tests intentionally stay
+behind a later policy or infrastructure slice.
 
 ### v1.4 - 2026-08-26
 
