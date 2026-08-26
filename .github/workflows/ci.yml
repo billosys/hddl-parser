@@ -6,9 +6,17 @@ on:
     branches:
       - main
       - master
+      - "audit/*"
+      - "ci/*"
+      - "edition/*"
       - "fix/*"
       - "feature/*"
+      - "measure/*"
+      - "policy/*"
       - "release/*"
+      - "test/*"
+  schedule:
+    - cron: "17 8 * * 1"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -58,21 +66,28 @@ jobs:
         run: cargo fmt --check
 
       - name: Check
-        run: cargo check --all-targets
+        run: cargo check --locked --all-targets
 
       - name: Check Rust 2024 compatibility lints
         env:
           RUSTFLAGS: -D rust-2024-compatibility
-        run: cargo check --all-targets
+        run: cargo check --locked --all-targets
 
       - name: Clippy
-        run: cargo clippy --all-targets -- -D warnings
+        run: cargo clippy --locked --all-targets -- -D warnings
 
       - name: Test
-        run: cargo test --all-targets
+        run: cargo test --locked --all-targets
+
+      - name: Measure fast corpus
+        run: HDDL_CORPUS_SELECTION=fast HDDL_CORPUS_ASSERT=both cargo run --locked --example corpus_measure
+
+      - name: Measure full corpus
+        if: github.event_name == 'pull_request' || github.event_name == 'schedule' || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+        run: HDDL_CORPUS_SELECTION=full HDDL_CORPUS_ASSERT=both cargo run --locked --example corpus_measure
 
       - name: Build release binaries
-        run: cargo build --release --bins
+        run: cargo build --release --locked --bins
 
       - name: Smoke test hddl_analyzer
         run: ./target/release/hddl_analyzer --help

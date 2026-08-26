@@ -1,7 +1,7 @@
 # IPC Corpus Selections
 
 `corpus_measure` supports named and manifest-based corpus selections for local
-validation and later CI wiring:
+validation and CI policy:
 
 ```bash
 cargo run --locked --example corpus_measure
@@ -48,6 +48,19 @@ cargo test --locked --all-targets
 Those tests report stable case IDs in failure messages. The full corpus remains
 explicit through the `HDDL_CORPUS_SELECTION=full` command above.
 
+## CI Policy
+
+GitHub Actions runs the default locked test suite plus the explicit fast corpus
+measurement on configured branch pushes, pull requests, default-branch pushes,
+and scheduled runs.
+
+Pull requests, pushes to `main` or `master`, and scheduled runs also run the
+explicit full corpus measurement on both Linux and macOS:
+
+```bash
+HDDL_CORPUS_SELECTION=full HDDL_CORPUS_ASSERT=both cargo run --locked --example corpus_measure
+```
+
 ## Fast Selection
 
 `fast.txt` is one fastest measured case per discovered corpus domain from the
@@ -55,5 +68,5 @@ explicit through the `HDDL_CORPUS_SELECTION=full` command above.
 branch-push use while avoiding the measured multi-second tail concentrated in
 larger Minecraft cases.
 
-The full corpus remains all 900 discovered cases and should be routed by a
-later slice into whatever PR or post-merge policy the project chooses.
+The full corpus remains all 900 discovered cases and is reserved for the PR,
+default-branch, and scheduled CI policy.
