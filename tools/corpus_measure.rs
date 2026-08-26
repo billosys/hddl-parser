@@ -1,13 +1,16 @@
 // Run with `cargo run --locked --example corpus_measure`.
 use hddl_analyzer::{HDDLProgram, Transpiler};
 use serde_json::Value;
+use std::collections::{HashMap, HashSet};
 use std::env;
 use std::fs::{self, File};
 use std::io::{self, BufWriter, Write};
 use std::path::{Path, PathBuf};
+use std::process::ExitCode;
 use std::time::{Duration, Instant};
 
 const CORPUS_ROOT: &str = "tests/ipc";
+const FAST_SELECTION_PATH: &str = "tests/ipc/corpus-selections/fast.txt";
 
 #[derive(Debug)]
 struct CorpusCase {
@@ -18,9 +21,68 @@ struct CorpusCase {
 
 #[derive(Debug)]
 struct Config {
+    selection: Selection,
+    assertion_mode: AssertionMode,
     filter: Option<String>,
     limit: Option<usize>,
     report_path: Option<PathBuf>,
+}
+
+#[derive(Debug)]
+enum Selection {
+    Named(NamedSelection),
+    Manifest(PathBuf),
+}
+
+impl Selection {
+    fn description(&self) -> String {
+        match self {
+            Self::Named(NamedSelection::Full) => "full".to_string(),
+            Self::Named(NamedSelection::Fast) => "fast".to_string(),
+            Self::Manifest(path) => format!("manifest:{}", path.display()),
+        }
+    }
+}
+
+#[derive(Debug)]
+enum NamedSelection {
+    Full,
+    Fast,
+}
+
+#[derive(Debug, Clone, Copy)]
+enum AssertionMode {
+    None,
+    Structural,
+    String,
+    Both,
+}
+
+impl AssertionMode {
+    fn from_env() -> io::Result<Self> {
+        match env::var("HDDL_CORPUS_ASSERT") {
+            Ok(value) if value.is_empty() || value == "none" => Ok(Self::None),
+            Ok(value) if value == "structural" => Ok(Self::Structural),
+            Ok(value) if value == "string" => Ok(Self::String),
+            Ok(value) if value == "both" => Ok(Self::Both),
+            Ok(value) => Err(io::Error::new(
+                io::ErrorKind::InvalidInput,
+                format!(
+                    "HDDL_CORPUS_ASSERT must be one of: none, structural, string, both; got {value:?}"
+                ),
+            )),
+            Err(_) => Ok(Self::None),
+        }
+    }
+
+    fn name(self) -> &'static str {
+        match self {
+            Self::None => "none",
+            Self::Structural => "structural",
+            Self::String => "string",
+            Self::Both => "both",
+        }
+    }
 }
 
 #[derive(Debug)]
@@ -122,15 +184,27 @@ impl CaseMeasurement {
     }
 }
 
-fn main() -> io::Result<()> {
+fn main() -> ExitCode {
+    match run() {
+        Ok(()) => ExitCode::SUCCESS,
+        Err(error) => {
+            eprintln!("error: {error}");
+            ExitCode::FAILURE
+        }
+    }
+}
+
+fn run() -> io::Result<()> {
     let config = Config::from_env()?;
     let all_cases = discover_cases(Path::new(CORPUS_ROOT))?;
     let discovered_cases = all_cases.len();
-    let selected_cases = select_cases(all_cases, &config);
+    let selected_cases = select_cases(all_cases, &config)?;
     let mut report = CsvReport::new(config.report_path.as_deref())?;
 
     println!(
-        "discovered_cases={}, selected_cases={}",
+        "selection={}, assertion={}, discovered_cases={}, selected_cases={}",
+        config.selection.description(),
+        config.assertion_mode.name(),
         discovered_cases,
         selected_cases.len()
     );
@@ -155,11 +229,25 @@ fn main() -> io::Result<()> {
     }
 
     print_summary(&measurements);
+    let assertion_failures = count_json_assertion_failures(&measurements, config.assertion_mode);
+    println!("json_assertion_failures={assertion_failures}");
+    if assertion_failures > 0 {
+        return Err(io::Error::new(
+            io::ErrorKind::InvalidData,
+            format!(
+                "HDDL_CORPUS_ASSERT={} failed for {assertion_failures} case(s)",
+                config.assertion_mode.name()
+            ),
+        ));
+    }
+
     Ok(())
 }
 
 impl Config {
     fn from_env() -> io::Result<Self> {
+        let selection = Selection::from_env()?;
+        let assertion_mode = AssertionMode::from_env()?;
         let filter = env::var("HDDL_CORPUS_FILTER")
             .ok()
             .filter(|s| !s.is_empty());
@@ -187,10 +275,35 @@ impl Config {
             .map(PathBuf::from);
 
         Ok(Self {
+            selection,
+            assertion_mode,
             filter,
             limit,
             report_path,
         })
+    }
+}
+
+impl Selection {
+    fn from_env() -> io::Result<Self> {
+        if let Some(path) = env::var_os("HDDL_CORPUS_MANIFEST")
+            .filter(|value| !value.is_empty())
+            .map(PathBuf::from)
+        {
+            return Ok(Self::Manifest(path));
+        }
+
+        match env::var("HDDL_CORPUS_SELECTION") {
+            Ok(value) if value.is_empty() || value == "full" => {
+                Ok(Self::Named(NamedSelection::Full))
+            }
+            Ok(value) if value == "fast" => Ok(Self::Named(NamedSelection::Fast)),
+            Ok(value) => Err(io::Error::new(
+                io::ErrorKind::InvalidInput,
+                format!("HDDL_CORPUS_SELECTION must be one of: full, fast; got {value:?}"),
+            )),
+            Err(_) => Ok(Self::Named(NamedSelection::Full)),
+        }
     }
 }
 
@@ -291,21 +404,96 @@ fn discover_cases(corpus_root: &Path) -> io::Result<Vec<CorpusCase>> {
         }
     }
 
+    cases.sort_by(|lhs, rhs| lhs.id.cmp(&rhs.id));
+
     Ok(cases)
 }
 
-fn select_cases(cases: Vec<CorpusCase>, config: &Config) -> Vec<CorpusCase> {
-    let filtered = cases.into_iter().filter(|case| {
+fn select_cases(cases: Vec<CorpusCase>, config: &Config) -> io::Result<Vec<CorpusCase>> {
+    let selected = match &config.selection {
+        Selection::Named(NamedSelection::Full) => cases,
+        Selection::Named(NamedSelection::Fast) => {
+            select_manifest_cases(cases, Path::new(FAST_SELECTION_PATH))?
+        }
+        Selection::Manifest(path) => select_manifest_cases(cases, path)?,
+    };
+
+    let filtered = selected.into_iter().filter(|case| {
         config
             .filter
             .as_ref()
             .is_none_or(|filter| case.id.contains(filter))
     });
 
-    match config.limit {
+    Ok(match config.limit {
         Some(limit) => filtered.take(limit).collect(),
         None => filtered.collect(),
+    })
+}
+
+fn select_manifest_cases(cases: Vec<CorpusCase>, path: &Path) -> io::Result<Vec<CorpusCase>> {
+    let case_ids = read_selection_ids(path)?;
+    let mut cases_by_id: HashMap<String, CorpusCase> = cases
+        .into_iter()
+        .map(|case| (case.id.clone(), case))
+        .collect();
+    let mut selected = Vec::with_capacity(case_ids.len());
+
+    for case_id in case_ids {
+        let Some(case) = cases_by_id.remove(&case_id) else {
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidInput,
+                format!(
+                    "{} contains unknown corpus case ID {case_id:?}",
+                    path.display()
+                ),
+            ));
+        };
+        selected.push(case);
     }
+
+    Ok(selected)
+}
+
+fn read_selection_ids(path: &Path) -> io::Result<Vec<String>> {
+    let contents = fs::read_to_string(path).map_err(|error| {
+        io::Error::new(
+            error.kind(),
+            format!(
+                "failed to read corpus selection {}: {error}",
+                path.display()
+            ),
+        )
+    })?;
+
+    let mut seen = HashSet::new();
+    let mut case_ids = Vec::new();
+    for (line_index, line) in contents.lines().enumerate() {
+        let line_number = line_index + 1;
+        let trimmed = line.trim();
+        if trimmed.is_empty() || trimmed.starts_with('#') {
+            continue;
+        }
+        if !seen.insert(trimmed.to_string()) {
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidInput,
+                format!(
+                    "{} contains duplicate corpus case ID {trimmed:?} on line {line_number}",
+                    path.display()
+                ),
+            ));
+        }
+        case_ids.push(trimmed.to_string());
+    }
+
+    if case_ids.is_empty() {
+        return Err(io::Error::new(
+            io::ErrorKind::InvalidInput,
+            format!("{} contains no corpus case IDs", path.display()),
+        ));
+    }
+
+    Ok(case_ids)
 }
 
 fn measure_case(case: &CorpusCase) -> CaseMeasurement {
@@ -444,6 +632,24 @@ fn print_summary(measurements: &[CaseMeasurement]) {
         })
         .count();
     println!("json_equality_disagreements={equality_disagreements}");
+}
+
+fn count_json_assertion_failures(
+    measurements: &[CaseMeasurement],
+    assertion_mode: AssertionMode,
+) -> usize {
+    measurements
+        .iter()
+        .filter(|measurement| match assertion_mode {
+            AssertionMode::None => false,
+            AssertionMode::Structural => measurement.json_value_equal == Some(false),
+            AssertionMode::String => measurement.json_string_equal == Some(false),
+            AssertionMode::Both => {
+                measurement.json_value_equal == Some(false)
+                    || measurement.json_string_equal == Some(false)
+            }
+        })
+        .count()
 }
 
 fn csv(value: &str) -> String {

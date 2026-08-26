@@ -1,0 +1,51 @@
+# Fast corpus selection for `HDDL_CORPUS_SELECTION=fast`.
+#
+# Selection policy:
+# - one case per discovered corpus domain;
+# - chosen from the fastest measured case in that domain in the
+#   2026-08-26 Slice03 corpus measurement CSV;
+# - keeps broad domain coverage while avoiding the measured slow tail.
+
+AssemblyHierarchical/genericLinearProblem_depth01.hddl
+Barman-BDI/pfile01.hddl
+Blocksworld-GTOHP/p01.hddl
+Blocksworld-HPDDL/pfile_005.hddl
+Depots/p01.hddl
+Factories-simple/pfile03.hddl
+Freecell-Learned-ECAI-16/probfreecell-04-5.hddl
+Hiking/p04.hddl
+Lamps/pfile03.pddl
+Logistics-Learned-ECAI-16/probLOGISTICS-04-0.hddl
+Minecraft-Player/p-003-003-003-003.hddl
+Minecraft-Regular/p-003-003-003-003.hddl
+Monroe_FO_1/pfile01-p-0092-set-up-shelter-no-pref-tlt.hddl
+Monroe_FO_19/pfile19-p-0037-clear-road-hazard-3-tlt.hddl
+Monroe_FO_2/pfile02-p-0063-clear-road-wreck-5-tlt.hddl
+Monroe_FO_20/pfile20-p-0037-clear-road-hazard-4-tlt.hddl
+Monroe_PO_1/pfile01-p-0014-fix-power-line-4.hddl
+Monroe_PO_19/pfile19-p-0084-provide-temp-heat-2.hddl
+Monroe_PO_2/pfile02-p-0051-plow-road-3.hddl
+Monroe_PO_20/pfile20-p-0080-provide-temp-heat-5.hddl
+Multiarm-Blocksworld/pfile_02_005.hddl
+PCP_1/p-pcp01.hddl
+PCP_16/p-pcp16.hddl
+PCP_17/p-pcp17.hddl
+PCP_2/p-pcp02.hddl
+PO_Barman-BDI/pfile01.hddl
+PO_Colouring/pfile03.hddl
+PO_Monroe_PO_1/pfile01-p-0088-quell-riot-1.hddl
+PO_Monroe_PO_2/pfile02-p-0068-provide-medical-attention-4.hddl
+PO_Monroe_PO_24/pfile24-p-0059-clear-road-hazard-3.hddl
+PO_Monroe_PO_25/pfile25-p-0050-clear-road-hazard-2.hddl
+PO_Rover/pfile02.hddl
+PO_Satellite/1obs-1sat-1mod.hddl
+PO_Transport/pfile01.hddl
+PO_UM-Translog/17-A-RegularTruckCustom.hddl
+PO_Woodworking/05--p02-part4.hddl
+Robot/pfile_02_001.hddl
+Rover-GTOHP/p03.hddl
+Satellite-GTOHP/p01.hddl
+Snake/pb-2slots-seed1.snake.hddl
+Towers/pfile_01.hddl
+Transport/pfile01.hddl
+Woodworking/03--p02-part2.hddl
