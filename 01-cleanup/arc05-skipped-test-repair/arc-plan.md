@@ -1,6 +1,6 @@
 # Arc05: Skipped Test Repair
 
-Version: 1.11
+Version: 1.12
 Date: 2026-08-26
 Expected investigation branch: `audit/ignored-tests`
 Expected repair branches: smaller `fix/...` branches as Slice01 requires
@@ -71,12 +71,19 @@ Route the two remaining inherited corpus ignored tests through the verified
 Slice04 policy surface. Default tests gain fast corpus coverage for IPC
 verification and JSON round-tripping, while full corpus validation remains an
 explicit policy command and CI scheduling stays for the next slice. Status:
-locally closed; CDC verification pending.
+CDC-verified.
+
+### slice06-github-actions-corpus-policy
+
+Wire the verified corpus command surfaces into GitHub Actions policy. This
+slice should decide and implement branch-push, PR, scheduled, and
+post-merge/main corpus gates without changing the parser/test semantics proven
+by Slice05. Status: planned; open set pending.
 
 ### Later Repair Slices
 
-Do not pre-open additional repair slices beyond Slice05 until the corpus test
-routing slice is CDC-verified. Later slices should be cut from the
+Do not pre-open additional repair slices beyond Slice06 until the corpus CI
+policy slice is opened and verified. Later slices should be cut from the
 remaining investigation findings, timing evidence, and Slice04 policy surface
 by route and review boundary, for example:
 
@@ -133,9 +140,19 @@ unknown behavior.
 | A5-5 | Arc05 closes with a composition report showing no inherited ignored-test behavior remains unexplained. | `test -f 01-cleanup/arc05-skipped-test-repair/closing-report.md` and inspect row walk. | serious | project-management | open | | |
 | A5-6 | Corpus slow-test policy decisions are based on deterministic case inventory and phase-level timing evidence rather than inferred runtime. | `test -f 01-cleanup/arc05-skipped-test-repair/slice03-corpus-measurement/closing-report.md` and inspect the measurement report for corpus counts, slowest cases, parse/verify timing, JSON phase timing, and structural-vs-string JSON comparison notes. | correctness | operator-follow-up | done | Slice03 CDC verification reproduced deterministic inventory of 900 cases, full measurement completion with 0 failures and 0 JSON equality disagreements, phase totals, distribution buckets, slowest cases/domains, and next-slice policy options. | Slice03 is measurement-first and does not finalize the CI policy by itself. |
 | A5-7 | The remaining corpus ignored tests have an addressable fast/full policy substrate before CI wiring or ignore removal. | `test -f 01-cleanup/arc05-skipped-test-repair/slice04-corpus-addressability-and-policy/cc-prompt.md` and inspect Slice04 close evidence for named fast/full commands, checked-in selection policy, JSON assertion policy, and unchanged workflow files. | serious | Slice03 bubble-up | done | Slice04 CDC verification reproduced named fast/full selection support, a checked-in 43-domain fast selection, custom manifest support, explicit JSON assertion modes, clean negative policy/input failures, and unchanged workflow/corpus-test boundaries. | Slice04 did not remove the two corpus ignores or change GitHub Actions. |
-| A5-8 | The two inherited corpus ignored tests are routed or replaced so no Rust `#[ignore]` annotations remain, while default tests run only fast corpus coverage. | `test -f 01-cleanup/arc05-skipped-test-repair/slice05-corpus-test-routing/cc-prompt.md`; after close, inspect Slice05 evidence for no ignored tests, fast IPC/JSON default coverage, full command preservation, and unchanged workflows. | serious | Slice04 bubble-up | open | Slice05 locally closed: `rg -n "#\\[ignore" src tests -g '*.rs'` has no matches; `cargo test --locked --test ipc` passes 1/0 ignored; `cargo test --locked --test json` passes 9/0 ignored; full `HDDL_CORPUS_SELECTION=full HDDL_CORPUS_ASSERT=both cargo run --locked --example corpus_measure` passes 900/900 with zero failures and zero JSON assertion failures; workflows unchanged. CDC verification is pending. | CI policy remains separate until CDC verifies the test-routing surface. |
+| A5-8 | The two inherited corpus ignored tests are routed or replaced so no Rust `#[ignore]` annotations remain, while default tests run only fast corpus coverage. | `test -f 01-cleanup/arc05-skipped-test-repair/slice05-corpus-test-routing/cc-prompt.md`; after close, inspect Slice05 evidence for no ignored tests, fast IPC/JSON default coverage, full command preservation, and unchanged workflows. | serious | Slice04 bubble-up | done | Slice05 CDC verification reproduced: `rg -n "#\\[ignore" src tests -g '*.rs'` has no matches; `cargo test --locked --test ipc` passes 1/0 ignored; `cargo test --locked --test json` passes 9/0 ignored; `cargo test --locked --all-targets` passes with IPC/JSON enabled; full `HDDL_CORPUS_SELECTION=full HDDL_CORPUS_ASSERT=both cargo run --locked --example corpus_measure` passes 900/900 with zero failures and zero JSON assertion failures; workflows unchanged. | CI policy remains separate for Slice06. |
+| A5-9 | GitHub Actions corpus policy is opened against the verified fast/default and full explicit command surfaces. | `test -f 01-cleanup/arc05-skipped-test-repair/slice06-github-actions-corpus-policy/cc-prompt.md`; inspect Slice06 open set for branch-push, PR, scheduled, and post-merge/main decisions. | serious | Slice05 bubble-up | open | | Slice05 verified the command surface but did not change workflows. |
 
 ## Version History
+
+### v1.12 - 2026-08-26
+
+Slice05 CDC verification landed at feature commit `af0968b`. CDC reproduced
+the no-ignore check, focused IPC/JSON fast corpus tests, full default locked
+test gate, fast and full corpus measurement commands, unchanged workflow
+boundary, `actionlint`, and all mechanical Rust gates. Arc05 now has no
+remaining inherited Rust `#[ignore]` annotations; the next planned slice is
+Slice06 GitHub Actions corpus policy.
 
 ### v1.11 - 2026-08-26
 

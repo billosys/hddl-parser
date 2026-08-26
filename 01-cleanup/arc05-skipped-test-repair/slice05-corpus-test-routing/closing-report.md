@@ -3,7 +3,7 @@
 Date: 2026-08-26
 Branch: `test/corpus-test-routing`
 Base: `8e36a6a tools: add corpus selection policy`
-Status: locally closed; CDC verification pending
+Status: locally closed; CDC verified
 
 ## Scope
 
@@ -127,3 +127,10 @@ where CI time is constrained, and place the full
 `HDDL_CORPUS_SELECTION=full HDDL_CORPUS_ASSERT=both` command on the PR and/or
 post-merge/main boundary after the operator confirms runtime and platform
 coverage expectations.
+
+## CDC Verification
+
+CDC verification landed on 2026-08-26 in `cdc-verification.md`. CDC reproduced
+the no-ignore check, focused IPC/JSON tests, the full default locked test gate,
+fast and full corpus commands, unchanged workflow check, `actionlint`, and the
+mechanical Rust quality gates against feature commit `af0968b`.
