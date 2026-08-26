@@ -1,6 +1,6 @@
 # Arc05: Skipped Test Repair
 
-Version: 1.7
+Version: 1.9
 Date: 2026-08-26
 Expected investigation branch: `audit/ignored-tests`
 Expected repair branches: smaller `fix/...` branches as Slice01 requires
@@ -63,12 +63,12 @@ Make the corpus measurement utility policy-ready without wiring CI yet. This
 slice adds addressable corpus selections, a checked-in fast-selection policy,
 named fast/full command surfaces, and explicit JSON assertion behavior so the
 remaining corpus tests can move behind intentional gates rather than inherited
-`#[ignore]` annotations. Status: open.
+`#[ignore]` annotations. Status: CDC-verified.
 
 ### Later Repair Slices
 
 Do not pre-open additional repair slices beyond Slice04 until the addressable
-corpus policy substrate is complete. Later slices should be cut from the
+corpus policy substrate is CDC-verified. Later slices should be cut from the
 remaining investigation findings, timing evidence, and Slice04 policy surface
 by route and review boundary, for example:
 
@@ -124,9 +124,25 @@ unknown behavior.
 | A5-4 | Repaired tests either run in the default locked test gate or move behind an explicit slow/corpus gate with documented invocation. | `cargo test --locked --all-targets` and inspect any slow-test command introduced by later slices. | serious | arc-plan | open | Slice02 repair commit `e534df2` puts the three fast non-corpus ignored tests in the default locked gate. Slice03 leaves the two corpus ignores in place and records opt-in measurement commands plus timing evidence for the later slow/corpus policy slice. | Corpus policy is not finalized yet. |
 | A5-5 | Arc05 closes with a composition report showing no inherited ignored-test behavior remains unexplained. | `test -f 01-cleanup/arc05-skipped-test-repair/closing-report.md` and inspect row walk. | serious | project-management | open | | |
 | A5-6 | Corpus slow-test policy decisions are based on deterministic case inventory and phase-level timing evidence rather than inferred runtime. | `test -f 01-cleanup/arc05-skipped-test-repair/slice03-corpus-measurement/closing-report.md` and inspect the measurement report for corpus counts, slowest cases, parse/verify timing, JSON phase timing, and structural-vs-string JSON comparison notes. | correctness | operator-follow-up | done | Slice03 CDC verification reproduced deterministic inventory of 900 cases, full measurement completion with 0 failures and 0 JSON equality disagreements, phase totals, distribution buckets, slowest cases/domains, and next-slice policy options. | Slice03 is measurement-first and does not finalize the CI policy by itself. |
-| A5-7 | The remaining corpus ignored tests have an addressable fast/full policy substrate before CI wiring or ignore removal. | `test -f 01-cleanup/arc05-skipped-test-repair/slice04-corpus-addressability-and-policy/cc-prompt.md` and inspect Slice04 close evidence for named fast/full commands, checked-in selection policy, JSON assertion policy, and unchanged workflow files. | serious | Slice03 bubble-up | open | Slice04 open set created from Slice03 measurement evidence. | Slice04 should not remove the two corpus ignores or change GitHub Actions. |
+| A5-7 | The remaining corpus ignored tests have an addressable fast/full policy substrate before CI wiring or ignore removal. | `test -f 01-cleanup/arc05-skipped-test-repair/slice04-corpus-addressability-and-policy/cc-prompt.md` and inspect Slice04 close evidence for named fast/full commands, checked-in selection policy, JSON assertion policy, and unchanged workflow files. | serious | Slice03 bubble-up | done | Slice04 CDC verification reproduced named fast/full selection support, a checked-in 43-domain fast selection, custom manifest support, explicit JSON assertion modes, clean negative policy/input failures, and unchanged workflow/corpus-test boundaries. | Slice04 did not remove the two corpus ignores or change GitHub Actions. |
 
 ## Version History
+
+### v1.9 - 2026-08-26
+
+Slice04 CDC verification landed. CDC reproduced the named fast/full and custom
+manifest corpus runs, all four JSON assertion modes, negative policy/input
+failure paths, unchanged workflow/corpus-test boundaries, and the full locked
+local gate. Arc05 can now plan the final corpus test routing and CI policy
+slices against the verified addressability substrate.
+
+### v1.8 - 2026-08-26
+
+Slice04 locally closed. The corpus runner now exposes named fast/full
+selections, custom manifest support, clean non-zero policy/input errors, and
+explicit JSON assertion modes. The checked-in fast selection covers 43 domains
+using the fastest measured case per domain from Slice03 evidence. CI wiring and
+corpus `#[ignore]` removal remain later work after CDC verification.
 
 ### v1.7 - 2026-08-26
 
