@@ -1,6 +1,6 @@
 # Arc05: Skipped Test Repair
 
-Version: 1.3
+Version: 1.4
 Date: 2026-08-26
 Expected investigation branch: `audit/ignored-tests`
 Expected repair branches: smaller `fix/...` branches as Slice01 requires
@@ -46,7 +46,7 @@ malformed typed-parameter diagnostics exposed by
 `forgotten_dash_validation_test` and
 `forgotten_question_mark_validation_test`, and remove only those three
 `#[ignore]` annotations once the tests pass in the default locked gate. Status:
-open.
+CDC-verified.
 
 ### slice03-corpus-measurement
 
@@ -111,12 +111,20 @@ unknown behavior.
 |----|-----------|--------|--------------|--------|--------|----------|-------|
 | A5-1 | Slice01 investigates every ignored Rust test without changing source, tests, manifests, workflows, README, fixtures, or ignore annotations. | `rg -n "#\\[ignore" src tests -g '*.rs'` and inspect Slice01 close evidence; `git diff --name-status` confirms read-only implementation scope. | serious | operator-follow-up | open | `slice01-ignored-test-investigation/closing-report.md` locally closes the read-only investigation; implementation `git diff --name-status` is empty and the allowed workbench report is ignored. CDC verification is pending. | |
 | A5-2 | Slice01 classifies each ignored test into a follow-up route: test-only fix, code-and-test repair, code-and-test rewrite, slow/corpus gate, or valid deferral. | `test -f 01-cleanup/arc05-skipped-test-repair/slice01-ignored-test-investigation/closing-report.md` and inspect classification matrix. | serious | operator-follow-up | open | Slice01 local close classifies `file_type_test` as test-only fix; the two forgotten-declaration tests as code-and-test repair; and the IPC/JSON corpus tests as slow/corpus gate. CDC verification is pending. | |
-| A5-3 | Later repair slices are opened only after Slice01 findings identify concrete route boundaries. | `find 01-cleanup/arc05-skipped-test-repair -maxdepth 2 -name 'slice-doc.md' -print` and inspect arc version history. | correctness | project-management | open | `slice02-fast-ignored-test-repair` opened from Slice01's route matrix for the one test-only fix and two code-and-test repairs. | Additional corpus-policy slices remain unopened while CDC and operator discuss the test-infrastructure design. |
+| A5-3 | Later repair slices are opened only after Slice01 findings identify concrete route boundaries. | `find 01-cleanup/arc05-skipped-test-repair -maxdepth 2 -name 'slice-doc.md' -print` and inspect arc version history. | correctness | project-management | done | `slice02-fast-ignored-test-repair` opened from Slice01's route matrix and CDC-verified; `slice03-corpus-measurement` opened for the remaining corpus route. | Additional corpus-policy slices remain unopened until Slice03 measurement evidence lands. |
 | A5-4 | Repaired tests either run in the default locked test gate or move behind an explicit slow/corpus gate with documented invocation. | `cargo test --locked --all-targets` and inspect any slow-test command introduced by later slices. | serious | arc-plan | open | | |
 | A5-5 | Arc05 closes with a composition report showing no inherited ignored-test behavior remains unexplained. | `test -f 01-cleanup/arc05-skipped-test-repair/closing-report.md` and inspect row walk. | serious | project-management | open | | |
 | A5-6 | Corpus slow-test policy decisions are based on deterministic case inventory and phase-level timing evidence rather than inferred runtime. | `test -f 01-cleanup/arc05-skipped-test-repair/slice03-corpus-measurement/closing-report.md` and inspect the measurement report for corpus counts, slowest cases, parse/verify timing, JSON phase timing, and structural-vs-string JSON comparison notes. | correctness | operator-follow-up | open | | Slice03 is measurement-first and must not finalize the CI policy by itself. |
 
 ## Version History
+
+### v1.4 - 2026-08-26
+
+Slice02 CDC verification landed at feature commit `e534df2`. The three fast
+non-corpus ignored tests are now enabled and passing in the default locked
+test gate, with specific AST/diagnostic assertions. The only remaining ignored
+Rust tests are the IPC and JSON corpus tests, preserving Slice03 as the
+measurement-first path for corpus policy.
 
 ### v1.3 - 2026-08-26
 
