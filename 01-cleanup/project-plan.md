@@ -1,6 +1,6 @@
 # HDDL-Parser Cleanup Project Plan
 
-Version: 2.15
+Version: 2.16
 Date: 2026-08-25
 Planning branch: `planning` orphan branch
 Implementation base: local `main` at `ec2d70e`
@@ -82,7 +82,10 @@ arc. Slice03 is CDC-verified with a test-only integration baseline. Slice04 is
 CDC-verified: borrowed byte-input APIs now accept `&[u8]`, Vec-backed callers
 remain covered, the malformed problem-parser panic path now returns
 `ParsingError::Syntactic`, and crate-root export narrowing remains skipped and
-gated. Slice05 is next.
+gated. Slice05 is locally closed: flawed-domain integration-test helper
+duplication is consolidated without weakening assertion precision, scoped
+private/test-only spelling drift is repaired, and public misspelled enum
+variants remain deferred. CDC verification is pending.
 
 The warning-fix PR is treated as predecessor work, not part of this planning
 packet.
@@ -102,6 +105,15 @@ arc can be executed as a focused PR or PR series.
 | P-6 | Arc04 is active and Slice01 opens as a read-only cohesion diagnosis audit from Arc03 final feature state. | `test -f 01-cleanup/arc04-rust-cohesion-audit/slice01-cohesion-diagnosis-audit/cc-prompt.md` and `rg -n "diagnosis-only|read-only|d820065|RUST-007|cohesion" 01-cleanup/arc04-rust-cohesion-audit/arc-plan.md 01-cleanup/arc04-rust-cohesion-audit/slice01-cohesion-diagnosis-audit/*.md` | serious | operator-follow-up | done | Arc04 promoted to active and Slice01 open set created. | Slice01 is the current Arc04 entry point. |
 
 ## Version History
+
+### v2.16 - 2026-08-26
+
+Arc04 Slice05 locally closed the test helper/private naming cohesion repair.
+The feature branch consolidates repeated flawed-domain integration-test result
+handling, preserves fixture coverage and ignored-test status, renames the
+private quantifier-elimination module and test-only spelling drift, and leaves
+`ParsingError::Lexiacal` plus `Transformation::QuantifierElimintation`
+unchanged behind the explicit public API gate. CDC verification is pending.
 
 ### v2.15 - 2026-08-26
 
