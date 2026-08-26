@@ -1,6 +1,6 @@
 # HDDL-Parser Cleanup Project Plan
 
-Version: 2.7
+Version: 2.8
 Date: 2026-08-26
 Planning branch: `planning` orphan branch
 Implementation base: local `main` at `ec2d70e`
@@ -37,7 +37,7 @@ Explicit non-goals:
 | arc01-github-actions-ci | Adds the first GitHub Actions CI workflow and status-facing project polish. | closed locally; PR-ready after upstream base settles | Warning-fix PR #5 merged or equivalent local baseline. |
 | arc02-rust-2024-edition | Migrates the crate to the latest Rust edition using the standard edition workflow. | active; slices CDC-verified, arc close pending | arc01 gives CI coverage for the migration PR. |
 | arc03-rust-best-practices | Audits Rust API, error handling, CLI, tests, and maintainability issues; baselines behavior with tests before production repairs. | closed locally | arc01 gives CI coverage; arc02 defines the target edition. |
-| arc04-rust-cohesion-audit | Performs the final whole-codebase consistency pass so Rust idioms, error shapes, data-flow patterns, and module conventions feel deliberately unified. | placeholder opened; next cleanup arc | arc03 fixes land first so cohesion is audited against the settled codebase. |
+| arc04-rust-cohesion-audit | Performs the final whole-codebase consistency pass so Rust idioms, error shapes, data-flow patterns, and module conventions feel deliberately unified. | active; Slice01 opened | arc03 local feature state at `d820065` gives the repaired-codebase audit base. |
 
 ## Current Status
 
@@ -48,29 +48,32 @@ including the strict Rust 2024 compatibility CI gate. Arc02 still needs
 arc-level composition closure and upstream base reconciliation before the Rust
 2024 PR should be opened.
 
-Arc03 is active. Slice01 is CDC-verified as a diagnosis-only audit with only
-workbench audit artifacts in the implementation worktree. Slice02 is
+Arc03 is closed locally. Slice01 is CDC-verified as a diagnosis-only audit with
+only workbench audit artifacts in the implementation worktree. Slice02 is
 CDC-verified with test-only baseline characterization coverage before any
 production repair slice begins. Slice03 maps the audit findings into five
-focused Arc03 repair slices and one Arc04 deferral, and is CDC-verified:
-CLI exit codes, structured parser/transform errors, LSP error boundaries and
-metadata, LSP diagnostic lock scope, Cargo reproducibility policy, and
-RUST-007 public API cohesion for Arc04. Slice04 is CDC-verified: RUST-001 is
-fixed, the updated CLI baselines pass, and the feature diff includes
-operator-approved `workbench` ignore hygiene. Slice05 is CDC-verified:
-RUST-002/RUST-003 mapped panic paths now return structured errors and the
-former panic probes exit through Slice04's ordinary CLI error path. Slice06 is
-CDC-verified: RUST-005/RUST-008 scoped LSP request-boundary and initialize
-metadata failures are fixed, with RUST-004 intentionally left for Slice07.
-Slice07 is CDC-verified: RUST-004 diagnostic lock scope is fixed, with
-deterministic runtime contention coverage deferred to a future test hook or
-in-crate direct handler harness. Slice08 is CDC-verified: RUST-006 Cargo
-reproducibility policy is fixed with explicit dependency requirements and a
-tracked Cargo-generated lockfile. Arc03 is closed locally: all slices have CDC
-verification, the final composed feature state passes the workflow-equivalent
-gate, and RUST-007 is routed to Arc04 public API cohesion. Arc04
-remains the final placeholder: a whole-codebase cohesion pass that
-runs after Arc03 so consistency is judged against the repaired codebase.
+focused Arc03 repair slices and one Arc04 deferral, and is CDC-verified: CLI
+exit codes, structured parser/transform errors, LSP error boundaries and
+metadata, LSP diagnostic lock scope, Cargo reproducibility policy, and RUST-007
+public API cohesion for Arc04. Slice04 is CDC-verified: RUST-001 is fixed, the
+updated CLI baselines pass, and the feature diff includes operator-approved
+`workbench` ignore hygiene. Slice05 is CDC-verified: RUST-002/RUST-003 mapped
+panic paths now return structured errors and the former panic probes exit
+through Slice04's ordinary CLI error path. Slice06 is CDC-verified:
+RUST-005/RUST-008 scoped LSP request-boundary and initialize metadata failures
+are fixed, with RUST-004 intentionally left for Slice07. Slice07 is
+CDC-verified: RUST-004 diagnostic lock scope is fixed, with deterministic
+runtime contention coverage deferred to a future test hook or in-crate direct
+handler harness. Slice08 is CDC-verified: RUST-006 Cargo reproducibility policy
+is fixed with explicit dependency requirements and a tracked Cargo-generated
+lockfile. Arc03 is closed locally: all slices have CDC verification, the final
+composed feature state passes the workflow-equivalent gate, and RUST-007 is
+routed to Arc04 public API cohesion.
+
+Arc04 is active. Slice01 is opened as a diagnosis-only cohesion audit from the
+Arc03 final feature state at `d820065`. It uses non-overwriting cohesion-named
+workbench files and explicitly re-enters RUST-007 before any production repair,
+test, manifest, workflow, README, or behavior change is allowed.
 
 The warning-fix PR is treated as predecessor work, not part of this planning
 packet.
@@ -84,11 +87,18 @@ arc can be executed as a focused PR or PR series.
 |----|-----------|--------|--------------|--------|--------|----------|-------|
 | P-1 | Arc01 CI is closed and composed. | `test -f 01-cleanup/arc01-github-actions-ci/closing-report.md` and inspect row walk. | serious | project-plan | done | `01-cleanup/arc01-github-actions-ci/closing-report.md` records all Arc01 rows done and the full local workflow-equivalent command passing. | CI PR readiness depends on upstream PR #5 base/merge sequencing. |
 | P-2 | Arc02 edition migration has an active arc plan and Slice01/Slice02 open sets. | `test -f 01-cleanup/arc02-rust-2024-edition/arc-plan.md` and `test -f 01-cleanup/arc02-rust-2024-edition/slice01-edition-migration/cc-prompt.md` and `test -f 01-cleanup/arc02-rust-2024-edition/slice02-edition-verification-and-pr/cc-prompt.md` | correctness | project-plan | done | Arc02 plan promoted from placeholder; Slice01 and Slice02 open sets created. | Slice02 executes after Slice01 close evidence exists. |
-| P-3 | Arc03 Rust best-practices audit/fix arc is active, with Slice01 opened as read-only and Slice02 reserved for pre-repair characterization tests. | `test -f 01-cleanup/arc03-rust-best-practices/arc-plan.md` and `test -f 01-cleanup/arc03-rust-best-practices/slice01-diagnosis-only-audit/cc-prompt.md` and `rg -n "diagnosis-only|read-only|baseline characterization|before production" 01-cleanup/arc03-rust-best-practices/arc-plan.md 01-cleanup/arc03-rust-best-practices/slice01-diagnosis-only-audit/*.md` | correctness | project-plan | done | Arc03 plan v1.0 created and Slice01 open set added. | Arc03 is now closed locally; see `arc03-rust-best-practices/closing-report.md`. |
+| P-3 | Arc03 Rust best-practices audit/fix arc was opened with Slice01 read-only and Slice02 reserved for pre-repair characterization tests. | `test -f 01-cleanup/arc03-rust-best-practices/arc-plan.md` and `test -f 01-cleanup/arc03-rust-best-practices/slice01-diagnosis-only-audit/cc-prompt.md` and `rg -n "diagnosis-only|read-only|baseline characterization|before production" 01-cleanup/arc03-rust-best-practices/arc-plan.md 01-cleanup/arc03-rust-best-practices/slice01-diagnosis-only-audit/*.md` | correctness | project-plan | done | Arc03 plan v1.0 created and Slice01 open set added. | Arc03 is now closed locally; see `arc03-rust-best-practices/closing-report.md`. |
 | P-4 | Project boundaries keep CI, edition migration, best-practices, and cohesion work in separate upstream PRs or PR families. | `rg -n "fix/cargo-warnings|feature/add-ci|edition/rust-2024|best-practices|cohesion|separate" 01-cleanup/project-plan.md 01-cleanup/arc*/arc-plan.md` | serious | issue-4 | done | Slice03 fix map separates Arc03 into PR groups for CLI exits, structured parser/transform errors, LSP robustness, and Cargo reproducibility, while RUST-007 is deferred to Arc04 cohesion. | Upstream branches should stay focused even if multiple Arc03 slices later land in one coordinated PR family. |
-| P-5 | Arc04 final Rust cohesion audit has a placeholder that records scope, dependency, and the project-wide consistency emphasis. | `test -f 01-cleanup/arc04-rust-cohesion-audit/arc-plan.md` and `rg -n "consistency|cohesion|unified" 01-cleanup/arc04-rust-cohesion-audit/arc-plan.md` | correctness | operator-follow-up | done | Arc04 placeholder opened with whole-codebase consistency scope. | Arc04 is the next cleanup arc after Arc03's local close. |
+| P-5 | Arc04 final Rust cohesion audit records scope, dependency, and the project-wide consistency emphasis. | `test -f 01-cleanup/arc04-rust-cohesion-audit/arc-plan.md` and `rg -n "consistency|cohesion|unified" 01-cleanup/arc04-rust-cohesion-audit/arc-plan.md` | correctness | operator-follow-up | done | Arc04 opened with whole-codebase consistency scope. | Arc04 is now active. |
+| P-6 | Arc04 is active and Slice01 opens as a read-only cohesion diagnosis audit from Arc03 final feature state. | `test -f 01-cleanup/arc04-rust-cohesion-audit/slice01-cohesion-diagnosis-audit/cc-prompt.md` and `rg -n "diagnosis-only|read-only|d820065|RUST-007|cohesion" 01-cleanup/arc04-rust-cohesion-audit/arc-plan.md 01-cleanup/arc04-rust-cohesion-audit/slice01-cohesion-diagnosis-audit/*.md` | serious | operator-follow-up | done | Arc04 promoted to active and Slice01 open set created. | Slice01 is the current Arc04 entry point. |
 
 ## Version History
+
+### v2.8 - 2026-08-26
+
+Arc04 promoted from placeholder to active planning. Slice01 opened as a
+diagnosis-only, read-only Rust cohesion audit from Arc03 final feature state at
+`d820065`, with non-overwriting workbench filenames and RUST-007 re-entry.
 
 ### v2.7 - 2026-08-26
 
