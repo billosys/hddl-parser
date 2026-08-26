@@ -1,6 +1,6 @@
 # Arc04: Rust Cohesion Audit And Fixes
 
-Version: 1.8
+Version: 1.9
 Date: 2026-08-25
 Expected audit branch: `audit/rust-cohesion`
 Expected repair branches: smaller `fix/...` branches as Slice02 requires
@@ -81,9 +81,8 @@ public API/error/AST contract work.
 
 Consolidate duplicated test assertion helpers and repair private/test-only
 naming drift after the behavior baselines and parser repair are settled. Status:
-locally closed; CDC verification pending. Public enum variant spelling repairs
-remain out of scope unless the operator explicitly approves a public API
-compatibility plan.
+CDC-verified. Public enum variant spelling repairs remain out of scope unless
+the operator explicitly approves a public API compatibility plan.
 
 ### Public API Gates And Deferrals
 
@@ -164,12 +163,19 @@ intentional variation.
 |----|-----------|--------|--------------|--------|--------|----------|-------|
 | A4-1 | Slice01 runs as a diagnosis-only, read-only cohesion audit from Arc03 final feature state. | `test -f 01-cleanup/arc04-rust-cohesion-audit/slice01-cohesion-diagnosis-audit/closing-report.md` and inspect row walk. | serious | collaboration-framework | done | `slice01-cohesion-diagnosis-audit/cdc-verification.md` verifies 12/12 rows, workbench-only implementation diff, six cohesion findings, seven negative checks, RUST-007 re-entry, and full locked quality gate reproduction. | Slice02 is the next planning-only fix-map slice. |
 | A4-2 | Slice02 maps every Slice01 finding to a focused repair slice, accepted variation, later-arc deferral, or duplicate/no-op. | `test -f 01-cleanup/arc04-rust-cohesion-audit/slice02-triage-and-fix-map/fix-map.md` and inspect mapping. | serious | project-management | done | `slice02-triage-and-fix-map/cdc-verification.md` verifies all six cohesion findings are dispositioned, public API gates are explicit, Slice03-Slice05 open sets are complete, and no downstream close artifacts were created. | Slice03 characterization baselines are next. |
-| A4-3 | Accepted Rust idiom variations are explicitly documented with local reasons instead of silently drifting. | `rg -n "accepted variation|intentional divergence|local reason" 01-cleanup/arc04-rust-cohesion-audit` | correctness | operator-follow-up | open | | |
-| A4-4 | Every production repair slice opened by Slice02 closes with CDC verification and a focused behavior-preservation story. | `find 01-cleanup/arc04-rust-cohesion-audit -path '*/closing-report.md' -print` and inspect repair rows. | serious | collaboration-framework | open | `slice04-parser-api-and-error-boundary/cdc-verification.md` verifies the parser byte-slice API and malformed problem-parser syntactic-error repair with full local gate reproduction. `slice05-test-helper-and-private-naming-cohesion/closing-report.md` locally closes the test helper and private/test naming cleanup with no public API changes; CDC verification is pending. | Slice03 characterization baseline and Slice04 repair are CDC-verified; Slice05 repair is locally closed pending CDC. |
-| A4-5 | Final Arc04 feature state passes the full local gate, including locked Cargo verification. | `cargo fmt --check && cargo check --locked --all-targets && RUSTFLAGS="-D rust-2024-compatibility" cargo check --locked --all-targets && cargo clippy --locked --all-targets -- -D warnings && cargo test --locked --all-targets && cargo build --locked --release --bins && ./target/release/hddl_analyzer --help && actionlint .github/workflows/ci.yml && git diff --check` | serious | arc01-arc03 | open | | |
+| A4-3 | Accepted Rust idiom variations are explicitly documented with local reasons instead of silently drifting. | `rg -n "accepted variation|intentional divergence|local reason" 01-cleanup/arc04-rust-cohesion-audit` | correctness | operator-follow-up | done | `slice02-triage-and-fix-map/fix-map.md` documents accepted variations, local rationale, and later-arc public API deferrals; Slice05 CDC verification confirms public misspelled variants remain deliberately deferred rather than silently renamed. | Remaining public API/error/AST work is gated by operator GO or a future public API contract arc. |
+| A4-4 | Every production repair slice opened by Slice02 closes with CDC verification and a focused behavior-preservation story. | `find 01-cleanup/arc04-rust-cohesion-audit -path '*/closing-report.md' -print` and inspect repair rows. | serious | collaboration-framework | done | `slice04-parser-api-and-error-boundary/cdc-verification.md` verifies the parser byte-slice API and malformed problem-parser syntactic-error repair with full local gate reproduction. `slice05-test-helper-and-private-naming-cohesion/cdc-verification.md` verifies the test helper and private/test naming cleanup with no public API changes. | Slice03 characterization baseline plus Slice04/Slice05 repairs are CDC-verified; Arc04 is ready for arc-level closure. |
+| A4-5 | Final Arc04 feature state passes the full local gate, including locked Cargo verification. | `cargo fmt --check && cargo check --locked --all-targets && RUSTFLAGS="-D rust-2024-compatibility" cargo check --locked --all-targets && cargo clippy --locked --all-targets -- -D warnings && cargo test --locked --all-targets && cargo build --locked --release --bins && ./target/release/hddl_analyzer --help && actionlint .github/workflows/ci.yml && git diff --check` | serious | arc01-arc03 | done | CDC reproduced the full local gate on `fix/test-private-naming-cohesion` at `7e2d8a7`, including locked check, Rust 2024 compatibility, Clippy `-D warnings`, full tests, release build, binary help smoke, actionlint, and whitespace checks. | Full tests preserve the inherited ignored-test pattern: 1 library ignored, 2 flawed ignored, 1 IPC ignored, and 1 JSON ignored. |
 | A4-6 | Arc04 close report bubbles up whether HDDL-Parser cleanup can close or needs another remediation arc. | `test -f 01-cleanup/arc04-rust-cohesion-audit/closing-report.md` and inspect final decision. | serious | project-management | open | | |
 
 ## Version History
+
+### v1.9 - 2026-08-26
+
+Slice05 CDC verification landed. The test helper/private naming cohesion repair
+is accepted with public API spellings unchanged and explicitly deferred. All
+planned Arc04 repair slices are now CDC-verified, the final Arc04 feature state
+passes the full locked local gate, and Arc04 is ready for arc-level closure.
 
 ### v1.8 - 2026-08-26
 

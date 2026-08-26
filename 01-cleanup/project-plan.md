@@ -1,6 +1,6 @@
 # HDDL-Parser Cleanup Project Plan
 
-Version: 2.17
+Version: 2.18
 Date: 2026-08-25
 Planning branch: `planning` orphan branch
 Implementation base: local `main` at `ec2d70e`
@@ -40,7 +40,7 @@ Explicit non-goals:
 | arc01-github-actions-ci | Adds the first GitHub Actions CI workflow and status-facing project polish. | closed locally; PR-ready after upstream base settles | Warning-fix PR #5 merged or equivalent local baseline. |
 | arc02-rust-2024-edition | Migrates the crate to the latest Rust edition using the standard edition workflow. | active; slices CDC-verified, arc close pending | arc01 gives CI coverage for the migration PR. |
 | arc03-rust-best-practices | Audits Rust API, error handling, CLI, tests, and maintainability issues; baselines behavior with tests before production repairs. | closed locally | arc01 gives CI coverage; arc02 defines the target edition. |
-| arc04-rust-cohesion-audit | Performs the final whole-codebase consistency pass so Rust idioms, error shapes, data-flow patterns, and module conventions feel deliberately unified. | active; Slice05 locally closed, CDC verification pending | arc03 local feature state at `d820065` gives the repaired-codebase audit base. |
+| arc04-rust-cohesion-audit | Performs the final whole-codebase consistency pass so Rust idioms, error shapes, data-flow patterns, and module conventions feel deliberately unified. | active; all planned slices CDC-verified, arc close next | arc03 local feature state at `d820065` gives the repaired-codebase audit base. |
 | arc05-skipped-test-repair | Investigates and repairs inherited ignored tests, including refactoring or rewriting tested code when an ignored test exposes stale or defective behavior. | planned; Slice01 open set created | arc04 should close first so test-repair work starts from the final cohesion baseline. |
 
 ## Current Status
@@ -86,10 +86,11 @@ arc. Slice03 is CDC-verified with a test-only integration baseline. Slice04 is
 CDC-verified: borrowed byte-input APIs now accept `&[u8]`, Vec-backed callers
 remain covered, the malformed problem-parser panic path now returns
 `ParsingError::Syntactic`, and crate-root export narrowing remains skipped and
-gated. Slice05 is locally closed: flawed-domain integration-test helper
+gated. Slice05 is CDC-verified: flawed-domain integration-test helper
 duplication is consolidated without weakening assertion precision, scoped
 private/test-only spelling drift is repaired, and public misspelled enum
-variants remain deferred. CDC verification is pending.
+variants remain deferred. All planned Arc04 slices are now CDC-verified; Arc04
+is ready for arc-level closure.
 
 Arc05 is planned as a follow-on remediation arc for inherited ignored tests.
 Slice01 is opened as an investigation-only slice that records exactly why each
@@ -115,6 +116,14 @@ arc can be executed as a focused PR or PR series.
 | P-7 | Arc05 skipped-test repair arc is planned with a read-only Slice01 investigation open set before any ignored tests or tested code are changed. | `test -f 01-cleanup/arc05-skipped-test-repair/arc-plan.md` and `test -f 01-cleanup/arc05-skipped-test-repair/slice01-ignored-test-investigation/cc-prompt.md` and `rg -n "investigation-only|read-only|ignored tests|fix only the test|repair the code|rewrite the code" 01-cleanup/arc05-skipped-test-repair` | correctness | operator-follow-up | done | Arc05 arc plan and Slice01 open set created. | Later repair slices remain intentionally unopened until Slice01 classifies the ignored tests. |
 
 ## Version History
+
+### v2.18 - 2026-08-26
+
+Arc04 Slice05 CDC verification landed. All planned Arc04 slices are now
+CDC-verified, the final feature state passes the full locked local gate, and
+Arc04 can proceed to arc-level closure. Public API/error/AST compatibility work
+remains deferred behind explicit operator GO or a future public API contract
+arc.
 
 ### v2.17 - 2026-08-26
 
