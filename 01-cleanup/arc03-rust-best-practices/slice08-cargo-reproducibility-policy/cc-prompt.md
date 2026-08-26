@@ -5,6 +5,10 @@ You are working in HDDL-Parser on Arc03 Slice08:
 
 This is a focused repair slice for RUST-006.
 
+Start from the verified Slice07 base, `fix/lsp-diagnostic-lock-scope` at
+`e14078c`, unless Slice07 has already been merged upstream. Create
+`fix/cargo-reproducibility-policy` from that base.
+
 Read first:
 
 - `/Users/oubiwann/lab/billosys/hddl-parser/.worktrees/planning/01-cleanup/project-plan.md`
@@ -25,6 +29,8 @@ Constraints:
 - Do not mix runtime behavior repairs or public API cleanup into the Cargo policy diff.
 - Do not manually edit generated `Cargo.lock` contents.
 - If you decide not to track `Cargo.lock`, stop and discuss the rationale before implementing that exception.
+- Treat all runtime, LSP, CLI, parser, transform, and public API behavior as
+  settled baseline. This slice should be Cargo policy only.
 
 Run and record:
 
@@ -40,7 +46,7 @@ cargo build --release --bins
 ./target/release/hddl_analyzer --help
 actionlint .github/workflows/ci.yml
 git diff --check
-git diff --name-only
+git diff --name-only e14078c..HEAD
 ```
 
 Closing report requirements:

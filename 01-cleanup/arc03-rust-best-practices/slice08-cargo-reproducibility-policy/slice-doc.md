@@ -1,9 +1,11 @@
 # Slice08: Cargo Reproducibility Policy
 
-Version: 1.0
-Date: 2026-08-25
+Version: 1.1
+Date: 2026-08-26
 Arc: `arc03-rust-best-practices`
 Expected implementation branch: `fix/cargo-reproducibility-policy`
+Expected base: `fix/lsp-diagnostic-lock-scope` at `e14078c`, unless Slice07
+has already been merged upstream.
 
 ## Goal
 
@@ -38,3 +40,15 @@ Inspect manifest requirements, lockfile tracking state, and `.gitignore`; run th
 - Dependency requirements are no longer wildcard-only.
 - Lockfile policy is observable through tracked files and `git ls-files Cargo.lock`.
 - The full local workflow-equivalent gate passes.
+
+## Version History
+
+### v1.1 - 2026-08-26
+
+Refreshed the open set after Slice07 CDC verification. Slice08 should start
+from `e14078c` or a merged equivalent so the Cargo-only diff is checked
+against the settled behavior and LSP repairs.
+
+### v1.0 - 2026-08-25
+
+Initial open set from Slice03 fix mapping.
