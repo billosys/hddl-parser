@@ -1,6 +1,6 @@
 # Arc03: Rust Best-Practices Audit And Fixes
 
-Version: 1.9
+Version: 1.10
 Date: 2026-08-25
 Expected branches: `audit/rust-best-practices`, then smaller `test/...` and
 `fix/...` branches as the audit requires.
@@ -27,7 +27,7 @@ feels intentionally consistent after those repairs land.
 | slice05-structured-parser-transform-errors | Fix RUST-002 and RUST-003 by replacing recoverable parser/transpiler/transform panics with structured errors. | Slice04 preferred. | CDC-verified. PR group 2: structured parser and transform errors. Updates the panic-capture baselines in `tests/current_behavior.rs`; former panic probes now exit through Slice04's ordinary `[Error]` path. |
 | slice06-lsp-error-boundaries-and-metadata | Fix RUST-005 and RUST-008 by making ordinary LSP request/runtime failures non-panicking and using package metadata for initialize version. | Slice03; may run after Slice05 for review order. | CDC-verified. PR group 3a: LSP error boundaries and metadata. Updates and extends `tests/lsp_current_behavior.rs`; RUST-004 remains for Slice07. |
 | slice07-lsp-diagnostic-lock-scope | Fix RUST-004 by dropping the diagnostic document-map read guard before awaited work. | Slice06 preferred if shared LSP helpers emerge. | CDC-verified with C7-5 deferred. PR group 3b: LSP diagnostic lock scope. Source proof confirms the guard is dropped before awaited work; deterministic runtime contention coverage has a re-entry condition. |
-| slice08-cargo-reproducibility-policy | Fix RUST-006 by replacing wildcard dependency requirements and settling `Cargo.lock` tracking policy. | Behavior repair slices preferred first. | PR group 4: Cargo reproducibility policy. No behavior baseline required. |
+| slice08-cargo-reproducibility-policy | Fix RUST-006 by replacing wildcard dependency requirements and settling `Cargo.lock` tracking policy. | Behavior repair slices preferred first. | CDC-verified. PR group 4: Cargo reproducibility policy. Tracks Cargo's generated `Cargo.lock`, keeps the broad `*.lock` ignore rule with a `!Cargo.lock` exception, and replaces wildcard dependency requirements. |
 
 ## Dependencies
 
@@ -59,11 +59,18 @@ baselined before production code changes.
 | A3-1 | Slice01 produces a diagnosis-only audit with no source, test, manifest, CI, or README edits. | `test -f 01-cleanup/arc03-rust-best-practices/slice01-diagnosis-only-audit/cdc-verification.md` and inspect the no-source-edit row. | serious | arc-plan | done | `slice01-diagnosis-only-audit/cdc-verification.md` verifies 12/12 rows, full quality gate reproduction, runtime probes, and workbench-only implementation diff. | Read-only means audit reports plus planning close artifacts only. |
 | A3-2 | Slice02 records current behavior with missing characterization tests before any production repair slice begins. | `test -f 01-cleanup/arc03-rust-best-practices/slice02-baseline-characterization-tests/cdc-verification.md` and inspect that the diff is test-only. | serious | operator-question | done | `slice02-baseline-characterization-tests/cdc-verification.md` verifies 12/12 rows, 13 new characterization tests, test-only `main..HEAD` diff, full quality gate reproduction, and runtime probes `0`, `0`, `101`, `101`. | This protects behavior before repairs. |
 | A3-3 | Slice03 maps audit findings to focused fix slices or explicit deferrals. | `test -f 01-cleanup/arc03-rust-best-practices/slice03-triage-and-fix-map/cdc-verification.md` and inspect fix-map rows. | correctness | arc-plan | done | `slice03-triage-and-fix-map/cdc-verification.md` verifies 12/12 rows, all eight audit findings dispositioned, Slice04-Slice08 open sets complete, and RUST-007 deferred to Arc04 with re-entry conditions. | Slice04 is the next ready repair slice. |
-| A3-4 | Every production repair slice opened by Slice03 closes with CDC verification. | `find 01-cleanup/arc03-rust-best-practices -path "*/cdc-verification.md" -print` and compare against the Slice03 fix map. | correctness | ledger-discipline | open | Slice04 has CDC verification for RUST-001; Slice05 has CDC verification for RUST-002/RUST-003; Slice06 has CDC verification for RUST-005/RUST-008; Slice07 has CDC verification for RUST-004 with C7-5 deferred. | Applies to Slice04-Slice08 before Arc03 closes. |
+| A3-4 | Every production repair slice opened by Slice03 closes with CDC verification. | `find 01-cleanup/arc03-rust-best-practices -path "*/cdc-verification.md" -print` and compare against the Slice03 fix map. | correctness | ledger-discipline | done | Slice04 has CDC verification for RUST-001; Slice05 has CDC verification for RUST-002/RUST-003; Slice06 has CDC verification for RUST-005/RUST-008; Slice07 has CDC verification for RUST-004 with C7-5 deferred; Slice08 has CDC verification for RUST-006. | All Slice03 production repair slices are CDC-verified. RUST-007 remains explicitly deferred to Arc04. |
 | A3-5 | The final Arc03 code state passes the full local workflow-equivalent gate. | `cargo fmt --check`, `cargo check --all-targets`, `RUSTFLAGS="-D rust-2024-compatibility" cargo check --all-targets`, `cargo clippy --all-targets -- -D warnings`, `cargo test --all-targets`, `cargo build --release --bins`, `./target/release/hddl_analyzer --help`, `actionlint .github/workflows/ci.yml`, and `git diff --check`. | serious | arc-plan | open | | Run at arc close on the final repair branch state. |
 | A3-6 | Arc03 bubble-up findings are routed into Arc04 or project-level deferrals before Arc03 closes. | `rg -n "Arc04|cohesion|deferred|bubble-up" 01-cleanup/arc03-rust-best-practices/closing-report.md 01-cleanup/project-plan.md` | correctness | project-plan | open | | Prevents audit findings from silently disappearing. |
 
 ## Version History
+
+### v1.10 - 2026-08-26
+
+Slice08 CDC verification landed. RUST-006 is fixed by replacing wildcard
+dependency requirements and tracking Cargo's generated lockfile for the
+binary-bearing package. All production repair slices opened by Slice03 are now
+CDC-verified; Arc03 is ready for arc-level closure.
 
 ### v1.9 - 2026-08-26
 

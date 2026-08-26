@@ -1,6 +1,6 @@
 # HDDL-Parser Cleanup Project Plan
 
-Version: 2.5
+Version: 2.6
 Date: 2026-08-26
 Planning branch: `planning` orphan branch
 Implementation base: local `main` at `ec2d70e`
@@ -36,7 +36,7 @@ Explicit non-goals:
 |-----|------------|--------|--------------|
 | arc01-github-actions-ci | Adds the first GitHub Actions CI workflow and status-facing project polish. | closed locally; PR-ready after upstream base settles | Warning-fix PR #5 merged or equivalent local baseline. |
 | arc02-rust-2024-edition | Migrates the crate to the latest Rust edition using the standard edition workflow. | active; slices CDC-verified, arc close pending | arc01 gives CI coverage for the migration PR. |
-| arc03-rust-best-practices | Audits Rust API, error handling, CLI, tests, and maintainability issues; baselines behavior with tests before production repairs. | active; Slice07 CDC-verified, Slice08 next | arc01 gives CI coverage; arc02 defines the target edition. |
+| arc03-rust-best-practices | Audits Rust API, error handling, CLI, tests, and maintainability issues; baselines behavior with tests before production repairs. | active; Slice08 CDC-verified, arc close next | arc01 gives CI coverage; arc02 defines the target edition. |
 | arc04-rust-cohesion-audit | Performs the final whole-codebase consistency pass so Rust idioms, error shapes, data-flow patterns, and module conventions feel deliberately unified. | placeholder opened | arc03 fixes land first so cohesion is audited against the settled codebase. |
 
 ## Current Status
@@ -64,7 +64,9 @@ CDC-verified: RUST-005/RUST-008 scoped LSP request-boundary and initialize
 metadata failures are fixed, with RUST-004 intentionally left for Slice07.
 Slice07 is CDC-verified: RUST-004 diagnostic lock scope is fixed, with
 deterministic runtime contention coverage deferred to a future test hook or
-in-crate direct handler harness. Slice08 is the next ready repair slice. Arc04
+in-crate direct handler harness. Slice08 is CDC-verified: RUST-006 Cargo
+reproducibility policy is fixed with explicit dependency requirements and a
+tracked Cargo-generated lockfile. Arc03 is ready for arc-level closure. Arc04
 remains the final placeholder: a whole-codebase cohesion pass that
 runs after Arc03 so consistency is judged against the repaired codebase.
 
@@ -85,6 +87,12 @@ arc can be executed as a focused PR or PR series.
 | P-5 | Arc04 final Rust cohesion audit has a placeholder that records scope, dependency, and the project-wide consistency emphasis. | `test -f 01-cleanup/arc04-rust-cohesion-audit/arc-plan.md` and `rg -n "consistency|cohesion|unified" 01-cleanup/arc04-rust-cohesion-audit/arc-plan.md` | correctness | operator-follow-up | done | Arc04 placeholder opened with whole-codebase consistency scope. | Arc04 remains deferred until Arc03 repairs land. |
 
 ## Version History
+
+### v2.6 - 2026-08-26
+
+Arc03 Slice08 CDC verification landed. RUST-006 Cargo reproducibility policy is
+fixed with explicit dependency requirements and a tracked Cargo-generated
+lockfile. Arc03 is ready for arc-level closure.
 
 ### v2.5 - 2026-08-26
 
