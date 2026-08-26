@@ -1,9 +1,11 @@
 # Slice06: LSP Error Boundaries And Metadata
 
-Version: 1.0
-Date: 2026-08-25
+Version: 1.1
+Date: 2026-08-26
 Arc: `arc03-rust-best-practices`
 Expected implementation branch: `fix/lsp-error-boundaries-and-metadata`
+Expected base: `fix/structured-parser-transform-errors` at `6bd1b0a`, unless
+Slice05 has already been merged upstream.
 
 ## Goal
 
@@ -42,3 +44,15 @@ Use `tests/lsp_current_behavior.rs` where the stdio harness can exercise behavio
 - RUST-005 and RUST-008 are fixed or any remaining LSP edge case has an explicit deferral and re-entry condition.
 - The LSP harness tests pass and no server panic is observed for covered failure paths.
 - The full local workflow-equivalent gate passes.
+
+## Version History
+
+### v1.1 - 2026-08-26
+
+Refreshed the open set after Slice05 CDC verification. Slice06 should start
+from `6bd1b0a` or a merged equivalent so LSP-only scope can be checked against
+the settled CLI and structured-error repairs.
+
+### v1.0 - 2026-08-25
+
+Initial open set from Slice03 fix mapping.

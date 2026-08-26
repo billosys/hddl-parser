@@ -5,6 +5,11 @@ You are working in HDDL-Parser on Arc03 Slice06:
 
 This is a focused repair slice for RUST-005 and RUST-008.
 
+Start from the verified Slice05 base,
+`fix/structured-parser-transform-errors` at `6bd1b0a`, unless Slice05 has
+already been merged upstream. Create `fix/lsp-error-boundaries-and-metadata`
+from that base.
+
 Read first:
 
 - `/Users/oubiwann/lab/billosys/hddl-parser/.worktrees/planning/01-cleanup/project-plan.md`
@@ -26,6 +31,8 @@ Constraints:
 - Do not change CLI/parser/transform behavior, Cargo policy, or public API cohesion.
 - Do not make private internals public only for tests.
 - Use the existing stdio LSP harness where possible.
+- Treat Slice04/Slice05 behavior as settled baseline; do not include those
+  files in the Slice06 diff unless an LSP-specific change truly requires it.
 
 Run and record:
 
@@ -40,7 +47,7 @@ cargo build --release --bins
 ./target/release/hddl_analyzer --help
 actionlint .github/workflows/ci.yml
 git diff --check
-git diff --name-only
+git diff --name-only 6bd1b0a..HEAD
 ```
 
 Closing report requirements:
