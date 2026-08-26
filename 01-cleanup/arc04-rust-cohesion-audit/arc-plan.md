@@ -1,6 +1,6 @@
 # Arc04: Rust Cohesion Audit And Fixes
 
-Version: 1.9
+Version: 1.10
 Date: 2026-08-25
 Expected audit branch: `audit/rust-cohesion`
 Expected repair branches: smaller `fix/...` branches as Slice02 requires
@@ -166,9 +166,16 @@ intentional variation.
 | A4-3 | Accepted Rust idiom variations are explicitly documented with local reasons instead of silently drifting. | `rg -n "accepted variation|intentional divergence|local reason" 01-cleanup/arc04-rust-cohesion-audit` | correctness | operator-follow-up | done | `slice02-triage-and-fix-map/fix-map.md` documents accepted variations, local rationale, and later-arc public API deferrals; Slice05 CDC verification confirms public misspelled variants remain deliberately deferred rather than silently renamed. | Remaining public API/error/AST work is gated by operator GO or a future public API contract arc. |
 | A4-4 | Every production repair slice opened by Slice02 closes with CDC verification and a focused behavior-preservation story. | `find 01-cleanup/arc04-rust-cohesion-audit -path '*/closing-report.md' -print` and inspect repair rows. | serious | collaboration-framework | done | `slice04-parser-api-and-error-boundary/cdc-verification.md` verifies the parser byte-slice API and malformed problem-parser syntactic-error repair with full local gate reproduction. `slice05-test-helper-and-private-naming-cohesion/cdc-verification.md` verifies the test helper and private/test naming cleanup with no public API changes. | Slice03 characterization baseline plus Slice04/Slice05 repairs are CDC-verified; Arc04 is ready for arc-level closure. |
 | A4-5 | Final Arc04 feature state passes the full local gate, including locked Cargo verification. | `cargo fmt --check && cargo check --locked --all-targets && RUSTFLAGS="-D rust-2024-compatibility" cargo check --locked --all-targets && cargo clippy --locked --all-targets -- -D warnings && cargo test --locked --all-targets && cargo build --locked --release --bins && ./target/release/hddl_analyzer --help && actionlint .github/workflows/ci.yml && git diff --check` | serious | arc01-arc03 | done | CDC reproduced the full local gate on `fix/test-private-naming-cohesion` at `7e2d8a7`, including locked check, Rust 2024 compatibility, Clippy `-D warnings`, full tests, release build, binary help smoke, actionlint, and whitespace checks. | Full tests preserve the inherited ignored-test pattern: 1 library ignored, 2 flawed ignored, 1 IPC ignored, and 1 JSON ignored. |
-| A4-6 | Arc04 close report bubbles up whether HDDL-Parser cleanup can close or needs another remediation arc. | `test -f 01-cleanup/arc04-rust-cohesion-audit/closing-report.md` and inspect final decision. | serious | project-management | open | | |
+| A4-6 | Arc04 close report bubbles up whether HDDL-Parser cleanup can close or needs another remediation arc. | `test -f 01-cleanup/arc04-rust-cohesion-audit/closing-report.md` and inspect final decision. | serious | project-management | done | `closing-report.md` closes A4-1 through A4-6, confirms all planned Arc04 slices compose into the cohesion capability, and bubbles inherited ignored-test debt to Arc05. | Arc04 is closed locally. |
 
 ## Version History
+
+### v1.10 - 2026-08-26
+
+Arc04 closed locally. The arc-level close report verifies that Slice01 through
+Slice05 compose into the Rust cohesion capability, records the full locked local
+gate passing at `7e2d8a7`, and bubbles inherited ignored-test debt into Arc05
+rather than treating it as silent residual work.
 
 ### v1.9 - 2026-08-26
 
