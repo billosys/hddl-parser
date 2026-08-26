@@ -1,6 +1,6 @@
 # Arc04: Rust Cohesion Audit And Fixes
 
-Version: 1.1
+Version: 1.2
 Date: 2026-08-26
 Expected audit branch: `audit/rust-cohesion`
 Expected repair branches: smaller `fix/...` branches as Slice02 requires
@@ -56,7 +56,9 @@ handoff items.
 Turn Slice01 findings into a repair map. Each finding must be assigned to one of
 these outcomes: focused repair slice, no-op accepted variation, later-arc
 deferral with a concrete re-entry condition, or duplicate of an already-fixed
-Arc03 issue. This slice opens the repair slices required by the map.
+Arc03 issue. This slice opens the repair slices required by the map. Status:
+opened as a planning-only slice; implementation, tests, manifests, workflows,
+README files, and behavior remain out of scope.
 
 ### slice03-plus-focused-cohesion-repairs
 
@@ -142,6 +144,13 @@ intentional variation.
 | A4-6 | Arc04 close report bubbles up whether HDDL-Parser cleanup can close or needs another remediation arc. | `test -f 01-cleanup/arc04-rust-cohesion-audit/closing-report.md` and inspect final decision. | serious | project-management | open | | |
 
 ## Version History
+
+### v1.2 - 2026-08-26
+
+Slice02 opened as a planning-only triage/fix-map slice. The open set requires
+all six Slice01 cohesion findings to receive explicit dispositions, public API
+compatibility gates, baseline-test routing, downstream slice open sets where
+concrete, and no implementation changes.
 
 ### v1.1 - 2026-08-26
 

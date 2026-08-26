@@ -1,6 +1,6 @@
 # HDDL-Parser Cleanup Project Plan
 
-Version: 2.9
+Version: 2.10
 Date: 2026-08-26
 Planning branch: `planning` orphan branch
 Implementation base: local `main` at `ec2d70e`
@@ -37,7 +37,7 @@ Explicit non-goals:
 | arc01-github-actions-ci | Adds the first GitHub Actions CI workflow and status-facing project polish. | closed locally; PR-ready after upstream base settles | Warning-fix PR #5 merged or equivalent local baseline. |
 | arc02-rust-2024-edition | Migrates the crate to the latest Rust edition using the standard edition workflow. | active; slices CDC-verified, arc close pending | arc01 gives CI coverage for the migration PR. |
 | arc03-rust-best-practices | Audits Rust API, error handling, CLI, tests, and maintainability issues; baselines behavior with tests before production repairs. | closed locally | arc01 gives CI coverage; arc02 defines the target edition. |
-| arc04-rust-cohesion-audit | Performs the final whole-codebase consistency pass so Rust idioms, error shapes, data-flow patterns, and module conventions feel deliberately unified. | active; Slice01 CDC-verified, Slice02 next | arc03 local feature state at `d820065` gives the repaired-codebase audit base. |
+| arc04-rust-cohesion-audit | Performs the final whole-codebase consistency pass so Rust idioms, error shapes, data-flow patterns, and module conventions feel deliberately unified. | active; Slice02 opened | arc03 local feature state at `d820065` gives the repaired-codebase audit base. |
 
 ## Current Status
 
@@ -73,9 +73,10 @@ routed to Arc04 public API cohesion.
 Arc04 is active. Slice01 is CDC-verified as a diagnosis-only cohesion audit
 from the Arc03 final feature state at `d820065`. The audit produced six
 cohesion findings, seven negative checks, and concrete Slice02 handoff items
-while preserving the read-only implementation boundary. Slice02 is next: a
+while preserving the read-only implementation boundary. Slice02 is opened as a
 planning-only triage/fix-map slice that decides which findings become repair
-slices, accepted variations, or later-arc deferrals.
+slices, accepted variations, or later-arc deferrals, with explicit public API
+compatibility gates before any breaking change.
 
 The warning-fix PR is treated as predecessor work, not part of this planning
 packet.
@@ -95,6 +96,12 @@ arc can be executed as a focused PR or PR series.
 | P-6 | Arc04 is active and Slice01 opens as a read-only cohesion diagnosis audit from Arc03 final feature state. | `test -f 01-cleanup/arc04-rust-cohesion-audit/slice01-cohesion-diagnosis-audit/cc-prompt.md` and `rg -n "diagnosis-only|read-only|d820065|RUST-007|cohesion" 01-cleanup/arc04-rust-cohesion-audit/arc-plan.md 01-cleanup/arc04-rust-cohesion-audit/slice01-cohesion-diagnosis-audit/*.md` | serious | operator-follow-up | done | Arc04 promoted to active and Slice01 open set created. | Slice01 is the current Arc04 entry point. |
 
 ## Version History
+
+### v2.10 - 2026-08-26
+
+Arc04 Slice02 opened as a planning-only triage/fix-map slice. The open set
+requires dispositions for all six cohesion findings, public API compatibility
+gates, baseline-test routing, and downstream slice open sets only where concrete.
 
 ### v2.9 - 2026-08-26
 
