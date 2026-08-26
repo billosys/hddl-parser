@@ -1,6 +1,6 @@
 # HDDL-Parser Cleanup Project Plan
 
-Version: 2.32
+Version: 2.34
 Date: 2026-08-25
 Planning branch: `planning` orphan branch
 Implementation base: local `main` at `ec2d70e`
@@ -41,7 +41,7 @@ Explicit non-goals:
 | arc02-rust-2024-edition | Migrates the crate to the latest Rust edition using the standard edition workflow. | active; slices CDC-verified, arc close pending | arc01 gives CI coverage for the migration PR. |
 | arc03-rust-best-practices | Audits Rust API, error handling, CLI, tests, and maintainability issues; baselines behavior with tests before production repairs. | closed locally | arc01 gives CI coverage; arc02 defines the target edition. |
 | arc04-rust-cohesion-audit | Performs the final whole-codebase consistency pass so Rust idioms, error shapes, data-flow patterns, and module conventions feel deliberately unified. | closed locally | arc03 local feature state at `d820065` gives the repaired-codebase audit base. |
-| arc05-skipped-test-repair | Investigates and repairs inherited ignored tests, including refactoring or rewriting tested code when an ignored test exposes stale or defective behavior. | active; Slice06 open | arc04 closed locally at final cohesion baseline `7e2d8a7`. |
+| arc05-skipped-test-repair | Investigates and repairs inherited ignored tests, including refactoring or rewriting tested code when an ignored test exposes stale or defective behavior. | active; Slice06 CDC-verified, arc close next | arc04 closed locally at final cohesion baseline `7e2d8a7`. |
 
 ## Current Status
 
@@ -116,7 +116,12 @@ explicit policy command and passed over all 900 cases with zero failures and
 zero JSON assertion failures. Slice06 is now open to wire the verified corpus
 policy into GitHub Actions: fast/default corpus coverage for branch pushes,
 full corpus coverage for pull requests and post-merge `main`/`master`, and an
-explicit scheduled-run disposition.
+explicit scheduled-run disposition. Slice06 is CDC-verified at feature commit
+`4f41000`: the workflow now runs explicit fast corpus measurement for all
+workflow runs and full corpus measurement for pull requests, scheduled runs,
+and pushes to `main` or `master`; CDC reproduced actionlint, locked Rust
+gates, fast corpus, and full corpus verification. Arc05 should move next to
+arc-level composition and PR-readiness closure.
 
 The warning-fix PR is treated as predecessor work, not part of this planning
 packet.
@@ -138,6 +143,25 @@ arc can be executed as a focused PR or PR series.
 | P-8 | Arc04 closes with an arc-level composition report and bubbles any residual cleanup need to the project roadmap. | `test -f 01-cleanup/arc04-rust-cohesion-audit/closing-report.md` and inspect the composition check and project bubble-up. | serious | project-management | done | `arc04-rust-cohesion-audit/closing-report.md` verifies all planned Arc04 slices, final gate reproduction, public API deferrals, and Arc05 ignored-test remediation handoff. | Arc05 is now active as the follow-on remediation arc. |
 
 ## Version History
+
+### v2.34 - 2026-08-26
+
+Arc05 Slice06 CDC verification landed at feature commit `4f41000`. CDC
+reproduced the workflow policy checks, no-ignore check, actionlint, locked
+Rust gates, fast corpus command, full 900-case corpus command, release build,
+binary smoke, and diff hygiene. Arc05 should move next to composition and
+PR-readiness closure across the skipped-test repair series.
+
+### v2.33 - 2026-08-26
+
+Arc05 Slice06 locally closed GitHub Actions corpus policy. The workflow now
+uses locked Cargo gates, keeps the existing Linux/macOS matrix and direct
+`rustup` setup, runs explicit fast corpus measurement for all workflow runs,
+and runs full corpus measurement for pull requests, weekly scheduled runs, and
+pushes to `main` or `master`. The implementation diff is limited to workflow
+policy and corpus-selection documentation; no parser, test, tool, or corpus
+selection semantics changed. CDC verification is pending before Arc05
+composition and PR-readiness closure.
 
 ### v2.32 - 2026-08-26
 

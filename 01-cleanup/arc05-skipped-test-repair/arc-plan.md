@@ -1,6 +1,6 @@
 # Arc05: Skipped Test Repair
 
-Version: 1.13
+Version: 1.15
 Date: 2026-08-26
 Expected investigation branch: `audit/ignored-tests`
 Expected repair branches: smaller `fix/...` branches as Slice01 requires
@@ -78,7 +78,7 @@ CDC-verified.
 Wire the verified corpus command surfaces into GitHub Actions policy. This
 slice should decide and implement branch-push, PR, scheduled, and
 post-merge/main corpus gates without changing the parser/test semantics proven
-by Slice05. Status: open.
+by Slice05. Status: CDC-verified.
 
 ### Later Repair Slices
 
@@ -135,16 +135,40 @@ unknown behavior.
 |----|-----------|--------|--------------|--------|--------|----------|-------|
 | A5-1 | Slice01 investigates every ignored Rust test without changing source, tests, manifests, workflows, README, fixtures, or ignore annotations. | `rg -n "#\\[ignore" src tests -g '*.rs'` and inspect Slice01 close evidence; `git diff --name-status` confirms read-only implementation scope. | serious | operator-follow-up | open | `slice01-ignored-test-investigation/closing-report.md` locally closes the read-only investigation; implementation `git diff --name-status` is empty and the allowed workbench report is ignored. CDC verification is pending. | |
 | A5-2 | Slice01 classifies each ignored test into a follow-up route: test-only fix, code-and-test repair, code-and-test rewrite, slow/corpus gate, or valid deferral. | `test -f 01-cleanup/arc05-skipped-test-repair/slice01-ignored-test-investigation/closing-report.md` and inspect classification matrix. | serious | operator-follow-up | open | Slice01 local close classifies `file_type_test` as test-only fix; the two forgotten-declaration tests as code-and-test repair; and the IPC/JSON corpus tests as slow/corpus gate. CDC verification is pending. | |
-| A5-3 | Later repair slices are opened only after Slice01 findings identify concrete route boundaries. | `find 01-cleanup/arc05-skipped-test-repair -maxdepth 2 -name 'slice-doc.md' -print` and inspect arc version history. | correctness | project-management | done | `slice02-fast-ignored-test-repair` opened from Slice01's route matrix and CDC-verified; `slice03-corpus-measurement` opened for the remaining corpus route. | Additional corpus-policy slices remain unopened until Slice03 measurement evidence lands. |
+| A5-3 | Later repair slices are opened only after Slice01 findings identify concrete route boundaries. | `find 01-cleanup/arc05-skipped-test-repair -maxdepth 2 -name 'slice-doc.md' -print` and inspect arc version history. | correctness | project-management | done | `slice02-fast-ignored-test-repair` opened from Slice01's route matrix and CDC-verified; `slice03-corpus-measurement`, `slice04-corpus-addressability-and-policy`, `slice05-corpus-test-routing`, and `slice06-github-actions-corpus-policy` followed the corpus route surfaced by Slice01 and measured in Slice03. | Corpus repair and policy slices were opened from evidence rather than pre-planned speculation. |
 | A5-4 | Repaired tests either run in the default locked test gate or move behind an explicit slow/corpus gate with documented invocation. | `cargo test --locked --all-targets` and inspect any slow-test command introduced by later slices. | serious | arc-plan | open | Slice02 repair commit `e534df2` puts the three fast non-corpus ignored tests in the default locked gate. Slice03 leaves the two corpus ignores in place and records opt-in measurement commands plus timing evidence for the later slow/corpus policy slice. | Corpus policy is not finalized yet. |
 | A5-5 | Arc05 closes with a composition report showing no inherited ignored-test behavior remains unexplained. | `test -f 01-cleanup/arc05-skipped-test-repair/closing-report.md` and inspect row walk. | serious | project-management | open | | |
 | A5-6 | Corpus slow-test policy decisions are based on deterministic case inventory and phase-level timing evidence rather than inferred runtime. | `test -f 01-cleanup/arc05-skipped-test-repair/slice03-corpus-measurement/closing-report.md` and inspect the measurement report for corpus counts, slowest cases, parse/verify timing, JSON phase timing, and structural-vs-string JSON comparison notes. | correctness | operator-follow-up | done | Slice03 CDC verification reproduced deterministic inventory of 900 cases, full measurement completion with 0 failures and 0 JSON equality disagreements, phase totals, distribution buckets, slowest cases/domains, and next-slice policy options. | Slice03 is measurement-first and does not finalize the CI policy by itself. |
 | A5-7 | The remaining corpus ignored tests have an addressable fast/full policy substrate before CI wiring or ignore removal. | `test -f 01-cleanup/arc05-skipped-test-repair/slice04-corpus-addressability-and-policy/cc-prompt.md` and inspect Slice04 close evidence for named fast/full commands, checked-in selection policy, JSON assertion policy, and unchanged workflow files. | serious | Slice03 bubble-up | done | Slice04 CDC verification reproduced named fast/full selection support, a checked-in 43-domain fast selection, custom manifest support, explicit JSON assertion modes, clean negative policy/input failures, and unchanged workflow/corpus-test boundaries. | Slice04 did not remove the two corpus ignores or change GitHub Actions. |
 | A5-8 | The two inherited corpus ignored tests are routed or replaced so no Rust `#[ignore]` annotations remain, while default tests run only fast corpus coverage. | `test -f 01-cleanup/arc05-skipped-test-repair/slice05-corpus-test-routing/cc-prompt.md`; after close, inspect Slice05 evidence for no ignored tests, fast IPC/JSON default coverage, full command preservation, and unchanged workflows. | serious | Slice04 bubble-up | done | Slice05 CDC verification reproduced: `rg -n "#\\[ignore" src tests -g '*.rs'` has no matches; `cargo test --locked --test ipc` passes 1/0 ignored; `cargo test --locked --test json` passes 9/0 ignored; `cargo test --locked --all-targets` passes with IPC/JSON enabled; full `HDDL_CORPUS_SELECTION=full HDDL_CORPUS_ASSERT=both cargo run --locked --example corpus_measure` passes 900/900 with zero failures and zero JSON assertion failures; workflows unchanged. | CI policy remains separate for Slice06. |
 | A5-9 | GitHub Actions corpus policy is opened against the verified fast/default and full explicit command surfaces. | `test -f 01-cleanup/arc05-skipped-test-repair/slice06-github-actions-corpus-policy/cc-prompt.md`; inspect Slice06 open set for branch-push, PR, scheduled, and post-merge/main decisions. | serious | Slice05 bubble-up | done | Slice06 open set created with `slice-doc.md`, `ledger.md`, and `cc-prompt.md`; it scopes branch-push fast corpus, PR full corpus, post-merge main/master full corpus, and explicit scheduled-policy disposition. | Slice05 verified the command surface but did not change workflows. |
-| A5-10 | GitHub Actions corpus policy is implemented and verified without changing parser/test semantics. | After Slice06 close, inspect `slice06-github-actions-corpus-policy/cdc-verification.md`, `.github/workflows/ci.yml`, `actionlint`, local fast/full corpus commands, and full locked Rust gates. | serious | Slice06 open | open | | This is the likely final implementation row before Arc05 composition close. |
+| A5-10 | GitHub Actions corpus policy is implemented and verified without changing parser/test semantics. | After Slice06 close, inspect `slice06-github-actions-corpus-policy/cdc-verification.md`, `.github/workflows/ci.yml`, `actionlint`, local fast/full corpus commands, and full locked Rust gates. | serious | Slice06 open | done | Slice06 CDC verification landed at feature commit `4f41000`: `.github/workflows/ci.yml` runs locked Cargo gates, explicit fast corpus measurement for all workflow runs, full corpus measurement for PR, schedule, and `main`/`master` pushes inside the Linux/macOS matrix, and a weekly scheduled run; feature diff is limited to workflow policy plus corpus-selection README; CDC reproduced `actionlint`, locked Rust gates, fast corpus, and full 900-case corpus commands. | Arc05 can move to composition and PR-readiness close. |
+| A5-11 | Arc05 closes with a composition and PR-readiness report across all skipped-test repair slices. | `test -f 01-cleanup/arc05-skipped-test-repair/closing-report.md` and inspect row walk for slices 01-06, no remaining ignored tests, fast/default corpus coverage, full corpus policy, CI policy, and upstream PR caveats. | serious | Slice06 bubble-up | open | | No further feature slice is indicated by Slice06 CDC verification. |
 
 ## Version History
+
+### v1.15 - 2026-08-26
+
+Slice06 CDC verification landed at feature commit `4f41000`. CDC reproduced
+the workflow policy checks, no-ignore check, actionlint, locked Rust gates,
+fast corpus command, full 900-case corpus command, release build, binary
+smoke, and diff hygiene. Arc05 now has the skipped-test investigation,
+fast-test repair, corpus measurement, addressable corpus policy, corpus test
+routing, and CI corpus policy pieces in place; the next step should be
+arc-level composition and PR-readiness closure unless the operator requests a
+separate packaging slice.
+
+### v1.14 - 2026-08-26
+
+Slice06 locally closed. GitHub Actions now preserves the established
+Linux/macOS matrix, checkout action, and direct `rustup` setup while using
+locked Cargo commands for dependency-resolving gates. The workflow runs
+explicit fast corpus measurement for all workflow runs and full corpus
+measurement for pull requests, scheduled runs, and pushes to `main` or
+`master`, including a weekly schedule. No parser, test, tool, or corpus data
+semantics changed. CDC verification remains pending; after it lands, Arc05
+should move to arc-level composition and PR-readiness closure rather than
+another feature slice unless CDC finds a gap.
 
 ### v1.13 - 2026-08-26
 
