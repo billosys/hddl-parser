@@ -3,36 +3,20 @@ extern crate hddl_analyzer;
 use hddl_analyzer::HDDLProgram;
 use std::fs;
 
+mod common;
+
 #[test]
-#[ignore = "takes too long to run"]
 pub fn ipc_validation_test() {
-    for folder in fs::read_dir("tests/ipc").unwrap() {
-        let path = folder.as_ref().unwrap().path();
-        let domain_path = fs::read_dir(path.clone())
-            .unwrap()
-            .find(|x| x.as_ref().unwrap().file_name() == "domain.hddl")
-            .as_ref()
-            .unwrap()
-            .as_ref()
-            .unwrap()
-            .path();
-        let domain = fs::read(&domain_path).unwrap();
-        for file in fs::read_dir(path).unwrap() {
-            if file.as_ref().unwrap().file_name() == "domain.hddl" {
-                continue;
-            } else {
-                let problem_path = file.as_ref().unwrap().path();
-                let problem = fs::read(&problem_path).unwrap();
-                if let Err(token) = HDDLProgram::from_hddl(&domain, Some(&problem))
-                    .and_then(|program| program.verify())
-                {
-                    let error = format!(
-                        "Domain: {:?} \nProblem:{:?}\nError: {:?}",
-                        domain_path, problem_path, token
-                    );
-                    panic!("{}", error)
-                }
-            }
+    for case in common::fast_corpus_cases().expect("fast corpus selection should be valid") {
+        let domain = fs::read(&case.domain_path)
+            .unwrap_or_else(|error| panic!("{}: failed to read domain: {error}", case.id));
+        let problem = fs::read(&case.problem_path)
+            .unwrap_or_else(|error| panic!("{}: failed to read problem: {error}", case.id));
+
+        if let Err(error) =
+            HDDLProgram::from_hddl(&domain, Some(&problem)).and_then(|program| program.verify())
+        {
+            panic!("{}: parse/verify error: {:?}", case.id, error);
         }
     }
 }

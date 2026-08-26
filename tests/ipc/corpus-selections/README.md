@@ -34,6 +34,20 @@ JSON assertion policy is explicit through `HDDL_CORPUS_ASSERT`:
 measurement found zero structural/string disagreements across 900 cases, and
 the inherited JSON corpus test asserted exact string equality.
 
+## Default Tests
+
+The default locked test suite uses `fast.txt` for enabled IPC verification and
+JSON round-trip corpus coverage:
+
+```bash
+cargo test --locked --test ipc
+cargo test --locked --test json
+cargo test --locked --all-targets
+```
+
+Those tests report stable case IDs in failure messages. The full corpus remains
+explicit through the `HDDL_CORPUS_SELECTION=full` command above.
+
 ## Fast Selection
 
 `fast.txt` is one fastest measured case per discovered corpus domain from the

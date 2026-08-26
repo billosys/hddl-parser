@@ -1,7 +1,10 @@
 extern crate hddl_analyzer;
 
 use hddl_analyzer::{HDDLProgram, ParsingError, SemanticErrorType, Transpiler};
+use serde_json::Value;
 use std::fs;
+
+mod common;
 
 #[test]
 pub fn json_round_trip_single_domain() {
@@ -14,47 +17,33 @@ pub fn json_round_trip_single_domain() {
 }
 
 #[test]
-#[ignore = "takes a long time"]
 pub fn json_round_trip_ipc() {
-    for folder in fs::read_dir("tests/ipc").unwrap() {
-        let path = folder.as_ref().unwrap().path();
-        let domain_path = fs::read_dir(path.clone())
-            .unwrap()
-            .find(|x| x.as_ref().unwrap().file_name() == "domain.hddl")
-            .as_ref()
-            .unwrap()
-            .as_ref()
-            .unwrap()
-            .path();
-        let domain = fs::read(&domain_path).unwrap();
-        for file in fs::read_dir(path).unwrap() {
-            if file.as_ref().unwrap().file_name() == "domain.hddl" {
-                continue;
-            }
-            let problem_path = file.as_ref().unwrap().path();
-            let problem = fs::read(&problem_path).unwrap();
-            let program = HDDLProgram::from_hddl(&domain, Some(&problem)).unwrap();
-            let exported = Transpiler::new(program).to_json();
-            let reimported = match HDDLProgram::from_json(&exported) {
-                Ok(program) => program,
-                Err(error) => panic!(
-                    "Domain: {:?} \nProblem:{:?}\nImport error: {:?}",
-                    domain_path, problem_path, error
-                ),
-            };
-            if let Err(error) = reimported.verify() {
-                panic!(
-                    "Domain: {:?} \nProblem:{:?}\nVerification error: {:?}",
-                    domain_path, problem_path, error
-                );
-            }
-            let re_exported = Transpiler::new(reimported).to_json();
-            assert_eq!(
-                exported, re_exported,
-                "round trip mismatch for {:?} / {:?}",
-                domain_path, problem_path
-            );
-        }
+    for case in common::fast_corpus_cases().expect("fast corpus selection should be valid") {
+        let domain = fs::read(&case.domain_path)
+            .unwrap_or_else(|error| panic!("{}: failed to read domain: {error}", case.id));
+        let problem = fs::read(&case.problem_path)
+            .unwrap_or_else(|error| panic!("{}: failed to read problem: {error}", case.id));
+        let program = HDDLProgram::from_hddl(&domain, Some(&problem))
+            .unwrap_or_else(|error| panic!("{}: HDDL parse error: {:?}", case.id, error));
+        let exported = Transpiler::new(program).to_json();
+        let reimported = HDDLProgram::from_json(&exported)
+            .unwrap_or_else(|error| panic!("{}: JSON import error: {:?}", case.id, error));
+        reimported.verify().unwrap_or_else(|error| {
+            panic!("{}: reimport verification error: {:?}", case.id, error)
+        });
+        let re_exported = Transpiler::new(reimported).to_json();
+        let exported_value = serde_json::from_str::<Value>(&exported)
+            .unwrap_or_else(|error| panic!("{}: exported JSON parse error: {error}", case.id));
+        let re_exported_value = serde_json::from_str::<Value>(&re_exported)
+            .unwrap_or_else(|error| panic!("{}: re-exported JSON parse error: {error}", case.id));
+        let exact_equal = exported == re_exported;
+        let structural_equal = exported_value == re_exported_value;
+
+        assert!(
+            exact_equal && structural_equal,
+            "{}: JSON round trip mismatch: exact_equal={exact_equal}, structural_equal={structural_equal}",
+            case.id
+        );
     }
 }
 
