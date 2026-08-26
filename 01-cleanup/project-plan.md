@@ -1,6 +1,6 @@
 # HDDL-Parser Cleanup Project Plan
 
-Version: 2.14
+Version: 2.15
 Date: 2026-08-25
 Planning branch: `planning` orphan branch
 Implementation base: local `main` at `ec2d70e`
@@ -37,7 +37,7 @@ Explicit non-goals:
 | arc01-github-actions-ci | Adds the first GitHub Actions CI workflow and status-facing project polish. | closed locally; PR-ready after upstream base settles | Warning-fix PR #5 merged or equivalent local baseline. |
 | arc02-rust-2024-edition | Migrates the crate to the latest Rust edition using the standard edition workflow. | active; slices CDC-verified, arc close pending | arc01 gives CI coverage for the migration PR. |
 | arc03-rust-best-practices | Audits Rust API, error handling, CLI, tests, and maintainability issues; baselines behavior with tests before production repairs. | closed locally | arc01 gives CI coverage; arc02 defines the target edition. |
-| arc04-rust-cohesion-audit | Performs the final whole-codebase consistency pass so Rust idioms, error shapes, data-flow patterns, and module conventions feel deliberately unified. | active; Slice03 CDC-verified; Slice04 next | arc03 local feature state at `d820065` gives the repaired-codebase audit base. |
+| arc04-rust-cohesion-audit | Performs the final whole-codebase consistency pass so Rust idioms, error shapes, data-flow patterns, and module conventions feel deliberately unified. | active; Slice04 CDC-verified; Slice05 next | arc03 local feature state at `d820065` gives the repaired-codebase audit base. |
 
 ## Current Status
 
@@ -79,10 +79,10 @@ characterization baselines, Slice04 parser API/error-boundary repair, and
 Slice05 test-helper/private-naming cohesion, and keeps public API breaking
 changes behind explicit operator GO or a later public API/error/AST contract
 arc. Slice03 is CDC-verified with a test-only integration baseline. Slice04 is
-locally closed: borrowed byte-input APIs now accept `&[u8]`, Vec-backed callers
+CDC-verified: borrowed byte-input APIs now accept `&[u8]`, Vec-backed callers
 remain covered, the malformed problem-parser panic path now returns
 `ParsingError::Syntactic`, and crate-root export narrowing remains skipped and
-gated. CDC verification is pending before Slice05 proceeds.
+gated. Slice05 is next.
 
 The warning-fix PR is treated as predecessor work, not part of this planning
 packet.
@@ -102,6 +102,13 @@ arc can be executed as a focused PR or PR series.
 | P-6 | Arc04 is active and Slice01 opens as a read-only cohesion diagnosis audit from Arc03 final feature state. | `test -f 01-cleanup/arc04-rust-cohesion-audit/slice01-cohesion-diagnosis-audit/cc-prompt.md` and `rg -n "diagnosis-only|read-only|d820065|RUST-007|cohesion" 01-cleanup/arc04-rust-cohesion-audit/arc-plan.md 01-cleanup/arc04-rust-cohesion-audit/slice01-cohesion-diagnosis-audit/*.md` | serious | operator-follow-up | done | Arc04 promoted to active and Slice01 open set created. | Slice01 is the current Arc04 entry point. |
 
 ## Version History
+
+### v2.15 - 2026-08-26
+
+Arc04 Slice04 CDC verification landed. The project now has the parser
+byte-slice API repair and malformed problem-parser structured-error repair
+verified against the full local gate, with public export narrowing still
+operator-gated. Arc04 proceeds to Slice05.
 
 ### v2.14 - 2026-08-25
 
