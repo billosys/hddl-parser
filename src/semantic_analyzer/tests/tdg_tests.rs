@@ -453,7 +453,7 @@ pub fn tdg_growing_cycle_test() {
 }
 
 #[test]
-pub fn satelite_domain_cycle_test() {
+pub fn satellite_domain_cycle_test() {
     let program = String::from(
         "(define (domain bal)
             (:predicates 

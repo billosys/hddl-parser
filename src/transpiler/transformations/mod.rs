@@ -1,5 +1,5 @@
 mod conjunctive_preconditions;
-mod qunatifier_elimintation;
+mod quantifier_elimination;
 mod remove_equality;
 mod remove_types;
 mod transform;

@@ -45,7 +45,7 @@ impl<'a> Parser<'a> {
                 return Err(ParsingError::Syntactic(error));
             }
         }
-        // skip action block's closing parantheses
+        // skip action block's closing parentheses
         match self.tokenizer.get_token()? {
             Token::Punctuator(PunctuationType::RParentheses) => {}
             token => {
